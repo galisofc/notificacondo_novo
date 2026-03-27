@@ -220,11 +220,14 @@ export default function ResidentPackages() {
             <div className="space-y-6">
               {/* Package Image */}
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
-                <img
-                  src={selectedPackage.photo_url}
-                  alt="Foto da encomenda"
-                  className="w-full h-full object-cover"
-                />
+                {selectedPackage.photo_url ? (
+                  <PackagePhoto src={selectedPackage.photo_url} />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <ImageOff className="w-10 h-10" />
+                    <span className="text-sm">Foto não disponível</span>
+                  </div>
+                )}
                 <Badge
                   variant={selectedPackage.status === "pendente" ? "default" : "secondary"}
                   className="absolute top-3 right-3"
