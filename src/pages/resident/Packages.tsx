@@ -222,7 +222,7 @@ export default function ResidentPackages() {
               {/* Package Image */}
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
                 {selectedPackage.photo_url ? (
-                  <PackagePhoto src={selectedPackage.photo_url} />
+                  <PackageCardImage src={selectedPackage.photo_url} alt="Foto da encomenda" />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
                     <ImageOff className="w-10 h-10" />
