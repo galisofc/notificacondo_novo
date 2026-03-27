@@ -467,6 +467,8 @@ export default function Zeladores() {
                       <TableHead>Telefone</TableHead>
                       <TableHead>Condomínio</TableHead>
                       <TableHead>Cadastrado em</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
