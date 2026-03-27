@@ -668,8 +668,9 @@ function SidebarNavigation() {
                               <item.icon className="w-5 h-5 shrink-0 mx-auto" />
                             </div>
                           </SidebarMenuButton>
-                          <div className="invisible opacity-0 group-hover/hover-menu:visible group-hover/hover-menu:opacity-100 transition-all duration-200 absolute left-full top-0 ml-2 z-50 min-w-48 rounded-lg border bg-popover p-2 shadow-lg">
-                            <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{item.title}</p>
+                          <div className="invisible opacity-0 group-hover/hover-menu:visible group-hover/hover-menu:opacity-100 transition-all duration-200 ease-out absolute left-full top-0 ml-3 z-50 min-w-52 rounded-xl border border-border/60 bg-card p-1.5 shadow-elevated backdrop-blur-sm translate-x-1 group-hover/hover-menu:translate-x-0">
+                            <p className="px-3 pt-2 pb-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{item.title}</p>
+                            <div className="h-px bg-border/50 mx-2 mb-1" />
                             {item.items.map((subItem) => {
                               const isSubActive = location.pathname === subItem.url;
                               return (
@@ -677,18 +678,18 @@ function SidebarNavigation() {
                                   key={subItem.title}
                                   to={subItem.url}
                                   className={cn(
-                                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-150",
                                     isSubActive
-                                      ? "bg-primary text-primary-foreground"
-                                      : "text-popover-foreground hover:bg-accent"
+                                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
+                                      : "text-foreground/80 hover:bg-secondary hover:text-foreground"
                                   )}
                                   activeClassName=""
                                   onClick={() => isMobile && setOpenMobile(false)}
                                 >
-                                  <subItem.icon className="w-4 h-4 shrink-0" />
+                                  <subItem.icon className={cn("w-4 h-4 shrink-0", isSubActive ? "text-primary-foreground" : "text-muted-foreground")} />
                                   <span className="font-medium">{subItem.title}</span>
                                   {subItem.badge !== undefined && subItem.badge > 0 && (
-                                    <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold ml-auto">
+                                    <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold ml-auto animate-pulse-slow">
                                       {subItem.badge > 99 ? "99+" : subItem.badge}
                                     </span>
                                   )}
