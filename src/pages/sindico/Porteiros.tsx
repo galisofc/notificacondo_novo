@@ -1162,6 +1162,7 @@ export default function Porteiros() {
                         <TableHead>Contato</TableHead>
                         <TableHead>Condomínio</TableHead>
                         <TableHead>Cadastrado em</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
