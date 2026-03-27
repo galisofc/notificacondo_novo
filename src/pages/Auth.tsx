@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, ArrowLeft, ArrowRight, Loader2, Check, Building2, Phone, MapPin, ChevronRight, ChevronLeft, RefreshCw, FileText, Sparkles, MessageCircle } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, ArrowRight, Loader2, Check, Building2, Phone, MapPin, ChevronRight, ChevronLeft, RefreshCw, FileText, Sparkles, MessageCircle, ShieldOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +109,7 @@ const Auth = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [deactivatedDialogOpen, setDeactivatedDialogOpen] = useState(false);
 
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -353,7 +354,9 @@ const Auth = () => {
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
-          if (error.message.includes("Invalid login credentials")) {
+          if (error.message.includes("desativada")) {
+            setDeactivatedDialogOpen(true);
+          } else if (error.message.includes("Invalid login credentials")) {
             toast({
               title: "Erro de autenticação",
               description: "Email ou senha incorretos.",
@@ -1507,6 +1510,30 @@ const Auth = () => {
             <p className="text-xs text-muted-foreground text-center">
               A nova senha será enviada para o WhatsApp vinculado ao seu email de síndico.
             </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deactivated Account Dialog */}
+      <Dialog open={deactivatedDialogOpen} onOpenChange={setDeactivatedDialogOpen}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldOff className="w-8 h-8 text-destructive" />
+            </div>
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl">Conta Desativada</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Sua conta de porteiro foi desativada pelo síndico do condomínio.
+                Entre em contato com o síndico para reativar seu acesso.
+              </DialogDescription>
+            </DialogHeader>
+            <Button
+              onClick={() => setDeactivatedDialogOpen(false)}
+              className="w-full max-w-[200px]"
+            >
+              Entendi
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
