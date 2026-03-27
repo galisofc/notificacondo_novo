@@ -1475,12 +1475,15 @@ const Auth = () => {
                   const { data, error } = await supabase.functions.invoke('send-password-recovery', {
                     body: { email: recoveryEmail.trim().toLowerCase() }
                   });
-                  
+
                   if (error) throw error;
-                  
+
+                  const backendMessage = data?.message || "Solicitação processada.";
+                  const passwordWasSent = backendMessage.toLowerCase().includes("nova senha enviada com sucesso");
+
                   toast({
-                    title: "Nova senha enviada!",
-                    description: "Se o email estiver cadastrado, você receberá a nova senha no WhatsApp vinculado.",
+                    title: passwordWasSent ? "Nova senha enviada!" : "Solicitação recebida",
+                    description: backendMessage,
                   });
                   setShowPasswordRecovery(false);
                   setRecoveryEmail("");
