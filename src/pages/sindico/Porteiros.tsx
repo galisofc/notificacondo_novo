@@ -1121,19 +1121,32 @@ export default function Porteiros() {
                           </AlertDialog>
                         </div>
                       </div>
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Mail className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{porter.profile?.email || "-"}</span>
-                        </div>
-                        {porter.profile?.phone && (
+                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                        <div className="space-y-1.5 text-xs flex-1">
                           <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Phone className="w-3 h-3 flex-shrink-0" />
-                            <span>{porter.profile.phone}</span>
+                            <Mail className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{porter.profile?.email || "-"}</span>
                           </div>
-                        )}
-                        <div className="text-[10px] text-muted-foreground pt-1">
-                          Cadastrado em {format(new Date(porter.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          {porter.profile?.phone && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Phone className="w-3 h-3 flex-shrink-0" />
+                              <span>{porter.profile.phone}</span>
+                            </div>
+                          )}
+                          <div className="text-[10px] text-muted-foreground pt-1">
+                            Cadastrado em {format(new Date(porter.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-3">
+                          <span className={cn("text-[10px] font-medium", porter.is_active ? "text-primary" : "text-muted-foreground")}>
+                            {porter.is_active ? "Ativo" : "Inativo"}
+                          </span>
+                          <Switch
+                            checked={porter.is_active}
+                            onCheckedChange={() => handleToggleActive(porter)}
+                            disabled={togglingActive === porter.id}
+                            className="scale-75"
+                          />
                         </div>
                       </div>
                     </div>
