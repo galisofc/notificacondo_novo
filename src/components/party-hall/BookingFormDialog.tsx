@@ -1,0 +1,579 @@
+import { useState, useEffect, useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format, addDays, parseISO, startOfDay, isSameDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { CalendarIcon, AlertCircle, Check, ChevronsUpDown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
+interface BookingFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  condominiums: { id: string; name: string }[];
+}
+
+export default function BookingFormDialog({ open, onOpenChange, condominiums }: BookingFormDialogProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const [selectedCondominium, setSelectedCondominium] = useState<string>("");
+  const [selectedSpace, setSelectedSpace] = useState<string>("");
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [selectedApartment, setSelectedApartment] = useState<string>("");
+  const [selectedResident, setSelectedResident] = useState<string>("");
+  const [bookingDate, setBookingDate] = useState<Date>();
+  const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("22:00");
+  const [guestCount, setGuestCount] = useState<number>(0);
+  const [observations, setObservations] = useState("");
+
+  // Fetch party hall settings for selected condominium
+  const { data: spaces = [] } = useQuery({
+    queryKey: ["party-hall-spaces", selectedCondominium],
+    queryFn: async () => {
+      if (!selectedCondominium) return [];
+      const { data, error } = await supabase
+        .from("party_hall_settings")
+        .select("id, name, check_in_time, check_out_time, max_guests, advance_days_required")
+        .eq("condominium_id", selectedCondominium)
+        .eq("is_active", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedCondominium,
+  });
+
+  // Fetch existing bookings for the selected space to block dates
+  const { data: existingBookings = [] } = useQuery({
+    queryKey: ["space-bookings", selectedSpace],
+    queryFn: async () => {
+      if (!selectedSpace) return [];
+      const { data, error } = await supabase
+        .from("party_hall_bookings")
+        .select("booking_date, status")
+        .eq("party_hall_setting_id", selectedSpace)
+        .in("status", ["pendente", "confirmada", "em_uso"]);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedSpace,
+  });
+
+  // Create a set of blocked dates for quick lookup
+  const blockedDates = useMemo(() => {
+    return existingBookings.map(booking => startOfDay(parseISO(booking.booking_date)));
+  }, [existingBookings]);
+
+  // Check if a date is blocked
+  const isDateBlocked = (date: Date) => {
+    return blockedDates.some(blockedDate => isSameDay(blockedDate, date));
+  };
+
+  // Fetch blocks for selected condominium
+  const { data: blocksRaw = [] } = useQuery({
+    queryKey: ["condominium-blocks", selectedCondominium],
+    queryFn: async () => {
+      if (!selectedCondominium) return [];
+      const { data, error } = await supabase
+        .from("blocks")
+        .select("id, name")
+        .eq("condominium_id", selectedCondominium);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedCondominium,
+  });
+
+  // Sort blocks alphabetically/numerically (natural sort)
+  const blocks = useMemo(() => {
+    return [...blocksRaw].sort((a, b) => 
+      a.name.localeCompare(b.name, "pt-BR", { numeric: true, sensitivity: "base" })
+    );
+  }, [blocksRaw]);
+
+  // Fetch apartments for selected block
+  const { data: apartments = [] } = useQuery({
+    queryKey: ["block-apartments", selectedBlock],
+    queryFn: async () => {
+      if (!selectedBlock) return [];
+      const { data, error } = await supabase
+        .from("apartments")
+        .select("id, number")
+        .eq("block_id", selectedBlock)
+        .order("number");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedBlock,
+  });
+
+  // Fetch residents for selected apartment
+  const { data: residents = [] } = useQuery({
+    queryKey: ["apartment-residents", selectedApartment],
+    queryFn: async () => {
+      if (!selectedApartment) return [];
+      const { data, error } = await supabase
+        .from("residents")
+        .select("id, full_name")
+        .eq("apartment_id", selectedApartment)
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedApartment,
+  });
+
+  // Reset dependent fields when parent changes
+  useEffect(() => {
+    setSelectedBlock("");
+    setSelectedApartment("");
+    setSelectedResident("");
+  }, [selectedCondominium]);
+
+  useEffect(() => {
+    setSelectedApartment("");
+    setSelectedResident("");
+  }, [selectedBlock]);
+
+  // Auto-select resident if apartment has only one resident
+  useEffect(() => {
+    if (residents.length === 1) {
+      setSelectedResident(residents[0].id);
+    } else {
+      setSelectedResident("");
+    }
+  }, [residents]);
+  useEffect(() => {
+    const space = spaces.find(s => s.id === selectedSpace);
+    if (space) {
+      setStartTime(space.check_in_time?.slice(0, 5) || "08:00");
+      setEndTime(space.check_out_time?.slice(0, 5) || "22:00");
+    }
+  }, [selectedSpace, spaces]);
+
+  // Reset booking date when space changes (in case selected date is now blocked)
+  useEffect(() => {
+    if (bookingDate && isDateBlocked(bookingDate)) {
+      setBookingDate(undefined);
+    }
+  }, [selectedSpace, existingBookings]);
+
+  // Create booking mutation
+  const createBookingMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedCondominium || !selectedSpace || !selectedResident || !bookingDate) {
+        throw new Error("Preencha todos os campos obrigatórios");
+      }
+
+      // Validate advance days
+      const selectedSpaceData = spaces.find(s => s.id === selectedSpace);
+      const minDays = selectedSpaceData?.advance_days_required || 1;
+      const minDate = startOfDay(addDays(new Date(), minDays));
+      
+      if (startOfDay(bookingDate) < minDate) {
+        throw new Error(`A reserva deve ser feita com pelo menos ${minDays} dia(s) de antecedência`);
+      }
+
+      // Double-check if date is still available (race condition prevention)
+      const { data: conflictCheck, error: checkError } = await supabase
+        .from("party_hall_bookings")
+        .select("id")
+        .eq("party_hall_setting_id", selectedSpace)
+        .eq("booking_date", format(bookingDate, "yyyy-MM-dd"))
+        .in("status", ["pendente", "confirmada", "em_uso"])
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (conflictCheck) {
+        throw new Error("Esta data já foi reservada. Por favor, escolha outra data.");
+      }
+
+      // Validate guest count
+      if (selectedSpaceData?.max_guests && guestCount > selectedSpaceData.max_guests) {
+        throw new Error(`O número de convidados não pode exceder ${selectedSpaceData.max_guests}`);
+      }
+
+      const { error } = await supabase
+        .from("party_hall_bookings")
+        .insert({
+          condominium_id: selectedCondominium,
+          party_hall_setting_id: selectedSpace,
+          resident_id: selectedResident,
+          booking_date: format(bookingDate, "yyyy-MM-dd"),
+          start_time: startTime,
+          end_time: endTime,
+          guest_count: guestCount || null,
+          observations: observations || null,
+          status: "pendente",
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["party-hall-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["space-bookings"] });
+      onOpenChange(false);
+      resetForm();
+      toast({ title: "Reserva criada com sucesso!" });
+    },
+    onError: (error) => {
+      toast({ title: "Erro ao criar reserva", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const resetForm = () => {
+    setSelectedCondominium("");
+    setSelectedSpace("");
+    setSelectedBlock("");
+    setSelectedApartment("");
+    setSelectedResident("");
+    setBookingDate(undefined);
+    setStartTime("08:00");
+    setEndTime("22:00");
+    setGuestCount(0);
+    setObservations("");
+  };
+
+  const selectedSpaceData = spaces.find(s => s.id === selectedSpace);
+  const minDate = selectedSpaceData 
+    ? addDays(new Date(), selectedSpaceData.advance_days_required || 1)
+    : addDays(new Date(), 1);
+
+  // Check if date should be disabled (before min date OR already booked)
+  const isDateDisabled = (date: Date) => {
+    return date < startOfDay(minDate) || isDateBlocked(date);
+  };
+
+  const guestCountExceedsMax = selectedSpaceData?.max_guests && guestCount > selectedSpaceData.max_guests;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Nova Reserva</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="condominium">Condomínio *</Label>
+            <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o condomínio" />
+              </SelectTrigger>
+              <SelectContent>
+                {condominiums.map((condo) => (
+                  <SelectItem key={condo.id} value={condo.id}>
+                    {condo.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="space">Espaço *</Label>
+            <Select value={selectedSpace} onValueChange={setSelectedSpace} disabled={!selectedCondominium}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o espaço" />
+              </SelectTrigger>
+              <SelectContent>
+                {spaces.map((space) => (
+                  <SelectItem key={space.id} value={space.id}>
+                    {space.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="block">Bloco *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  disabled={!selectedCondominium}
+                  className={cn(
+                    "w-full justify-between",
+                    !selectedBlock && "text-muted-foreground"
+                  )}
+                >
+                  {selectedBlock
+                    ? blocks.find((b) => b.id === selectedBlock)?.name
+                    : "Selecione o bloco"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar bloco..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum bloco encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {blocks.map((block) => (
+                        <CommandItem
+                          key={block.id}
+                          value={block.name}
+                          onSelect={() => {
+                            setSelectedBlock(block.id);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedBlock === block.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {block.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="apartment">Apartamento *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  disabled={!selectedBlock}
+                  className={cn(
+                    "w-full justify-between",
+                    !selectedApartment && "text-muted-foreground"
+                  )}
+                >
+                  {selectedApartment
+                    ? apartments.find((a) => a.id === selectedApartment)?.number
+                    : "Selecione o apartamento"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar apartamento..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum apartamento encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {apartments.map((apartment) => (
+                        <CommandItem
+                          key={apartment.id}
+                          value={apartment.number}
+                          onSelect={() => {
+                            setSelectedApartment(apartment.id);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedApartment === apartment.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {apartment.number}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="resident">Morador *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  disabled={!selectedApartment}
+                  className={cn(
+                    "w-full justify-between",
+                    !selectedResident && "text-muted-foreground"
+                  )}
+                >
+                  {selectedResident
+                    ? residents.find((r) => r.id === selectedResident)?.full_name
+                    : "Selecione o morador"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar morador..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum morador encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {residents.map((resident) => (
+                        <CommandItem
+                          key={resident.id}
+                          value={resident.full_name}
+                          onSelect={() => {
+                            setSelectedResident(resident.id);
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedResident === resident.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {resident.full_name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Data da Reserva *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !bookingDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {bookingDate ? format(bookingDate, "PPP", { locale: ptBR }) : "Selecione a data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={bookingDate}
+                  onSelect={setBookingDate}
+                  disabled={isDateDisabled}
+                  locale={ptBR}
+                  initialFocus
+                  modifiers={{
+                    booked: blockedDates,
+                  }}
+                  modifiersClassNames={{
+                    booked: "line-through text-muted-foreground bg-muted",
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+            <div className="space-y-1">
+              {selectedSpaceData && (
+                <p className="text-xs text-muted-foreground">
+                  Antecedência mínima: {selectedSpaceData.advance_days_required} dia(s)
+                </p>
+              )}
+              {blockedDates.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  <span className="inline-block w-3 h-3 bg-muted rounded mr-1 align-middle" />
+                  Datas riscadas já possuem reserva
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="start_time">Horário Início</Label>
+              <Input
+                id="start_time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="end_time">Horário Fim</Label>
+              <Input
+                id="end_time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="guest_count">Número de Convidados</Label>
+            <Input
+              id="guest_count"
+              type="number"
+              value={guestCount}
+              onChange={(e) => setGuestCount(Number(e.target.value))}
+              placeholder="0"
+            />
+            {selectedSpaceData && (
+              <p className={cn(
+                "text-xs",
+                guestCountExceedsMax ? "text-destructive" : "text-muted-foreground"
+              )}>
+                Capacidade máxima: {selectedSpaceData.max_guests} pessoas
+                {guestCountExceedsMax && " (excedido!)"}
+              </p>
+            )}
+          </div>
+
+          {guestCountExceedsMax && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                O número de convidados excede a capacidade máxima do espaço.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="grid gap-2">
+            <Label htmlFor="observations">Observações</Label>
+            <Textarea
+              id="observations"
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="Informações adicionais sobre a reserva..."
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={() => createBookingMutation.mutate()}
+            disabled={
+              !selectedCondominium || 
+              !selectedSpace || 
+              !selectedResident || 
+              !bookingDate || 
+              guestCountExceedsMax ||
+              createBookingMutation.isPending
+            }
+          >
+            {createBookingMutation.isPending ? "Criando..." : "Criar Reserva"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
