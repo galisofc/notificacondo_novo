@@ -1,4 +1,4 @@
-import { Package, PackageCheck, Clock, Eye, Calendar, MapPin, Info } from "lucide-react";
+import { Package, PackageCheck, Clock, Eye, Calendar, MapPin, Info, ImageOff } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
