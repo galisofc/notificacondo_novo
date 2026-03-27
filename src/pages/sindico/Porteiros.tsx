@@ -37,6 +37,7 @@ interface Porter {
   user_id: string;
   condominium_id: string;
   created_at: string;
+  is_active: boolean;
   profile: {
     full_name: string;
     email: string;
