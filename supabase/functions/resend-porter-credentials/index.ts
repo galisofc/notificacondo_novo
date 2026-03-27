@@ -301,7 +301,6 @@ serve(async (req: Request) => {
       .single();
 
     if (whatsappError || !whatsappConfig) {
-      // Return password if WhatsApp not configured
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -313,8 +312,93 @@ serve(async (req: Request) => {
       );
     }
 
-    // Build WhatsApp message
-    const message = `🔐 *Notifica Condo - Novas Credenciais*
+    // Get app_url from settings
+    const { data: appSettings } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "app_url")
+      .single();
+
+    const appUrl = appSettings?.value || "https://notificacondo.lovable.app";
+
+    // Get WABA template for credentials
+    const { data: wabaTemplate } = await supabase
+      .from("whatsapp_templates")
+      .select("*, waba_template_name, waba_language, params_order")
+      .eq("slug", "resend_porter_credentials")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    // Format phone
+    const cleanPhone = porterProfile.phone.replace(/\D/g, "");
+    const formattedPhone = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
+
+    let whatsappSent = false;
+
+    // Try WABA template first (nova_credencial)
+    if (whatsappConfig.use_waba_templates && wabaTemplate?.waba_template_name) {
+      console.log(`Sending WABA template: ${wabaTemplate.waba_template_name}`);
+      
+      const wabaTemplateUrl = `https://graph.facebook.com/v25.0/${Deno.env.get("META_WHATSAPP_PHONE_ID")}/messages`;
+      
+      const paramsOrder = wabaTemplate.params_order || ["condominio", "nome", "email", "senha", "link"];
+      const values: Record<string, string> = {
+        condominio: condominium.name,
+        nome: porterProfile.full_name,
+        email: porterProfile.email,
+        senha: newPassword,
+        link: appUrl,
+      };
+
+      const wabaPayload = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: formattedPhone,
+        type: "template",
+        template: {
+          name: wabaTemplate.waba_template_name,
+          language: { code: wabaTemplate.waba_language || "pt_BR" },
+          components: [
+            {
+              type: "body",
+              parameters: paramsOrder.map((param: string) => ({
+                type: "text",
+                text: values[param] || "",
+              })),
+            },
+          ],
+        },
+      };
+
+      try {
+        const wabaResponse = await fetch(wabaTemplateUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${Deno.env.get("META_WHATSAPP_ACCESS_TOKEN")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(wabaPayload),
+        });
+
+        if (wabaResponse.ok) {
+          whatsappSent = true;
+          console.log("WhatsApp WABA template sent successfully");
+        } else {
+          const errorText = await wabaResponse.text();
+          console.error("WABA send error:", errorText);
+        }
+      } catch (wabaError) {
+        console.error("WABA request failed:", wabaError);
+      }
+    }
+
+    // Fallback to provider text message if WABA failed
+    if (!whatsappSent) {
+      const provider = whatsappConfig.provider as WhatsAppProvider;
+      const sendMessage = providers[provider];
+
+      if (sendMessage) {
+        const message = `🔐 *Notifica Condo - Novas Credenciais*
 
 Olá, *${porterProfile.full_name}*!
 
@@ -327,34 +411,25 @@ Suas novas credenciais de acesso:
 
 🔒 Recomendamos que você altere sua senha após o primeiro acesso.
 
-Acesse: https://notificacondo.lovable.app`;
+Acesse: ${appUrl}`;
 
-    // Send WhatsApp message
-    const provider = whatsappConfig.provider as WhatsAppProvider;
-    const sendMessage = providers[provider];
+        const config: ProviderSettings = {
+          apiUrl: whatsappConfig.api_url,
+          apiKey: whatsappConfig.api_key,
+          instanceId: whatsappConfig.instance_id,
+        };
 
-    if (!sendMessage) {
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          whatsapp_sent: false, 
-          password: newPassword,
-          message: "Senha resetada. Provedor WhatsApp não suportado."
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+        const result = await sendMessage(porterProfile.phone, message, config);
+        if (result.success) {
+          whatsappSent = true;
+          console.log("WhatsApp text message sent successfully:", result.messageId);
+        } else {
+          console.error("WhatsApp text send failed:", result.error);
+        }
+      }
     }
 
-    const config: ProviderSettings = {
-      apiUrl: whatsappConfig.api_url,
-      apiKey: whatsappConfig.api_key,
-      instanceId: whatsappConfig.instance_id,
-    };
-
-    const result = await sendMessage(porterProfile.phone, message, config);
-
-    if (result.success) {
-      console.log("WhatsApp message sent successfully:", result.messageId);
+    if (whatsappSent) {
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -364,13 +439,12 @@ Acesse: https://notificacondo.lovable.app`;
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {
-      console.error("WhatsApp send failed:", result.error);
       return new Response(
         JSON.stringify({ 
           success: true, 
           whatsapp_sent: false, 
           password: newPassword,
-          message: `Senha resetada. Falha no WhatsApp: ${result.error}`
+          message: "Senha resetada. Não foi possível enviar via WhatsApp."
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
