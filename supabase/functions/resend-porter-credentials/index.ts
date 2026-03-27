@@ -334,66 +334,77 @@ serve(async (req: Request) => {
     const formattedPhone = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
 
     let whatsappSent = false;
+    let whatsappErrorMsg = "";
 
     // Try WABA template first (nova_credencial)
     if (whatsappConfig.use_waba_templates && wabaTemplate?.waba_template_name) {
-      console.log(`Sending WABA template: ${wabaTemplate.waba_template_name}`);
-      
-      const wabaTemplateUrl = `https://graph.facebook.com/v25.0/${Deno.env.get("META_WHATSAPP_PHONE_ID")}/messages`;
-      
-      const paramsOrder = wabaTemplate.params_order || ["condominio", "nome", "email", "senha", "link"];
-      const values: Record<string, string> = {
-        condominio: condominium.name,
-        nome: porterProfile.full_name,
-        email: porterProfile.email,
-        senha: newPassword,
-        link: appUrl,
-      };
+      const metaPhoneId = Deno.env.get("META_WHATSAPP_PHONE_ID");
+      const metaToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN");
 
-      const wabaPayload = {
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: formattedPhone,
-        type: "template",
-        template: {
-          name: wabaTemplate.waba_template_name,
-          language: { code: wabaTemplate.waba_language || "pt_BR" },
-          components: [
-            {
-              type: "body",
-              parameters: paramsOrder.map((param: string) => ({
-                type: "text",
-                text: values[param] || "",
-              })),
-            },
-          ],
-        },
-      };
+      if (!metaPhoneId || !metaToken) {
+        console.error("META_WHATSAPP_PHONE_ID or META_WHATSAPP_ACCESS_TOKEN not configured");
+        whatsappErrorMsg = "Variáveis META_WHATSAPP_PHONE_ID ou META_WHATSAPP_ACCESS_TOKEN não configuradas.";
+      } else {
+        console.log(`Sending WABA template: ${wabaTemplate.waba_template_name} to ${formattedPhone}`);
+        
+        const wabaTemplateUrl = `https://graph.facebook.com/v25.0/${metaPhoneId}/messages`;
+        
+        const paramsOrder = wabaTemplate.params_order || ["condominio", "nome", "email", "senha", "link"];
+        const values: Record<string, string> = {
+          condominio: condominium.name,
+          nome: porterProfile.full_name,
+          email: porterProfile.email,
+          senha: newPassword,
+          link: appUrl,
+        };
 
-      try {
-        const wabaResponse = await fetch(wabaTemplateUrl, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${Deno.env.get("META_WHATSAPP_ACCESS_TOKEN")}`,
-            "Content-Type": "application/json",
+        const wabaPayload = {
+          messaging_product: "whatsapp",
+          recipient_type: "individual",
+          to: formattedPhone,
+          type: "template",
+          template: {
+            name: wabaTemplate.waba_template_name,
+            language: { code: wabaTemplate.waba_language || "pt_BR" },
+            components: [
+              {
+                type: "body",
+                parameters: paramsOrder.map((param: string) => ({
+                  type: "text",
+                  text: values[param] || "",
+                })),
+              },
+            ],
           },
-          body: JSON.stringify(wabaPayload),
-        });
+        };
 
-        if (wabaResponse.ok) {
-          whatsappSent = true;
-          console.log("WhatsApp WABA template sent successfully");
-        } else {
-          const errorText = await wabaResponse.text();
-          console.error("WABA send error:", errorText);
+        try {
+          const wabaResponse = await fetch(wabaTemplateUrl, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${metaToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(wabaPayload),
+          });
+
+          if (wabaResponse.ok) {
+            whatsappSent = true;
+            console.log("WhatsApp WABA template sent successfully");
+          } else {
+            const errorText = await wabaResponse.text();
+            console.error("WABA send error:", errorText);
+            whatsappErrorMsg = `Erro WABA API: ${errorText}`;
+          }
+        } catch (wabaErr: any) {
+          console.error("WABA request failed:", wabaErr);
+          whatsappErrorMsg = `Erro de conexão WABA: ${wabaErr.message}`;
         }
-      } catch (wabaError) {
-        console.error("WABA request failed:", wabaError);
       }
     }
 
-    // Fallback to provider text message if WABA failed
-    if (!whatsappSent) {
+    // Fallback to provider ONLY if WABA is not enabled and provider has valid config
+    if (!whatsappSent && !whatsappConfig.use_waba_templates && whatsappConfig.api_url) {
       const provider = whatsappConfig.provider as WhatsAppProvider;
       const sendMessage = providers[provider];
 
@@ -425,6 +436,7 @@ Acesse: ${appUrl}`;
           console.log("WhatsApp text message sent successfully:", result.messageId);
         } else {
           console.error("WhatsApp text send failed:", result.error);
+          whatsappErrorMsg = result.error || "Falha ao enviar via provedor";
         }
       }
     }
@@ -444,7 +456,7 @@ Acesse: ${appUrl}`;
           success: true, 
           whatsapp_sent: false, 
           password: newPassword,
-          message: "Senha resetada. Não foi possível enviar via WhatsApp."
+          message: `Senha resetada. Falha no WhatsApp: ${whatsappErrorMsg || "Template WABA não encontrado ou configuração incompleta"}`
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
