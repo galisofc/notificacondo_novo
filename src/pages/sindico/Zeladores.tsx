@@ -157,6 +157,29 @@ export default function Zeladores() {
     return matchesCondo && matchesSearch;
   });
 
+  const [togglingActive, setTogglingActive] = useState<string | null>(null);
+
+  const handleToggleActive = async (zelador: Zelador) => {
+    setTogglingActive(zelador.id);
+    const newStatus = !zelador.is_active;
+    
+    const { error } = await supabase
+      .from("user_condominiums")
+      .update({ is_active: newStatus } as any)
+      .eq("id", zelador.id);
+
+    if (error) {
+      toast({ title: "Erro ao alterar status", description: "Tente novamente", variant: "destructive" });
+    } else {
+      setZeladores(prev => prev.map(z => z.id === zelador.id ? { ...z, is_active: newStatus } : z));
+      toast({
+        title: newStatus ? "Zelador ativado" : "Zelador desativado",
+        description: `${zelador.profile?.full_name || "Zelador"} foi ${newStatus ? "ativado" : "desativado"} com sucesso.`,
+      });
+    }
+    setTogglingActive(null);
+  };
+
   // --- Handlers ---
   const handleAddZelador = async () => {
     if (!newZelador.full_name || !newZelador.email || !newZelador.condominium_id) {
