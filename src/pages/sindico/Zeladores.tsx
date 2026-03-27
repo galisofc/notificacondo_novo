@@ -501,6 +501,18 @@ export default function Zeladores() {
                         <TableCell>
                           {format(new Date(zelador.created_at), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Switch
+                              checked={zelador.is_active}
+                              onCheckedChange={() => handleToggleActive(zelador)}
+                              disabled={togglingActive === zelador.id}
+                            />
+                            <span className={cn("text-xs font-medium", zelador.is_active ? "text-primary" : "text-muted-foreground")}>
+                              {zelador.is_active ? "Ativo" : "Inativo"}
+                            </span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="icon" onClick={() => openEditDialog(zelador)} title="Editar dados">
