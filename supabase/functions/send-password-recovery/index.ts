@@ -9,6 +9,7 @@ const corsHeaders = {
 
 const MAX_ATTEMPTS_PER_EMAIL = 3;
 const RATE_LIMIT_WINDOW_MINUTES = 15;
+const PASSWORD_RECOVERY_ALLOWED_ROLES = ["sindico", "porteiro", "zelador", "morador", "super_admin"] as const;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
