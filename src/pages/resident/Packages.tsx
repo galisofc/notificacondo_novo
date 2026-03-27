@@ -1,4 +1,4 @@
-import { Package, PackageCheck, Clock, Eye, Calendar, MapPin, Info } from "lucide-react";
+import { Package, PackageCheck, Clock, Eye, Calendar, MapPin, Info, ImageOff } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PackageCard } from "@/components/packages/PackageCard";
+import { PackageCardImage } from "@/components/packages/PackageCardImage";
 import { PickupCodeDisplay } from "@/components/packages/PickupCodeDisplay";
 import { usePackages, Package as PackageType } from "@/hooks/usePackages";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -220,11 +221,14 @@ export default function ResidentPackages() {
             <div className="space-y-6">
               {/* Package Image */}
               <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
-                <img
-                  src={selectedPackage.photo_url}
-                  alt="Foto da encomenda"
-                  className="w-full h-full object-cover"
-                />
+                {selectedPackage.photo_url ? (
+                  <PackageCardImage src={selectedPackage.photo_url} alt="Foto da encomenda" />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <ImageOff className="w-10 h-10" />
+                    <span className="text-sm">Foto não disponível</span>
+                  </div>
+                )}
                 <Badge
                   variant={selectedPackage.status === "pendente" ? "default" : "secondary"}
                   className="absolute top-3 right-3"
