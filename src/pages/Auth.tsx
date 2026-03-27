@@ -109,6 +109,7 @@ const Auth = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [deactivatedDialogOpen, setDeactivatedDialogOpen] = useState(false);
 
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
