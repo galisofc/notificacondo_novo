@@ -218,6 +218,7 @@ export default function Porteiros() {
           user_id,
           condominium_id,
           created_at,
+          is_active,
           condominium:condominiums(name)
         `)
         .in("condominium_id", condoIds)
