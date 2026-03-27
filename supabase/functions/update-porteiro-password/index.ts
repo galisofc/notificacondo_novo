@@ -164,7 +164,7 @@ serve(async (req) => {
             .eq("key", "app_url")
             .single();
 
-          const appUrl = appSettings?.value || "https://notificacondo.lovable.app";
+          const appUrl = appSettings?.value || "https://notificacondo.com.br";
 
           if (whatsappConfig) {
             // Get template

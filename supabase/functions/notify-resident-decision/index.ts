@@ -104,7 +104,7 @@ serve(async (req) => {
     }
 
     // Build link
-    const appBaseUrl = "https://notificacondo.lovable.app";
+    const appBaseUrl = "https://notificacondo.com.br";
     const link = `${appBaseUrl}/resident/occurrences/${occurrence_id}`;
 
     // Build variables

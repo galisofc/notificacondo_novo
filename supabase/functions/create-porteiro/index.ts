@@ -464,7 +464,7 @@ serve(async (req) => {
 
       if (whatsappConfig) {
         const whatsappProvider = (whatsappConfig.provider || "zpro") as WhatsAppProvider;
-        const appUrl = whatsappConfig.app_url || "https://notificacondo.lovable.app";
+        const appUrl = whatsappConfig.app_url || "https://notificacondo.com.br";
 
         const message = `🏢 *${condo.name}*
 

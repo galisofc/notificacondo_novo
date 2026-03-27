@@ -163,7 +163,7 @@ serve(async (req) => {
       .eq("key", "app_url")
       .maybeSingle();
     
-    const appBaseUrl = (appSettings?.value as string) || "https://notificacondo.lovable.app";
+    const appBaseUrl = (appSettings?.value as string) || "https://notificacondo.com.br";
 
     // Fetch resident and occurrence details
     const { data: resident, error: residentError } = await supabase
