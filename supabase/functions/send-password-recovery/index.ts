@@ -1,14 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isMetaConfigured, getMetaConfig, sendMetaText, formatPhoneForMeta } from "../_shared/meta-whatsapp.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Rate limiting configuration
-const MAX_ATTEMPTS_PER_EMAIL = 3; // Max attempts per email in the time window
-const RATE_LIMIT_WINDOW_MINUTES = 15; // Time window in minutes
+const MAX_ATTEMPTS_PER_EMAIL = 3;
+const RATE_LIMIT_WINDOW_MINUTES = 15;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,6 +22,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Email é obrigatório" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check Meta WhatsApp config
+    if (!isMetaConfigured()) {
+      return new Response(
+        JSON.stringify({ error: "Meta WhatsApp não configurado. Configure META_WHATSAPP_PHONE_ID e META_WHATSAPP_ACCESS_TOKEN." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -52,7 +60,6 @@ serve(async (req) => {
       success: false,
     });
 
-    // Check if rate limited
     if (attemptCount !== null && attemptCount >= MAX_ATTEMPTS_PER_EMAIL) {
       console.log(`Rate limit exceeded for email: ${normalizedEmail}, attempts: ${attemptCount}`);
       return new Response(
@@ -63,7 +70,7 @@ serve(async (req) => {
       );
     }
 
-    // Find sindico profile by email
+    // Find profile by email
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("user_id, full_name, email, phone")
@@ -79,7 +86,6 @@ serve(async (req) => {
     }
 
     if (!profile || !profile.phone) {
-      // Return success even if not found to prevent enumeration attacks
       console.log("Profile not found or no phone for email:", normalizedEmail);
       return new Response(
         JSON.stringify({ success: true, message: "Se o email estiver cadastrado, você receberá a nova senha." }),
@@ -88,19 +94,14 @@ serve(async (req) => {
     }
 
     // Check if user is sindico
-    const { data: userRole, error: roleError } = await supabase
+    const { data: userRole } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", profile.user_id)
       .eq("role", "sindico")
       .maybeSingle();
 
-    if (roleError) {
-      console.error("Error checking role:", roleError);
-    }
-
     if (!userRole) {
-      // Return success to prevent enumeration
       console.log("User is not a sindico:", profile.user_id);
       return new Response(
         JSON.stringify({ success: true, message: "Se o email estiver cadastrado, você receberá a nova senha." }),
@@ -108,34 +109,14 @@ serve(async (req) => {
       );
     }
 
-    // Get WhatsApp config
-    const { data: whatsappConfig, error: configError } = await supabase
-      .from("whatsapp_config")
-      .select("*")
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (configError || !whatsappConfig) {
-      console.error("WhatsApp config not found:", configError);
-      return new Response(
-        JSON.stringify({ error: "Configuração de WhatsApp não encontrada" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Generate temporary password
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let newPassword = '';
+    for (let i = 0; i < 8; i++) {
+      newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    // Generate a random temporary password
-    const generatePassword = () => {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-      let password = '';
-      for (let i = 0; i < 8; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return password;
-    };
-
-    const newPassword = generatePassword();
-
-    // Update user password using Supabase Auth Admin API
+    // Update user password
     const { error: updateError } = await supabase.auth.admin.updateUserById(
       profile.user_id,
       { password: newPassword }
@@ -149,81 +130,27 @@ serve(async (req) => {
       );
     }
 
-    // Format phone number from profile
-    const phoneDigits = profile.phone.replace(/\D/g, '');
-    const formattedPhone = phoneDigits.startsWith('55') ? phoneDigits : `55${phoneDigits}`;
-
-    // Send WhatsApp message with the new password
-    const appUrl = whatsappConfig.app_url || "https://notificacondo.com.br";
+    // Send via Meta WABA Cloud API
+    const formattedPhone = formatPhoneForMeta(profile.phone);
+    const appUrl = "https://notificacondo.com.br";
     const message = `🔐 *NotificaCondo - Nova Senha*\n\nOlá, ${profile.full_name}!\n\nSua nova senha temporária é:\n\n*${newPassword}*\n\n⚠️ Por segurança, altere sua senha após o primeiro acesso.\n\nAcesse: ${appUrl}/auth`;
 
-    const { api_url, api_key, instance_id, provider } = whatsappConfig;
-    const baseUrl = api_url.replace(/\/$/, "");
+    console.log("Sending password recovery via Meta WABA to:", formattedPhone);
 
-    // Apply externalKey fallback logic
-    let externalKey = instance_id || "";
-    if (!externalKey || externalKey === "zpro-embedded") {
-      externalKey = api_key;
-    }
+    const result = await sendMetaText({
+      phone: formattedPhone,
+      message: message,
+    });
 
-    console.log("Sending WhatsApp message to:", formattedPhone);
-    console.log("Using provider:", provider || "zpro");
-
-    let whatsappResponse: Response;
-
-    if (provider === "zpro" || !provider) {
-      // Z-PRO uses /params/ endpoint with query parameters
-      const params = new URLSearchParams({
-        body: message,
-        number: formattedPhone,
-        externalKey: externalKey,
-        bearertoken: api_key,
-        isClosed: "false"
-      });
-
-      const whatsappUrl = `${baseUrl}/params/?${params.toString()}`;
-      console.log("Z-PRO URL:", whatsappUrl.substring(0, 100) + "...");
-
-      whatsappResponse = await fetch(whatsappUrl, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-    } else {
-      // Other providers (fallback)
-      whatsappResponse = await fetch(`${baseUrl}/send-text`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${api_key}`,
-        },
-        body: JSON.stringify({
-          phone: formattedPhone,
-          message: message,
-        }),
-      });
-    }
-
-    const responseText = await whatsappResponse.text();
-    console.log("WhatsApp API response status:", whatsappResponse.status);
-    console.log("WhatsApp API response:", responseText.substring(0, 200));
-
-    let responseData;
-    try {
-      responseData = JSON.parse(responseText);
-    } catch {
-      responseData = { raw: responseText };
-    }
-
-    // For Z-PRO, status 200 means success even without explicit success field
-    if (!whatsappResponse.ok) {
-      console.error("WhatsApp API error:", responseData);
+    if (!result.success) {
+      console.error("Meta WhatsApp error:", result.error, result.debug);
       return new Response(
         JSON.stringify({ error: "Erro ao enviar mensagem via WhatsApp" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Update the attempt as successful
+    // Update attempt as successful
     await supabase
       .from("password_recovery_attempts")
       .update({ success: true })
@@ -231,7 +158,7 @@ serve(async (req) => {
       .order("attempted_at", { ascending: false })
       .limit(1);
 
-    console.log("New password sent successfully to:", formattedPhone);
+    console.log("Password recovery sent successfully to:", formattedPhone);
 
     return new Response(
       JSON.stringify({ success: true, message: "Nova senha enviada com sucesso" }),
