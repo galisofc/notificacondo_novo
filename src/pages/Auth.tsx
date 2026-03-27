@@ -354,7 +354,9 @@ const Auth = () => {
         const { error } = await signIn(formData.email, formData.password);
         
         if (error) {
-          if (error.message.includes("Invalid login credentials")) {
+          if (error.message.includes("desativada")) {
+            setDeactivatedDialogOpen(true);
+          } else if (error.message.includes("Invalid login credentials")) {
             toast({
               title: "Erro de autenticação",
               description: "Email ou senha incorretos.",
