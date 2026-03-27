@@ -928,8 +928,15 @@ function SidebarNavigation() {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const savedState = localStorage.getItem("sidebar-open");
+  const initialOpen = savedState !== null ? savedState === "true" : false;
+
+  const handleOpenChange = (open: boolean) => {
+    localStorage.setItem("sidebar-open", String(open));
+  };
+
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={initialOpen} onOpenChange={handleOpenChange}>
       <div className="min-h-screen flex w-full bg-background">
         <SidebarNavigation />
         <main className="flex-1 flex flex-col min-h-screen overflow-hidden w-full">
