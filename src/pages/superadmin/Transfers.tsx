@@ -1,0 +1,470 @@
+import { useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns";
+import { useDateFormatter } from "@/hooks/useFormattedDate";
+import DashboardLayout from "@/components/layouts/DashboardLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatCPF } from "@/components/ui/masked-input";
+import { cn } from "@/lib/utils";
+import {
+  ArrowRightLeft,
+  Building2,
+  User,
+  Calendar,
+  Search,
+  ArrowRight,
+  CalendarIcon,
+  X,
+  MessageSquare,
+} from "lucide-react";
+import SuperAdminBreadcrumbs from "@/components/superadmin/SuperAdminBreadcrumbs";
+
+interface TransferWithDetails {
+  id: string;
+  condominium_id: string;
+  from_owner_id: string;
+  to_owner_id: string;
+  transferred_by: string;
+  transferred_at: string;
+  notes: string | null;
+  condominium: {
+    name: string;
+  } | null;
+  from_owner: {
+    full_name: string;
+    email: string;
+    cpf: string | null;
+  } | null;
+  to_owner: {
+    full_name: string;
+    email: string;
+    cpf: string | null;
+  } | null;
+  transferred_by_user: {
+    full_name: string;
+    email: string;
+  } | null;
+}
+
+export default function Transfers() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const { date: formatDate, dateTime: formatDateTime, custom: formatCustom } = useDateFormatter();
+
+  const { data: transfers, isLoading } = useQuery({
+    queryKey: ["superadmin-transfers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("condominium_transfers")
+        .select("*")
+        .order("transferred_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch related data for each transfer
+      const transfersWithDetails = await Promise.all(
+        (data || []).map(async (transfer) => {
+          // Get condominium name
+          const { data: condominium } = await supabase
+            .from("condominiums")
+            .select("name")
+            .eq("id", transfer.condominium_id)
+            .single();
+
+          // Get from owner profile
+          const { data: fromOwner } = await supabase
+            .from("profiles")
+            .select("full_name, email, cpf")
+            .eq("user_id", transfer.from_owner_id)
+            .single();
+
+          // Get to owner profile
+          const { data: toOwner } = await supabase
+            .from("profiles")
+            .select("full_name, email, cpf")
+            .eq("user_id", transfer.to_owner_id)
+            .single();
+
+          // Get transferred by profile
+          const { data: transferredBy } = await supabase
+            .from("profiles")
+            .select("full_name, email")
+            .eq("user_id", transfer.transferred_by)
+            .single();
+
+          return {
+            ...transfer,
+            condominium,
+            from_owner: fromOwner,
+            to_owner: toOwner,
+            transferred_by_user: transferredBy,
+          } as TransferWithDetails;
+        })
+      );
+
+      return transfersWithDetails;
+    },
+  });
+
+  const filteredTransfers = transfers?.filter((t) => {
+    // Date filter
+    if (startDate || endDate) {
+      const transferDate = new Date(t.transferred_at);
+      if (startDate && endDate) {
+        if (!isWithinInterval(transferDate, { 
+          start: startOfDay(startDate), 
+          end: endOfDay(endDate) 
+        })) {
+          return false;
+        }
+      } else if (startDate && transferDate < startOfDay(startDate)) {
+        return false;
+      } else if (endDate && transferDate > endOfDay(endDate)) {
+        return false;
+      }
+    }
+
+    // Search filter
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const queryDigits = searchQuery.replace(/\D/g, "");
+    return (
+      t.condominium?.name?.toLowerCase().includes(query) ||
+      t.from_owner?.full_name?.toLowerCase().includes(query) ||
+      t.from_owner?.email?.toLowerCase().includes(query) ||
+      t.to_owner?.full_name?.toLowerCase().includes(query) ||
+      t.to_owner?.email?.toLowerCase().includes(query) ||
+      (t.from_owner?.cpf && t.from_owner.cpf.includes(queryDigits)) ||
+      (t.to_owner?.cpf && t.to_owner.cpf.includes(queryDigits))
+    );
+  });
+
+  const clearDateFilters = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  return (
+    <DashboardLayout>
+      <Helmet>
+        <title>Histórico de Transferências | NotificaCondo</title>
+      </Helmet>
+
+      <div className="space-y-6">
+        <SuperAdminBreadcrumbs items={[{ label: "Transferências" }]} />
+        {/* Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+              <ArrowRightLeft className="h-6 w-6 text-primary" />
+              Histórico de Transferências
+            </h1>
+            <p className="text-muted-foreground">
+              Visualize todas as transferências de propriedade de condomínios
+            </p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="bg-gradient-card border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <ArrowRightLeft className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{transfers?.length || 0}</p>
+                  <p className="text-sm text-muted-foreground">Total de Transferências</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-card border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <Building2 className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">
+                    {new Set(transfers?.map((t) => t.condominium_id)).size || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Condomínios Transferidos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-card border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/10">
+                  <Calendar className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">
+                    {transfers?.[0]
+                      ? formatDate(transfers[0].transferred_at)
+                      : "—"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Última Transferência</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Card */}
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <CardTitle>Transferências Realizadas</CardTitle>
+                <CardDescription>
+                  Histórico completo de transferências de condomínios entre síndicos
+                </CardDescription>
+              </div>
+              <div className="flex flex-col gap-3 w-full md:flex-row md:items-center md:w-auto">
+                {/* Date Range Filter */}
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[140px] justify-start text-left font-normal",
+                          !startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, "dd/MM/yyyy") : "Data início"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={startDate}
+                        onSelect={setStartDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-muted-foreground">até</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-[140px] justify-start text-left font-normal",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, "dd/MM/yyyy") : "Data fim"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={endDate}
+                        onSelect={setEndDate}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {(startDate || endDate) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={clearDateFilters}
+                      className="h-9 w-9"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Search Input */}
+                <div className="relative w-full md:w-80">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome, email, CPF..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : filteredTransfers?.length === 0 ? (
+              <div className="text-center py-12">
+                <ArrowRightLeft className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-lg font-medium">Nenhuma transferência encontrada</h3>
+                <p className="text-muted-foreground">
+                  {searchQuery
+                    ? "Nenhuma transferência corresponde à sua busca."
+                    : "Ainda não há transferências de condomínios registradas."}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Condomínio</TableHead>
+                      <TableHead>De</TableHead>
+                      <TableHead className="text-center w-12"></TableHead>
+                      <TableHead>Para</TableHead>
+                      <TableHead>Realizado por</TableHead>
+                      <TableHead>Observações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTransfers?.map((transfer) => (
+                      <TableRow key={transfer.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">
+                                {formatDate(transfer.transferred_at)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatCustom(transfer.transferred_at, "HH:mm")}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-primary" />
+                            <span className="font-medium">
+                              {transfer.condominium?.name || "—"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">
+                                {transfer.from_owner?.full_name || "—"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {transfer.from_owner?.email}
+                            </p>
+                            {transfer.from_owner?.cpf && (
+                              <p className="text-xs text-muted-foreground font-mono">
+                                CPF: {formatCPF(transfer.from_owner.cpf)}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <div className="p-1.5 rounded-full bg-primary/10">
+                              <ArrowRight className="h-4 w-4 text-primary" />
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-emerald-500" />
+                              <span className="font-medium">
+                                {transfer.to_owner?.full_name || "—"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {transfer.to_owner?.email}
+                            </p>
+                            {transfer.to_owner?.cpf && (
+                              <p className="text-xs text-muted-foreground font-mono">
+                                CPF: {formatCPF(transfer.to_owner.cpf)}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-normal">
+                            {transfer.transferred_by_user?.full_name || "Sistema"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {transfer.notes ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex items-start gap-2 max-w-[200px] cursor-help">
+                                    <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                      {transfer.notes}
+                                    </p>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="left" className="max-w-[300px]">
+                                  <p className="text-sm whitespace-pre-wrap">{transfer.notes}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
