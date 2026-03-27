@@ -106,21 +106,14 @@ export async function getSignedPackagePhotoUrl(
 
       if (error) {
         const message = (error as any)?.message ?? String(error);
-        const shouldFallbackToFunction =
+        const isNotFound =
           typeof message === "string" &&
           (message.toLowerCase().includes("object not found") || message.toLowerCase().includes("not_found"));
 
-        if (shouldFallbackToFunction) {
-          try {
-            const { data: fnData, error: fnError } = await supabase.functions.invoke<SignedUrlFunctionResponse>(
-              "get-package-photo-signed-url",
-              { body: { filePath, expiresIn } }
-            );
-
-            if (!fnError && fnData?.signedUrl) return fnData.signedUrl;
-          } catch (fnInvokeError) {
-            console.warn(`Attempt ${attempt}/${maxRetries} - Function fallback exception:`, fnInvokeError);
-          }
+        // If file genuinely doesn't exist, no point retrying or calling edge function
+        if (isNotFound) {
+          console.warn("Package photo not found in storage:", filePath);
+          return null;
         }
 
         lastError = error as Error;
