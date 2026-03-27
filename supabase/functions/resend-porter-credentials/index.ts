@@ -319,7 +319,7 @@ serve(async (req: Request) => {
       .eq("key", "app_url")
       .single();
 
-    const appUrl = appSettings?.value || "https://notificacondo.lovable.app";
+    const appUrl = appSettings?.value || "https://notificacondo.com.br";
 
     // Get WABA template for credentials
     const { data: wabaTemplate } = await supabase
