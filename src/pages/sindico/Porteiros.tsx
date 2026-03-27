@@ -408,19 +408,25 @@ export default function Porteiros() {
           user_id,
           condominium_id,
           created_at,
+          is_active,
           condominium:condominiums(name)
         `)
         .in("condominium_id", condoIds);
 
-      const userIds = portersData?.map((p) => p.user_id) || [];
+      const refetchRecords = portersData as any[] || [];
+      const userIds = refetchRecords.map((p: any) => p.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, email, phone")
         .in("user_id", userIds);
 
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
-      const portersWithProfiles = (portersData || []).map((p) => ({
-        ...p,
+      const portersWithProfiles: Porter[] = refetchRecords.map((p: any) => ({
+        id: p.id,
+        user_id: p.user_id,
+        condominium_id: p.condominium_id,
+        created_at: p.created_at,
+        is_active: p.is_active ?? true,
         profile: profileMap.get(p.user_id) || null,
         condominium: p.condominium as { name: string } | null,
       }));
