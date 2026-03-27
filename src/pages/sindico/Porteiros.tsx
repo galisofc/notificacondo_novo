@@ -452,6 +452,34 @@ export default function Porteiros() {
     }
   };
 
+  const [togglingActive, setTogglingActive] = useState<string | null>(null);
+
+  const handleToggleActive = async (porter: Porter) => {
+    setTogglingActive(porter.id);
+    const newStatus = !porter.is_active;
+    
+    const { error } = await supabase
+      .from("user_condominiums")
+      .update({ is_active: newStatus } as any)
+      .eq("id", porter.id);
+
+    if (error) {
+      console.error("Error toggling porter status:", error);
+      toast({
+        title: "Erro ao alterar status",
+        description: "Tente novamente",
+        variant: "destructive",
+      });
+    } else {
+      setPorters(prev => prev.map(p => p.id === porter.id ? { ...p, is_active: newStatus } : p));
+      toast({
+        title: newStatus ? "Porteiro ativado" : "Porteiro desativado",
+        description: `${porter.profile?.full_name || "Porteiro"} foi ${newStatus ? "ativado" : "desativado"} com sucesso.`,
+      });
+    }
+    setTogglingActive(null);
+  };
+
   const handleOpenEditDialog = (porter: Porter) => {
     setEditingPorter(porter);
     setEditForm({
