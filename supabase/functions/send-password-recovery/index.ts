@@ -94,16 +94,23 @@ serve(async (req) => {
       );
     }
 
-    // Check if user is sindico
-    const { data: userRole } = await supabase
+    // Check if user has an allowed role for password recovery
+    const { data: userRoles, error: userRolesError } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", profile.user_id)
-      .eq("role", "sindico")
-      .maybeSingle();
+      .in("role", [...PASSWORD_RECOVERY_ALLOWED_ROLES]);
 
-    if (!userRole) {
-      console.log("User is not a sindico:", profile.user_id);
+    if (userRolesError) {
+      console.error("Error checking user roles:", userRolesError);
+      return new Response(
+        JSON.stringify({ error: "Erro ao verificar permissões do usuário" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!userRoles || userRoles.length === 0) {
+      console.log("User has no allowed role for recovery:", profile.user_id);
       return new Response(
         JSON.stringify({ success: true, message: "Se o email estiver cadastrado, você receberá a nova senha." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
