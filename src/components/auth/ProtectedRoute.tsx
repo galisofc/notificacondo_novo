@@ -1,0 +1,67 @@
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole, UserRole } from "@/hooks/useUserRole";
+import { Navigate, useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredRole?: UserRole | UserRole[];
+}
+
+const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+  const { user, loading: authLoading } = useAuth();
+  const { role, loading: roleLoading, isSuperAdmin, isSindico, isResident, isPorteiro, isZelador } = useUserRole();
+  const location = useLocation();
+
+  const loading = authLoading || roleLoading;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (role === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando permissões...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (requiredRole) {
+    const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    const hasRequiredRole = roles.includes(role);
+
+    if (!hasRequiredRole) {
+      if (isSuperAdmin) {
+        return <Navigate to="/superadmin" replace />;
+      } else if (isSindico) {
+        return <Navigate to="/dashboard" replace />;
+      } else if (isPorteiro) {
+        return <Navigate to="/porteiro" replace />;
+      } else if (isZelador) {
+        return <Navigate to="/zelador" replace />;
+      } else if (isResident) {
+        return <Navigate to="/resident" replace />;
+      }
+      return <Navigate to="/auth" replace />;
+    }
+  }
+
+  return <>{children}</>;
+};
+
+export default ProtectedRoute;

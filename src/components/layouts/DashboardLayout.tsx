@@ -1,0 +1,944 @@
+import React, { ReactNode, useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { NavLink } from "@/components/NavLink";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import ApartmentSwitcher from "@/components/resident/ApartmentSwitcher";
+import {
+  Building2,
+  LayoutDashboard,
+  FileText,
+  Users,
+  CreditCard,
+  Settings,
+  LogOut,
+  Shield,
+  MessageCircle,
+  Bell,
+  BarChart3,
+  Home,
+  User,
+  Scale,
+  Receipt,
+  ChevronRight,
+  ChevronDown,
+  Clock,
+  PartyPopper,
+  Mail,
+  Package,
+  PackageCheck,
+  PackagePlus,
+  DoorOpen,
+  Wrench,
+  Wallet,
+  ClipboardList,
+  ClipboardCheck,
+  Cog,
+  AlertTriangle,
+  Megaphone,
+} from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
+import logoImage from "@/assets/logo.webp";
+import logoIcon from "@/assets/logo-icon.png";
+
+interface DashboardLayoutProps {
+  children: ReactNode;
+}
+
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: number;
+}
+
+interface NavGroup {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: NavItem[];
+}
+
+type NavStructure = (NavItem | NavGroup)[];
+
+const isNavGroup = (item: NavItem | NavGroup): item is NavGroup => {
+  return 'items' in item;
+};
+
+const getBaseSuperAdminNavItems = (): NavStructure => [
+  { title: "Início", url: "/superadmin", icon: Home },
+  {
+    title: "Gestão",
+    icon: Users,
+    items: [
+      { title: "Síndicos", url: "/superadmin/sindicos", icon: Users },
+      { title: "Condomínios", url: "/superadmin/condominiums", icon: Building2 },
+      { title: "Transferências", url: "/superadmin/transfers", icon: Scale },
+    ],
+  },
+  { title: "Mensagens", url: "/superadmin/contact-messages", icon: Mail },
+  {
+    title: "Assinaturas",
+    icon: CreditCard,
+    items: [
+      { title: "Assinantes", url: "/superadmin/subscriptions", icon: Users },
+      { title: "Faturas", url: "/superadmin/invoices", icon: Receipt },
+    ],
+  },
+  {
+    title: "WhatsApp",
+    icon: MessageCircle,
+    items: [
+      { title: "Templates", url: "/superadmin/whatsapp", icon: BarChart3 },
+      { title: "BSUIDs", url: "/superadmin/bsuid-migration", icon: Users },
+      { title: "Configurações", url: "/superadmin/whatsapp/config", icon: Cog },
+    ],
+  },
+  {
+    title: "Configurações",
+    icon: Settings,
+    items: [
+      { title: "Geral", url: "/superadmin/settings", icon: Cog },
+      { title: "Tipos de Encomenda", url: "/superadmin/package-types", icon: Package },
+      { title: "Exportar Banco", url: "/superadmin/export-database", icon: Building2 },
+      { title: "Logs", url: "/superadmin/logs", icon: FileText },
+      { title: "Cron Jobs", url: "/superadmin/cron-jobs", icon: Clock },
+    ],
+  },
+];
+
+const residentNavItems: NavStructure = [
+  { title: "Início", url: "/resident", icon: Home },
+  { title: "Minhas Ocorrências", url: "/resident/occurrences", icon: FileText },
+  { title: "Minhas Encomendas", url: "/resident/packages", icon: Package },
+  { title: "Meu Perfil", url: "/resident/profile", icon: User },
+];
+
+const getPorteiroNavItems = (pendingPackages: number, openPorterOccs: number): NavStructure => [
+  { title: "Início", url: "/porteiro", icon: Home },
+  { title: "Condomínio", url: "/porteiro/condominio", icon: Building2 },
+  {
+    title: "Encomendas",
+    icon: Package,
+    items: [
+      { title: "Registrar Encomenda", url: "/porteiro/registrar", icon: PackagePlus },
+      { title: "Retirar Encomenda", url: "/porteiro/encomendas", icon: PackageCheck, badge: pendingPackages },
+      { title: "Histórico", url: "/porteiro/historico", icon: FileText },
+    ],
+  },
+  {
+    title: "Portaria",
+    icon: ClipboardList,
+    items: [
+      { title: "Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
+      { title: "Passagem de Plantão", url: "/porteiro/portaria/plantao", icon: ClipboardCheck },
+    ],
+  },
+  { title: "Configurações", url: "/porteiro/configuracoes", icon: Settings },
+];
+
+const getZeladorNavItems = (): NavStructure => [
+  { title: "Início", url: "/zelador", icon: Home },
+  { title: "Manutenções", url: "/zelador/manutencoes", icon: ClipboardCheck },
+  { title: "Configurações", url: "/zelador/configuracoes", icon: Settings },
+];
+
+function SidebarNavigation() {
+  const { state, isMobile, setOpenMobile } = useSidebar();
+  const collapsed = isMobile ? false : state === "collapsed";
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
+  const { role, residentInfo, profileInfo, loading, porteiroCondominiums } = useUserRole();
+  const { toast } = useToast();
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const prevPendingDefensesRef = useRef<number>(0);
+  const prevUnreadMessagesRef = useRef<number>(0);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Sindico condominium IDs (cached via React Query)
+  const { data: condoIds = [] } = useQuery({
+    queryKey: ["sindico-condo-ids", user?.id],
+    queryFn: async () => {
+      const { data: condos } = await supabase
+        .from("condominiums")
+        .select("id")
+        .eq("owner_id", user!.id);
+      return condos?.map((c) => c.id) || [];
+    },
+    enabled: !!user && role === "sindico",
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Porteiro condominium IDs from context
+  const porteiroCondoIds = porteiroCondominiums.map(c => c.id);
+
+  // Badge: pending defenses for sindico
+  const { data: pendingDefenses = 0 } = useQuery({
+    queryKey: ["badge-pending-defenses", condoIds],
+    queryFn: async () => {
+      if (condoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("occurrences")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", condoIds)
+        .eq("status", "em_defesa");
+      return count || 0;
+    },
+    enabled: !!user && role === "sindico" && condoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
+  // Badge: open occurrences for sindico
+  const { data: openOccurrences = 0 } = useQuery({
+    queryKey: ["badge-open-occurrences", condoIds],
+    queryFn: async () => {
+      if (condoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("occurrences")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", condoIds)
+        .in("status", ["registrada", "notificado"]);
+      return count || 0;
+    },
+    enabled: !!user && role === "sindico" && condoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
+  // Badge: open porter occurrences for sindico
+  const { data: openPorterOccurrences = 0 } = useQuery({
+    queryKey: ["badge-porter-occurrences-sindico", condoIds],
+    queryFn: async () => {
+      if (condoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("porter_occurrences")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", condoIds)
+        .eq("status", "aberta");
+      return count || 0;
+    },
+    enabled: !!user && role === "sindico" && condoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
+  // Badge: pending packages for porteiro
+  const { data: pendingPackages = 0 } = useQuery({
+    queryKey: ["badge-pending-packages", porteiroCondoIds],
+    queryFn: async () => {
+      if (porteiroCondoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("packages")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", porteiroCondoIds)
+        .eq("status", "pendente");
+      return count || 0;
+    },
+    enabled: !!user && role === "porteiro" && porteiroCondoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
+  // Badge: open porter occurrences for porteiro
+  const { data: openPorterOccurrencesPorteiro = 0 } = useQuery({
+    queryKey: ["badge-porter-occurrences-porteiro", porteiroCondoIds],
+    queryFn: async () => {
+      if (porteiroCondoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("porter_occurrences")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", porteiroCondoIds)
+        .eq("status", "aberta");
+      return count || 0;
+    },
+    enabled: !!user && role === "porteiro" && porteiroCondoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
+  // Badge: unread messages for super_admin
+  const { data: unreadMessagesQuery = 0 } = useQuery({
+    queryKey: ["badge-unread-messages"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("contact_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false);
+      return count || 0;
+    },
+    enabled: !!user && role === "super_admin",
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
+  // Sync query result to state for realtime updates
+  useEffect(() => {
+    setUnreadMessages(unreadMessagesQuery);
+  }, [unreadMessagesQuery]);
+
+  // Som para defesas pendentes (tom ascendente - urgência)
+  const playDefenseNotificationSound = useCallback(() => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+      oscillator.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+      oscillator.frequency.setValueAtTime(1320, ctx.currentTime + 0.2);
+      
+      oscillator.type = "sine";
+      
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.4);
+    } catch (error) {
+      console.error("Error playing defense notification sound:", error);
+    }
+  }, []);
+
+  // Som para mensagens de contato (tom duplo suave - atenção gentil)
+  const playMessageNotificationSound = useCallback(() => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
+      
+      const ctx = audioContextRef.current;
+      
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+      osc1.type = "sine";
+      gain1.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.15);
+      
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.18);
+      osc2.type = "sine";
+      gain2.gain.setValueAtTime(0, ctx.currentTime);
+      gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.18);
+      gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc2.start(ctx.currentTime + 0.18);
+      osc2.stop(ctx.currentTime + 0.35);
+    } catch (error) {
+      console.error("Error playing message notification sound:", error);
+    }
+  }, []);
+
+  // Keep ONLY the realtime subscription for contact messages (super_admin) for sound alerts
+  useEffect(() => {
+    if (!user || role !== "super_admin") return;
+
+    const channel = supabase
+      .channel("contact-messages-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "contact_messages",
+        },
+        async (payload) => {
+          const newMessage = payload.new as { name?: string; subject?: string };
+          
+          playMessageNotificationSound();
+          
+          toast({
+            title: "📬 Nova mensagem de contato",
+            description: newMessage.name 
+              ? `${newMessage.name}: ${newMessage.subject || "Sem assunto"}`
+              : "Uma nova mensagem foi recebida",
+            action: (
+              <button
+                onClick={() => navigate("/superadmin/contact-messages")}
+                className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+              >
+                Ver
+              </button>
+            ),
+          });
+
+          const { count } = await supabase
+            .from("contact_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("is_read", false);
+
+          setUnreadMessages(count || 0);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "contact_messages",
+        },
+        async () => {
+          const { count } = await supabase
+            .from("contact_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("is_read", false);
+
+          setUnreadMessages(count || 0);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, role, playMessageNotificationSound, toast, navigate]);
+
+  useEffect(() => {
+    prevPendingDefensesRef.current = pendingDefenses;
+  }, [pendingDefenses]);
+
+  useEffect(() => {
+    prevUnreadMessagesRef.current = unreadMessages;
+  }, [unreadMessages]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const getSuperAdminNavItems = (): NavStructure => {
+    // Deep clone while preserving icon references
+    const items: NavStructure = getBaseSuperAdminNavItems().map(item => {
+      if (isNavGroup(item)) {
+        return {
+          ...item,
+          items: item.items.map(subItem => ({ ...subItem }))
+        };
+      }
+      // Add badge to Mensagens item if there are unread messages
+      if (!isNavGroup(item) && item.url === "/superadmin/contact-messages" && unreadMessages > 0) {
+        return { ...item, badge: unreadMessages };
+      }
+      return { ...item };
+    });
+    
+    return items;
+  };
+
+  const getSindicoNavItems = (): NavStructure => [
+    { title: "Início", url: "/dashboard", icon: Home },
+    {
+      title: "Gestão",
+      icon: Building2,
+      items: [
+        { title: "Condomínios", url: "/condominiums", icon: Building2 },
+        { title: "Assinaturas", url: "/sindico/subscriptions", icon: CreditCard },
+        { title: "Faturas", url: "/sindico/invoices", icon: Receipt },
+      ],
+    },
+    {
+      title: "Serviços",
+      icon: Package,
+      items: [
+        { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
+        { title: "Ocorrências", url: "/occurrences", icon: FileText, badge: openOccurrences },
+        { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
+        { title: "Salão de Festas", url: "/party-hall", icon: PartyPopper },
+      ],
+    },
+    {
+      title: "Portaria",
+      icon: DoorOpen,
+      items: [
+        { title: "Ocorrências Portaria", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
+        { title: "Passagens de Plantão", url: "/sindico/portaria/plantoes", icon: ClipboardCheck },
+        { title: "Checklist Portaria", url: "/sindico/portaria/checklist", icon: Cog },
+        { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },
+      ],
+    },
+    {
+      title: "Manutenção",
+      icon: Wrench,
+      items: [
+        { title: "Dashboard", url: "/sindico/manutencoes", icon: LayoutDashboard },
+        { title: "Categorias", url: "/sindico/manutencoes/categorias", icon: ClipboardList },
+        { title: "Histórico", url: "/sindico/manutencoes/historico", icon: Clock },
+      ],
+    },
+    {
+      title: "Usuários",
+      icon: Users,
+      items: [
+        { title: "Porteiros", url: "/sindico/porteiros", icon: DoorOpen },
+        { title: "Zeladores", url: "/sindico/zeladores", icon: Wrench },
+      ],
+    },
+    
+    { title: "Notificações", url: "/notifications", icon: Bell },
+    { title: "Relatórios", url: "/reports", icon: BarChart3 },
+    { title: "Configurações", url: "/sindico/settings", icon: Settings },
+  ];
+
+  const navItems: NavStructure =
+    role === "super_admin"
+      ? getSuperAdminNavItems()
+      : role === "sindico"
+      ? getSindicoNavItems()
+      : role === "porteiro"
+      ? getPorteiroNavItems(pendingPackages, openPorterOccurrencesPorteiro)
+      : role === "zelador"
+      ? getZeladorNavItems()
+      : residentNavItems;
+
+  const getRoleConfig = () => {
+    switch (role) {
+      case "super_admin":
+        return {
+          title: "NOTIFICACONDO",
+          subtitle: "Super Admin",
+          icon: Shield,
+        };
+      case "sindico":
+        return {
+          title: "NOTIFICACONDO",
+          subtitle: "Gestão Condominial",
+          icon: Building2,
+        };
+      case "porteiro":
+        return {
+          title: "NOTIFICACONDO",
+          subtitle: "Portaria",
+          icon: DoorOpen,
+        };
+      case "zelador":
+        return {
+          title: "NOTIFICACONDO",
+          subtitle: "Manutenção",
+          icon: Wrench,
+        };
+      default:
+        return {
+          title: "NOTIFICACONDO",
+          subtitle: "Área do Morador",
+          icon: Home,
+        };
+    }
+  };
+
+  const config = getRoleConfig();
+  const Icon = config.icon;
+
+  const getUserInitials = () => {
+    if (residentInfo?.full_name) {
+      return residentInfo.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+    }
+    if (profileInfo?.full_name) {
+      return profileInfo.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+    }
+    return user?.email?.slice(0, 2).toUpperCase() || "U";
+  };
+
+  const getUserName = () => {
+    if (residentInfo?.full_name) {
+      return residentInfo.full_name.split(" ")[0].toUpperCase();
+    }
+    if (profileInfo?.full_name) {
+      return profileInfo.full_name.split(" ")[0].toUpperCase();
+    }
+    return user?.email?.split("@")[0]?.toUpperCase() || "USUÁRIO";
+  };
+
+  const getRoleLabel = () => {
+    switch (role) {
+      case "super_admin":
+        return "Administrador";
+      case "sindico":
+        return "Síndico";
+      case "porteiro":
+        return "Porteiro";
+      case "zelador":
+        return "Zelador";
+      default:
+        return "Morador";
+    }
+  };
+
+  return (
+    <Sidebar
+      className={cn(
+        "border-r-0 transition-all duration-300",
+        collapsed ? "w-[70px]" : "w-[260px]"
+      )}
+      collapsible="icon"
+      variant="sidebar"
+    >
+      {/* Header with Logo */}
+      <SidebarHeader className="p-4 pb-6">
+        <div className="flex items-center justify-center w-full">
+          <img 
+            src={collapsed ? logoIcon : logoImage} 
+            alt="NotificaCondo" 
+            className={cn(
+              "object-contain transition-all duration-200",
+              collapsed ? "w-full h-14" : "w-full h-auto max-h-28"
+            )} 
+          />
+        </div>
+      </SidebarHeader>
+
+      {/* Apartment Switcher for Residents */}
+      {role === "morador" && !collapsed && <ApartmentSwitcher />}
+
+      {/* Navigation */}
+      <SidebarContent className="px-3">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {navItems.map((item) => {
+                if (isNavGroup(item)) {
+                  // Check if any child is active
+                  const hasActiveChild = item.items.some(child => location.pathname === child.url);
+                  const groupBadgeCount = item.items.reduce((acc, child) => acc + (child.badge || 0), 0);
+                  
+                  return (
+                    <React.Fragment key={item.title}>
+                      {collapsed ? (
+                        <SidebarMenuItem className="relative group/hover-menu">
+                          <SidebarMenuButton
+                            tooltip={item.title}
+                            className={cn(
+                              "w-full h-11 rounded-full transition-all duration-300 ease-out",
+                              hasActiveChild
+                                ? "bg-primary/10 text-primary"
+                                : "text-muted-foreground hover:text-foreground hover:bg-secondary hover:scale-[1.01]"
+                            )}
+                          >
+                            <div className="flex w-full items-center py-2.5 justify-center px-0 gap-0">
+                              <item.icon className="w-5 h-5 shrink-0 mx-auto" />
+                            </div>
+                          </SidebarMenuButton>
+                          <div className="invisible opacity-0 group-hover/hover-menu:visible group-hover/hover-menu:opacity-100 transition-all duration-200 absolute left-full top-0 ml-2 z-50 min-w-48 rounded-lg border bg-popover p-2 shadow-lg">
+                            <p className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{item.title}</p>
+                            {item.items.map((subItem) => {
+                              const isSubActive = location.pathname === subItem.url;
+                              return (
+                                <NavLink
+                                  key={subItem.title}
+                                  to={subItem.url}
+                                  className={cn(
+                                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                                    isSubActive
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-popover-foreground hover:bg-accent"
+                                  )}
+                                  activeClassName=""
+                                  onClick={() => isMobile && setOpenMobile(false)}
+                                >
+                                  <subItem.icon className="w-4 h-4 shrink-0" />
+                                  <span className="font-medium">{subItem.title}</span>
+                                  {subItem.badge !== undefined && subItem.badge > 0 && (
+                                    <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold ml-auto">
+                                      {subItem.badge > 99 ? "99+" : subItem.badge}
+                                    </span>
+                                  )}
+                                </NavLink>
+                              );
+                            })}
+                          </div>
+                        </SidebarMenuItem>
+                      ) : (
+                        <Collapsible defaultOpen={hasActiveChild} className="group/collapsible">
+                          <SidebarMenuItem>
+                            <CollapsibleTrigger asChild>
+                              <SidebarMenuButton
+                                className={cn(
+                                  "w-full h-11 rounded-full transition-all duration-300 ease-out",
+                                  hasActiveChild
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-secondary hover:scale-[1.01]"
+                                )}
+                              >
+                                <div className="flex w-full items-center py-2.5 gap-3 px-3">
+                                  <item.icon className="w-5 h-5 shrink-0" />
+                                  <span className="font-medium flex-1 text-sm">{item.title}</span>
+                                  {groupBadgeCount > 0 && (
+                                    <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold mr-1">
+                                      {groupBadgeCount > 99 ? "99+" : groupBadgeCount}
+                                    </span>
+                                  )}
+                                  <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                                </div>
+                              </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-1 space-y-1">
+                              {item.items.map((subItem) => {
+                                const isSubActive = location.pathname === subItem.url;
+                                return (
+                                  <SidebarMenuButton
+                                    key={subItem.title}
+                                    asChild
+                                    isActive={isSubActive}
+                                    className={cn(
+                                      "w-full h-10 rounded-full transition-all duration-300 ease-out ml-4",
+                                      isSubActive
+                                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                                    )}
+                                  >
+                                    <NavLink
+                                      to={subItem.url}
+                                      className="flex w-full items-center gap-3 px-3 py-2"
+                                      activeClassName=""
+                                      onClick={() => isMobile && setOpenMobile(false)}
+                                    >
+                                      <subItem.icon className="w-4 h-4 shrink-0" />
+                                      <span className="font-medium flex-1 text-sm">{subItem.title}</span>
+                                      {subItem.badge !== undefined && subItem.badge > 0 && (
+                                        <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                                          {subItem.badge > 99 ? "99+" : subItem.badge}
+                                        </span>
+                                      )}
+                                      {isSubActive && (
+                                        <ChevronRight className="w-4 h-4 text-sidebar-primary" />
+                                      )}
+                                    </NavLink>
+                                  </SidebarMenuButton>
+                                );
+                              })}
+                            </CollapsibleContent>
+                          </SidebarMenuItem>
+                        </Collapsible>
+                      )}
+                    </React.Fragment>
+                  );
+                }
+                
+                // Regular nav item
+                const isActive = location.pathname === item.url;
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={collapsed ? item.title : undefined}
+                      className={cn(
+                        "w-full h-11 rounded-full transition-all duration-300 ease-out",
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-[1.02]"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary hover:scale-[1.01]"
+                      )}
+                    >
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/superadmin" || item.url === "/dashboard" || item.url === "/resident"}
+                        className={cn(
+                          "flex w-full items-center py-2.5",
+                          collapsed
+                            ? "justify-center px-0 gap-0"
+                            : "gap-3 px-3"
+                        )}
+                        activeClassName=""
+                        onClick={() => isMobile && setOpenMobile(false)}
+                      >
+                        <item.icon className={cn("w-5 h-5 shrink-0", collapsed && "mx-auto")} />
+                        {!collapsed && (
+                          <>
+                            <span className="font-medium flex-1 text-sm">{item.title}</span>
+                            {item.badge !== undefined && item.badge > 0 && (
+                              <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                                {item.badge > 99 ? "99+" : item.badge}
+                              </span>
+                            )}
+                            {isActive && (
+                              <ChevronRight className="w-4 h-4 text-sidebar-primary" />
+                            )}
+                          </>
+                        )}
+                        {collapsed && item.badge !== undefined && item.badge > 0 && (
+                          <span className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+                            {item.badge > 9 ? "9+" : item.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      {/* Footer with User Info */}
+      <SidebarFooter className="p-3 mt-auto">
+        <div
+          className={cn(
+            "flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/30",
+            collapsed && "justify-center p-2"
+          )}
+        >
+          <Avatar className="h-10 w-10 shrink-0 border-2 border-sidebar-accent">
+            {profileInfo?.avatar_url && (
+              <AvatarImage 
+                src={profileInfo.avatar_url} 
+                alt={getUserName()}
+                className="object-cover"
+              />
+            )}
+            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm font-bold">
+              <User className="w-5 h-5" />
+            </AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <div className="flex-1 overflow-hidden min-w-0">
+              <p className="text-sm font-bold text-sidebar-foreground truncate">
+                {getUserName()}
+              </p>
+              <p className="text-xs text-sidebar-muted truncate">
+                {getRoleLabel()}
+              </p>
+            </div>
+          )}
+          {!collapsed && (
+            <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => navigate("/notifications")}
+                    className="relative p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {pendingDefenses > 0 && (
+                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold animate-pulse">
+                        {pendingDefenses > 9 ? "9+" : pendingDefenses}
+                      </span>
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>{pendingDefenses > 0 ? `${pendingDefenses} defesa(s) pendente(s)` : "Nenhuma notificação pendente"}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleSignOut}
+                    className="p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Sair da conta</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+        </div>
+        {collapsed && (
+          <div className="flex flex-col items-center gap-2 mt-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => navigate("/notifications")}
+                  className="relative p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+                >
+                  <Bell className="w-4 h-4" />
+                  {pendingDefenses > 0 && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold animate-pulse">
+                      {pendingDefenses > 9 ? "9+" : pendingDefenses}
+                    </span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>{pendingDefenses > 0 ? `${pendingDefenses} defesa(s) pendente(s)` : "Notificações"}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Sair</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  return (
+    <SidebarProvider defaultOpen={false}>
+      <div className="min-h-screen flex w-full bg-background">
+        <SidebarNavigation />
+        <main className="flex-1 flex flex-col min-h-screen overflow-hidden w-full">
+          <header className="sticky top-0 z-40 h-14 border-b border-border bg-card/80 backdrop-blur-lg flex items-center justify-between px-3 md:px-4">
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+            <ThemeToggle />
+          </header>
+          <div className="flex-1 overflow-auto p-3 md:p-6">{children}</div>
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+}
