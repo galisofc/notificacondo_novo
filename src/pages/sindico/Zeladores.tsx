@@ -463,12 +463,10 @@ export default function Zeladores() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>E-mail</TableHead>
-                      <TableHead>Telefone</TableHead>
+                      <TableHead>Contato</TableHead>
                       <TableHead>Condomínio</TableHead>
                       <TableHead>Cadastrado em</TableHead>
                       <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -479,26 +477,26 @@ export default function Zeladores() {
                           {zelador.profile?.full_name || "—"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Mail className="w-3 h-3 text-muted-foreground" />
-                            {zelador.profile?.email || "—"}
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                              {zelador.profile?.email || "—"}
+                            </div>
+                            {zelador.profile?.phone && (
+                              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <Phone className="w-3.5 h-3.5" />
+                                {formatDisplayPhone(zelador.profile.phone)}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          {zelador.profile?.phone ? (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-muted-foreground" />
-                              {formatDisplayPhone(zelador.profile.phone)}
-                            </div>
-                          ) : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="gap-1">
+                          <Badge variant="secondary" className="gap-1">
                             <Building2 className="w-3 h-3" />
                             {zelador.condominium?.name || "—"}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-muted-foreground">
                           {format(new Date(zelador.created_at), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
                         <TableCell className="text-center">
