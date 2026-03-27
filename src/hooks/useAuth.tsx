@@ -82,12 +82,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     
-    return { error: error as Error | null };
+    if (error) return { error: error as Error | null };
+
+    // Check if user is a porter and if they are active
+    const userId = data.user?.id;
+    if (userId) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "porteiro")
+        .maybeSingle();
+
+      if (roles) {
+        // User is a porter - check is_active on their condominium links
+        const { data: condoLinks } = await supabase
+          .from("user_condominiums")
+          .select("id, is_active")
+          .eq("user_id", userId) as any;
+
+        const links = condoLinks as any[] || [];
+        const hasActiveLink = links.some((link: any) => link.is_active !== false);
+
+        if (!hasActiveLink) {
+          // No active links - sign out and return error
+          await supabase.auth.signOut();
+          return { error: new Error("Sua conta está desativada. Entre em contato com o síndico.") };
+        }
+      }
+    }
+
+    return { error: null };
   };
 
   const signOut = async () => {
