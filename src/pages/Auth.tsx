@@ -1513,6 +1513,30 @@ const Auth = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Deactivated Account Dialog */}
+      <Dialog open={deactivatedDialogOpen} onOpenChange={setDeactivatedDialogOpen}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldOff className="w-8 h-8 text-destructive" />
+            </div>
+            <DialogHeader className="space-y-2">
+              <DialogTitle className="text-xl">Conta Desativada</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Sua conta de porteiro foi desativada pelo síndico do condomínio.
+                Entre em contato com o síndico para reativar seu acesso.
+              </DialogDescription>
+            </DialogHeader>
+            <Button
+              onClick={() => setDeactivatedDialogOpen(false)}
+              className="w-full max-w-[200px]"
+            >
+              Entendi
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
