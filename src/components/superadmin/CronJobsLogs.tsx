@@ -1,0 +1,963 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useDateFormatter } from "@/hooks/useFormattedDate";
+import { CronJobsMonitor } from "./CronJobsMonitor";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Clock,
+  Play,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Calendar,
+  Zap,
+  AlertTriangle,
+  Pause,
+  PlayCircle,
+  SkipForward,
+  Eye,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+interface CronJob {
+  jobid: number;
+  schedule: string;
+  command: string;
+  nodename: string;
+  nodeport: number;
+  database: string;
+  username: string;
+  active: boolean;
+  jobname: string;
+}
+
+interface CronJobRun {
+  runid: number;
+  jobid: number;
+  job_pid: number;
+  database: string;
+  username: string;
+  command: string;
+  status: string;
+  return_message: string;
+  start_time: string;
+  end_time: string;
+}
+
+interface EdgeFunctionLog {
+  id: string;
+  function_name: string;
+  trigger_type: string;
+  status: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_ms: number | null;
+  result: any;
+  error_message: string | null;
+}
+
+interface PauseStatus {
+  function_name: string;
+  paused: boolean;
+  paused_at: string | null;
+}
+
+export function CronJobsLogs() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
+  const [isRunDialogOpen, setIsRunDialogOpen] = useState(false);
+  const [selectedLogDetails, setSelectedLogDetails] = useState<EdgeFunctionLog | null>(null);
+  const { dateTime: formatDateTime, custom: formatCustom } = useDateFormatter();
+
+  // Fetch cron jobs
+  const { data: cronJobs, isLoading: isLoadingJobs } = useQuery({
+    queryKey: ["cron-jobs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_cron_jobs" as any);
+      if (error) {
+        console.error("Error fetching cron jobs:", error);
+        return [];
+      }
+      return (data || []) as CronJob[];
+    },
+  });
+
+  // Fetch pause statuses
+  const { data: pauseStatuses, isLoading: isLoadingPauseStatus } = useQuery({
+    queryKey: ["cron-job-pause-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_cron_job_pause_status" as any);
+      if (error) {
+        console.error("Error fetching pause statuses:", error);
+        return [];
+      }
+      return (data || []) as PauseStatus[];
+    },
+  });
+
+  // Fetch cron job runs (last 50 from pg_cron)
+  const { data: cronRuns, isLoading: isLoadingRuns } = useQuery({
+    queryKey: ["cron-job-runs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_cron_job_runs" as any);
+      if (error) {
+        console.error("Error fetching cron job runs:", error);
+        return [];
+      }
+      return (data || []) as CronJobRun[];
+    },
+  });
+
+  // Fetch edge function logs (our custom table - includes manual executions)
+  const { data: edgeFunctionLogs, isLoading: isLoadingEdgeLogs, refetch: refetchEdgeLogs } = useQuery({
+    queryKey: ["edge-function-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("edge_function_logs")
+        .select("*")
+        .order("started_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        console.error("Error fetching edge function logs:", error);
+        return [];
+      }
+      return (data || []) as EdgeFunctionLog[];
+    },
+  });
+
+  // Manual trigger mutation
+  const triggerMutation = useMutation({
+    mutationFn: async (functionName: string) => {
+      const { data, error } = await supabase.functions.invoke(functionName);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Função executada com sucesso!",
+        description: `Resultado: ${JSON.stringify(data?.results || data).substring(0, 100)}...`,
+      });
+      refetchEdgeLogs();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao executar função",
+        description: error.message,
+        variant: "destructive",
+      });
+      refetchEdgeLogs();
+    },
+  });
+
+  // Toggle pause mutation
+  const togglePauseMutation = useMutation({
+    mutationFn: async (functionName: string) => {
+      const { data, error } = await supabase.rpc("toggle_cron_job_pause" as any, { 
+        p_function_name: functionName 
+      });
+      if (error) throw error;
+      return data as boolean;
+    },
+    onSuccess: (isPaused: boolean, functionName: string) => {
+      toast({
+        title: isPaused ? "Job pausado!" : "Job reativado!",
+        description: isPaused 
+          ? `O job "${functionName}" foi pausado e não executará ações até ser reativado.`
+          : `O job "${functionName}" foi reativado e voltará a executar normalmente.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["cron-job-pause-status"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao alterar status do job",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleManualTrigger = (functionName: string) => {
+    setIsRunDialogOpen(false);
+    triggerMutation.mutate(functionName);
+  };
+
+  const handleTogglePause = (functionName: string) => {
+    togglePauseMutation.mutate(functionName);
+  };
+
+  // Get pause status for a function
+  const isPaused = (functionName: string): boolean => {
+    const status = pauseStatuses?.find(s => s.function_name === functionName);
+    return status?.paused || false;
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "succeeded":
+      case "success":
+      case "completed":
+        return (
+          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 gap-1">
+            <CheckCircle2 className="h-3 w-3" />
+            Sucesso
+          </Badge>
+        );
+      case "failed":
+      case "error":
+        return (
+          <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
+            <XCircle className="h-3 w-3" />
+            Falha
+          </Badge>
+        );
+      case "running":
+        return (
+          <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Executando
+          </Badge>
+        );
+      case "skipped":
+        return (
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1">
+            <SkipForward className="h-3 w-3" />
+            Pulado
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="gap-1">
+            {status}
+          </Badge>
+        );
+    }
+  };
+
+  const getTriggerTypeBadge = (triggerType: string) => {
+    if (triggerType === "manual") {
+      return (
+        <Badge variant="outline" className="bg-violet-500/10 text-violet-500 border-violet-500/20 text-xs">
+          Manual
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-xs">
+        Agendado
+      </Badge>
+    );
+  };
+
+  const getJobNameFromCommand = (command: string) => {
+    const match = command.match(/functions\/v1\/([a-zA-Z0-9-]+)/);
+    return match ? match[1] : "Desconhecido";
+  };
+
+  const formatSchedule = (schedule: string) => {
+    const parts = schedule.split(" ");
+    if (parts.length !== 5) return schedule;
+    
+    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+    
+    if (minute === "*" && hour === "*") return "A cada minuto";
+    if (minute === "0" && hour === "*") return "A cada hora";
+    
+    // Weekly schedule (specific day of week)
+    if (minute !== "*" && hour !== "*" && dayOfMonth === "*" && month === "*" && dayOfWeek !== "*") {
+      const utcHour = parseInt(hour, 10);
+      const utcMinute = parseInt(minute, 10);
+      
+      let spHour = utcHour - 3;
+      if (spHour < 0) spHour += 24;
+      
+      const dayNames: Record<string, string> = {
+        "0": "Domingo",
+        "1": "Segunda",
+        "2": "Terça",
+        "3": "Quarta",
+        "4": "Quinta",
+        "5": "Sexta",
+        "6": "Sábado",
+      };
+      
+      const dayName = dayNames[dayOfWeek] || dayOfWeek;
+      return `Semanalmente ${dayName} às ${spHour.toString().padStart(2, "0")}:${utcMinute.toString().padStart(2, "0")} (Brasília)`;
+    }
+    
+    // Daily schedule
+    if (minute !== "*" && hour !== "*" && dayOfMonth === "*" && month === "*" && dayOfWeek === "*") {
+      const utcHour = parseInt(hour, 10);
+      const utcMinute = parseInt(minute, 10);
+      
+      let spHour = utcHour - 3;
+      if (spHour < 0) spHour += 24;
+      
+      return `Diariamente às ${spHour.toString().padStart(2, "0")}:${utcMinute.toString().padStart(2, "0")} (Brasília)`;
+    }
+    
+    return schedule;
+  };
+
+  const availableFunctions = [
+    { name: "notify-trial-ending", label: "Avisar Fim do Trial", description: "Envia notificações para síndicos cujo período de teste expira em 1-2 dias" },
+    { name: "generate-invoices", label: "Gerar Faturas", description: "Gera faturas mensais para assinaturas ativas com período vencido" },
+    { name: "notify-party-hall-reminders", label: "Lembretes Salão de Festas", description: "Envia lembretes de reservas de salão de festas para amanhã" },
+    { name: "start-party-hall-usage", label: "Iniciar Uso Salão", description: "Marca reservas do dia como 'em uso' e envia checklist de entrada" },
+    { name: "finish-party-hall-usage", label: "Finalizar Uso Salão", description: "Marca reservas finalizadas como 'concluídas' e envia checklist de saída" },
+    { name: "cleanup-orphan-package-photos", label: "Limpar Fotos Órfãs", description: "Remove fotos de encomendas excluídas do storage para liberar espaço" },
+  ];
+
+  // Translation map for job names to Portuguese
+  const jobNameTranslations: Record<string, string> = {
+    "notify-trial-ending-daily": "Avisar Fim do Trial (Diário)",
+    "generate-invoices-daily": "Gerar Faturas (Diário)",
+    "notify-party-hall-reminders-daily": "Lembretes Salão de Festas (Diário)",
+    "start-party-hall-usage-daily": "Iniciar Uso Salão (Diário)",
+    "finish-party-hall-usage-daily": "Finalizar Uso Salão (Diário)",
+    "cleanup-orphan-package-photos": "Limpar Fotos Órfãs (Semanal)",
+    "notify-trial-ending": "Avisar Fim do Trial",
+    "generate-invoices": "Gerar Faturas",
+    "notify-party-hall-reminders": "Lembretes Salão de Festas",
+    "start-party-hall-usage": "Iniciar Uso Salão",
+    "finish-party-hall-usage": "Finalizar Uso Salão",
+  };
+
+  const translateJobName = (jobName: string): string => {
+    return jobNameTranslations[jobName] || jobName;
+  };
+
+  const translateFunctionName = (functionName: string): string => {
+    const fn = availableFunctions.find(f => f.name === functionName);
+    return fn?.label || functionName;
+  };
+
+  const refreshAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["cron-jobs"] });
+    queryClient.invalidateQueries({ queryKey: ["cron-job-pause-status"] });
+    queryClient.invalidateQueries({ queryKey: ["cron-job-runs"] });
+    refetchEdgeLogs();
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Real-time Monitoring Panel */}
+      <CronJobsMonitor />
+
+      {/* Quick Actions Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Zap className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base md:text-lg">Execução Manual</CardTitle>
+              <CardDescription className="text-xs md:text-sm">
+                Dispare funções agendadas manualmente
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 md:gap-3">
+            {availableFunctions.map((fn) => (
+              <TooltipProvider key={fn.name}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedJob({ jobname: fn.name } as CronJob);
+                        setIsRunDialogOpen(true);
+                      }}
+                      disabled={triggerMutation.isPending}
+                      className="gap-2 w-full sm:w-auto justify-start sm:justify-center text-sm"
+                      size="sm"
+                    >
+                      {triggerMutation.isPending && triggerMutation.variables === fn.name ? (
+                        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                      ) : (
+                        <Play className="h-4 w-4 shrink-0" />
+                      )}
+                      <span className="truncate">{fn.label}</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[250px]">
+                    <p className="text-xs">{fn.description}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Scheduled Jobs Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Calendar className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <CardTitle className="text-base md:text-lg">Cron Jobs Agendados</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Tarefas agendadas para execução automática
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshAll}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoadingJobs || isLoadingPauseStatus ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : cronJobs && cronJobs.length > 0 ? (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block rounded-md border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">Ação</TableHead>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Agendamento</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cronJobs.map((job) => {
+                      const functionName = getJobNameFromCommand(job.command);
+                      const paused = isPaused(functionName);
+                      const effectivelyActive = job.active && !paused;
+                      
+                      return (
+                        <TableRow key={job.jobid}>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleTogglePause(functionName)}
+                              disabled={togglePauseMutation.isPending}
+                              title={paused ? "Reativar job" : "Pausar job"}
+                            >
+                              {togglePauseMutation.isPending && togglePauseMutation.variables === functionName ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : paused ? (
+                                <PlayCircle className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <Pause className="h-4 w-4 text-amber-500" />
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="font-medium">{translateJobName(job.jobname)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">{formatSchedule(job.schedule)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {translateFunctionName(functionName)}
+                            </code>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  effectivelyActive
+                                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                    : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                }
+                              >
+                                {effectivelyActive ? "Ativo" : "Pausado"}
+                              </Badge>
+                              {paused && (
+                                <Badge variant="outline" className="bg-violet-500/10 text-violet-500 border-violet-500/20 text-xs">
+                                  via painel
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3">
+                {cronJobs.map((job) => {
+                  const functionName = getJobNameFromCommand(job.command);
+                  const paused = isPaused(functionName);
+                  const effectivelyActive = job.active && !paused;
+                  
+                  return (
+                    <div key={job.jobid} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <h4 className="font-medium text-sm truncate">{translateJobName(job.jobname)}</h4>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{formatSchedule(job.schedule)}</span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleTogglePause(functionName)}
+                          disabled={togglePauseMutation.isPending}
+                          className="shrink-0"
+                        >
+                          {togglePauseMutation.isPending && togglePauseMutation.variables === functionName ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : paused ? (
+                            <PlayCircle className="h-5 w-5 text-emerald-500" />
+                          ) : (
+                            <Pause className="h-5 w-5 text-amber-500" />
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <code className="text-xs bg-muted px-2 py-1 rounded truncate max-w-[60%]">
+                          {translateFunctionName(functionName)}
+                        </code>
+                        <div className="flex items-center gap-1.5">
+                          <Badge
+                            variant="outline"
+                            className={
+                              effectivelyActive
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-xs"
+                                : "bg-amber-500/10 text-amber-500 border-amber-500/20 text-xs"
+                            }
+                          >
+                            {effectivelyActive ? "Ativo" : "Pausado"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 mx-auto text-amber-500/50 mb-4" />
+              <p className="text-muted-foreground mb-2">Nenhum cron job encontrado</p>
+              <p className="text-sm text-muted-foreground">
+                Os cron jobs podem estar configurados mas não visíveis via RPC.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Execution History Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-violet-500/10">
+                <Clock className="h-5 w-5 text-violet-500" />
+              </div>
+              <div>
+                <CardTitle className="text-base md:text-lg">Histórico de Execuções</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Últimas 50 execuções (manuais e agendadas)
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshAll}
+              className="gap-2 w-full sm:w-auto"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="mb-4 w-full sm:w-auto grid grid-cols-2 sm:flex">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">Todos</TabsTrigger>
+              <TabsTrigger value="cron" className="text-xs sm:text-sm">Agendados</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              {isLoadingEdgeLogs ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : edgeFunctionLogs && edgeFunctionLogs.length > 0 ? (
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block rounded-md border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Função</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Início</TableHead>
+                          <TableHead>Duração</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Detalhes</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {edgeFunctionLogs.map((log) => (
+                          <TableRow key={log.id}>
+                            <TableCell>
+                              <code className="text-xs bg-muted px-2 py-1 rounded">
+                                {translateFunctionName(log.function_name)}
+                              </code>
+                            </TableCell>
+                            <TableCell>{getTriggerTypeBadge(log.trigger_type)}</TableCell>
+                            <TableCell className="text-sm">
+                              {log.started_at
+                                ? formatCustom(log.started_at, "dd/MM/yyyy HH:mm:ss")
+                                : "—"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {log.duration_ms ? `${log.duration_ms}ms` : "—"}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(log.status)}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setSelectedLogDetails(log)}
+                                title="Ver detalhes"
+                              >
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  <div className="md:hidden space-y-3">
+                    {edgeFunctionLogs.map((log) => (
+                      <div key={log.id} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <code className="text-xs bg-muted px-2 py-1 rounded truncate flex-1">
+                            {translateFunctionName(log.function_name)}
+                          </code>
+                          <div className="flex items-center gap-1">
+                            {getStatusBadge(log.status)}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => setSelectedLogDetails(log)}
+                              title="Ver detalhes"
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>
+                            {log.started_at
+                              ? formatCustom(log.started_at, "dd/MM HH:mm:ss")
+                              : "—"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {getTriggerTypeBadge(log.trigger_type)}
+                            {log.duration_ms && (
+                              <span className="text-muted-foreground">{log.duration_ms}ms</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {log.error_message && (
+                          <p className="text-xs text-destructive bg-destructive/10 p-2 rounded truncate">
+                            {log.error_message}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">Nenhuma execução registrada ainda</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Execute uma função manualmente ou aguarde a próxima execução agendada
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="cron">
+              {isLoadingRuns ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : cronRuns && cronRuns.length > 0 ? (
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block rounded-md border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Função</TableHead>
+                          <TableHead>Início</TableHead>
+                          <TableHead>Fim</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Mensagem</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {cronRuns.map((run) => (
+                          <TableRow key={run.runid}>
+                            <TableCell className="font-mono text-xs">{run.runid}</TableCell>
+                            <TableCell>
+                              <code className="text-xs bg-muted px-2 py-1 rounded">
+                                {translateFunctionName(getJobNameFromCommand(run.command))}
+                              </code>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {run.start_time
+                                ? formatCustom(run.start_time, "dd/MM/yyyy HH:mm:ss")
+                                : "—"}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {run.end_time
+                                ? formatCustom(run.end_time, "dd/MM/yyyy HH:mm:ss")
+                                : "—"}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(run.status)}</TableCell>
+                            <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                              {run.return_message || "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="md:hidden space-y-3">
+                    {cronRuns.map((run) => (
+                      <div key={run.runid} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <code className="text-xs bg-muted px-2 py-1 rounded truncate flex-1">
+                            {translateFunctionName(getJobNameFromCommand(run.command))}
+                          </code>
+                          {getStatusBadge(run.status)}
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="space-y-0.5">
+                            <div>Início: {run.start_time ? formatCustom(run.start_time, "dd/MM HH:mm") : "—"}</div>
+                            <div>Fim: {run.end_time ? formatCustom(run.end_time, "dd/MM HH:mm") : "—"}</div>
+                          </div>
+                          <span className="font-mono text-[10px]">#{run.runid}</span>
+                        </div>
+                        
+                        {run.return_message && (
+                          <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded truncate">
+                            {run.return_message}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">Nenhuma execução do pg_cron registrada</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isRunDialogOpen} onOpenChange={setIsRunDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Executar Função Manualmente</DialogTitle>
+            <DialogDescription>
+              Deseja executar a função <code className="bg-muted px-2 py-1 rounded">{selectedJob ? translateFunctionName(selectedJob.jobname) : ''}</code> agora?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Esta ação irá disparar a função imediatamente, independente do agendamento configurado.
+            </p>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsRunDialogOpen(false)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => selectedJob && handleManualTrigger(selectedJob.jobname)}
+              disabled={triggerMutation.isPending}
+              className="gap-2 w-full sm:w-auto"
+            >
+              {triggerMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              Executar Agora
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Log Details Modal */}
+      <Dialog open={!!selectedLogDetails} onOpenChange={(open) => !open && setSelectedLogDetails(null)}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Detalhes da Execução
+            </DialogTitle>
+            <DialogDescription>
+              {selectedLogDetails && (
+                <span className="flex items-center gap-2">
+                  <code className="bg-muted px-2 py-1 rounded text-xs">
+                    {translateFunctionName(selectedLogDetails.function_name)}
+                  </code>
+                  {getTriggerTypeBadge(selectedLogDetails.trigger_type)}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedLogDetails && (
+            <div className="space-y-4 overflow-y-auto flex-1">
+              {/* Status and Timing */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Status</p>
+                  {getStatusBadge(selectedLogDetails.status)}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Duração</p>
+                  <p className="text-sm font-medium">
+                    {selectedLogDetails.duration_ms ? `${selectedLogDetails.duration_ms}ms` : "—"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Início</p>
+                  <p className="text-sm">
+                    {selectedLogDetails.started_at
+                      ? formatCustom(selectedLogDetails.started_at, "dd/MM/yyyy HH:mm:ss")
+                      : "—"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Fim</p>
+                  <p className="text-sm">
+                    {selectedLogDetails.ended_at
+                      ? formatCustom(selectedLogDetails.ended_at, "dd/MM/yyyy HH:mm:ss")
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {selectedLogDetails.error_message && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Mensagem de Erro</p>
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                    <p className="text-sm text-destructive whitespace-pre-wrap break-words">
+                      {selectedLogDetails.error_message}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Result */}
+              {selectedLogDetails.result && (
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground font-medium">Resultado</p>
+                  <div className="bg-muted rounded-lg p-3 overflow-x-auto">
+                    <pre className="text-xs whitespace-pre-wrap break-words">
+                      {JSON.stringify(selectedLogDetails.result, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSelectedLogDetails(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
