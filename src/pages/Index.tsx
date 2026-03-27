@@ -1,16 +1,42 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Helmet } from "react-helmet-async";
+import Header from "@/components/landing/Header";
+import Hero from "@/components/landing/Hero";
+import Features from "@/components/landing/Features";
+import Workflow from "@/components/landing/Workflow";
+import Testimonials from "@/components/landing/Testimonials";
+import Pricing from "@/components/landing/Pricing";
+import FAQ from "@/components/landing/FAQ";
+import CTA from "@/components/landing/CTA";
+import Footer from "@/components/landing/Footer";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <>
+      <Helmet>
+        <title>NotificaCondo - Sistema de Multas e Notificações para Condomínios</title>
+        <meta 
+          name="description" 
+          content="Plataforma SaaS para gestão de notificações, advertências e multas condominiais com prova jurídica automática, conformidade LGPD e integração WhatsApp." 
+        />
+        <meta name="keywords" content="notificação condomínio, multa condominial, gestão condominial, síndico, LGPD, prova jurídica" />
+        <link rel="canonical" href="https://notificacondo.com.br" />
+      </Helmet>
+      
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main>
+          <Hero />
+          <Features />
+          <Workflow />
+          <Testimonials />
+          <Pricing />
+          <FAQ />
+          <CTA />
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
