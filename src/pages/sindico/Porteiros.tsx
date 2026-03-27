@@ -231,7 +231,8 @@ export default function Porteiros() {
       }
 
       // Fetch profiles for each user
-      const userIds = data?.map((p) => p.user_id) || [];
+      const records = data as any[] || [];
+      const userIds = records.map((p: any) => p.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, email, phone")
@@ -239,8 +240,12 @@ export default function Porteiros() {
 
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
 
-      const portersWithProfiles = (data || []).map((p) => ({
-        ...p,
+      const portersWithProfiles: Porter[] = records.map((p: any) => ({
+        id: p.id,
+        user_id: p.user_id,
+        condominium_id: p.condominium_id,
+        created_at: p.created_at,
+        is_active: p.is_active ?? true,
         profile: profileMap.get(p.user_id) || null,
         condominium: p.condominium as { name: string } | null,
       }));
