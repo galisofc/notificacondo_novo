@@ -117,11 +117,12 @@ export default function Zeladores() {
 
     const { data } = await supabase
       .from("user_condominiums")
-      .select(`id, user_id, condominium_id, created_at, condominium:condominiums(name)`)
+      .select(`id, user_id, condominium_id, created_at, is_active, condominium:condominiums(name)`)
       .in("condominium_id", condoIds)
       .in("user_id", zeladorUserIds);
 
-    const userIds = data?.map((p) => p.user_id) || [];
+    const records = data as any[] || [];
+    const userIds = records.map((p: any) => p.user_id);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, full_name, email, phone")
@@ -130,8 +131,12 @@ export default function Zeladores() {
     const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
 
     setZeladores(
-      (data || []).map((z) => ({
-        ...z,
+      records.map((z: any) => ({
+        id: z.id,
+        user_id: z.user_id,
+        condominium_id: z.condominium_id,
+        created_at: z.created_at,
+        is_active: z.is_active ?? true,
         profile: profileMap.get(z.user_id) || null,
         condominium: z.condominium as { name: string } | null,
       }))
