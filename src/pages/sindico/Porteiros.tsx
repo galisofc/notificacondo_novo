@@ -18,7 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { DoorOpen, Plus, Trash2, Building2, Mail, Phone, Search, UserPlus, MessageCircle, Copy, Check, Key, AlertCircle, UserX, RefreshCw, Loader2, Pencil, ArrowLeft, ShieldCheck, Send, Lock } from "lucide-react";
+import { DoorOpen, Plus, Trash2, Building2, Mail, Phone, Search, UserPlus, MessageCircle, Copy, Check, Key, AlertCircle, UserX, RefreshCw, Loader2, Pencil, ArrowLeft, ShieldCheck, Send, Lock, Power } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
@@ -36,6 +37,7 @@ interface Porter {
   user_id: string;
   condominium_id: string;
   created_at: string;
+  is_active: boolean;
   profile: {
     full_name: string;
     email: string;
@@ -216,6 +218,7 @@ export default function Porteiros() {
           user_id,
           condominium_id,
           created_at,
+          is_active,
           condominium:condominiums(name)
         `)
         .in("condominium_id", condoIds)
@@ -228,7 +231,8 @@ export default function Porteiros() {
       }
 
       // Fetch profiles for each user
-      const userIds = data?.map((p) => p.user_id) || [];
+      const records = data as any[] || [];
+      const userIds = records.map((p: any) => p.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, email, phone")
@@ -236,8 +240,12 @@ export default function Porteiros() {
 
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
 
-      const portersWithProfiles = (data || []).map((p) => ({
-        ...p,
+      const portersWithProfiles: Porter[] = records.map((p: any) => ({
+        id: p.id,
+        user_id: p.user_id,
+        condominium_id: p.condominium_id,
+        created_at: p.created_at,
+        is_active: p.is_active ?? true,
         profile: profileMap.get(p.user_id) || null,
         condominium: p.condominium as { name: string } | null,
       }));
@@ -400,19 +408,25 @@ export default function Porteiros() {
           user_id,
           condominium_id,
           created_at,
+          is_active,
           condominium:condominiums(name)
         `)
         .in("condominium_id", condoIds);
 
-      const userIds = portersData?.map((p) => p.user_id) || [];
+      const refetchRecords = portersData as any[] || [];
+      const userIds = refetchRecords.map((p: any) => p.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name, email, phone")
         .in("user_id", userIds);
 
       const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
-      const portersWithProfiles = (portersData || []).map((p) => ({
-        ...p,
+      const portersWithProfiles: Porter[] = refetchRecords.map((p: any) => ({
+        id: p.id,
+        user_id: p.user_id,
+        condominium_id: p.condominium_id,
+        created_at: p.created_at,
+        is_active: p.is_active ?? true,
         profile: profileMap.get(p.user_id) || null,
         condominium: p.condominium as { name: string } | null,
       }));
@@ -436,6 +450,34 @@ export default function Porteiros() {
       setPasswordCopied(true);
       setTimeout(() => setPasswordCopied(false), 2000);
     }
+  };
+
+  const [togglingActive, setTogglingActive] = useState<string | null>(null);
+
+  const handleToggleActive = async (porter: Porter) => {
+    setTogglingActive(porter.id);
+    const newStatus = !porter.is_active;
+    
+    const { error } = await supabase
+      .from("user_condominiums")
+      .update({ is_active: newStatus } as any)
+      .eq("id", porter.id);
+
+    if (error) {
+      console.error("Error toggling porter status:", error);
+      toast({
+        title: "Erro ao alterar status",
+        description: "Tente novamente",
+        variant: "destructive",
+      });
+    } else {
+      setPorters(prev => prev.map(p => p.id === porter.id ? { ...p, is_active: newStatus } : p));
+      toast({
+        title: newStatus ? "Porteiro ativado" : "Porteiro desativado",
+        description: `${porter.profile?.full_name || "Porteiro"} foi ${newStatus ? "ativado" : "desativado"} com sucesso.`,
+      });
+    }
+    setTogglingActive(null);
   };
 
   const handleOpenEditDialog = (porter: Porter) => {
@@ -1079,19 +1121,32 @@ export default function Porteiros() {
                           </AlertDialog>
                         </div>
                       </div>
-                      <div className="space-y-1.5 text-xs">
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Mail className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{porter.profile?.email || "-"}</span>
-                        </div>
-                        {porter.profile?.phone && (
+                      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                        <div className="space-y-1.5 text-xs flex-1">
                           <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Phone className="w-3 h-3 flex-shrink-0" />
-                            <span>{porter.profile.phone}</span>
+                            <Mail className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{porter.profile?.email || "-"}</span>
                           </div>
-                        )}
-                        <div className="text-[10px] text-muted-foreground pt-1">
-                          Cadastrado em {format(new Date(porter.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          {porter.profile?.phone && (
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Phone className="w-3 h-3 flex-shrink-0" />
+                              <span>{porter.profile.phone}</span>
+                            </div>
+                          )}
+                          <div className="text-[10px] text-muted-foreground pt-1">
+                            Cadastrado em {format(new Date(porter.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 ml-3">
+                          <span className={cn("text-[10px] font-medium", porter.is_active ? "text-primary" : "text-muted-foreground")}>
+                            {porter.is_active ? "Ativo" : "Inativo"}
+                          </span>
+                          <Switch
+                            checked={porter.is_active}
+                            onCheckedChange={() => handleToggleActive(porter)}
+                            disabled={togglingActive === porter.id}
+                            className="scale-75"
+                          />
                         </div>
                       </div>
                     </div>
@@ -1107,6 +1162,7 @@ export default function Porteiros() {
                         <TableHead>Contato</TableHead>
                         <TableHead>Condomínio</TableHead>
                         <TableHead>Cadastrado em</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1140,6 +1196,18 @@ export default function Porteiros() {
                           </TableCell>
                         <TableCell className="text-muted-foreground">
                           {format(new Date(porter.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Switch
+                              checked={porter.is_active}
+                              onCheckedChange={() => handleToggleActive(porter)}
+                              disabled={togglingActive === porter.id}
+                            />
+                            <span className={cn("text-xs font-medium", porter.is_active ? "text-primary" : "text-muted-foreground")}>
+                              {porter.is_active ? "Ativo" : "Inativo"}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
