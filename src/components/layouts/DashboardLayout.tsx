@@ -931,12 +931,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const savedState = localStorage.getItem("sidebar-open");
   const initialOpen = savedState !== null ? savedState === "true" : false;
 
-  const handleOpenChange = (open: boolean) => {
-    localStorage.setItem("sidebar-open", String(open));
+  const [open, setOpen] = useState(initialOpen);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    localStorage.setItem("sidebar-open", String(newOpen));
   };
 
   return (
-    <SidebarProvider defaultOpen={initialOpen} onOpenChange={handleOpenChange}>
+    <SidebarProvider open={open} onOpenChange={handleOpenChange}>
       <div className="min-h-screen flex w-full bg-background">
         <SidebarNavigation />
         <main className="flex-1 flex flex-col min-h-screen overflow-hidden w-full">
