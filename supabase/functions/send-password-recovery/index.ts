@@ -53,13 +53,6 @@ serve(async (req) => {
       console.error("Error checking rate limit:", countError);
     }
 
-    // Log the attempt
-    await supabase.from("password_recovery_attempts").insert({
-      email: normalizedEmail,
-      ip_address: clientIp,
-      success: false,
-    });
-
     if (attemptCount !== null && attemptCount >= MAX_ATTEMPTS_PER_EMAIL) {
       console.log(`Rate limit exceeded for email: ${normalizedEmail}, attempts: ${attemptCount}`);
       return new Response(
@@ -69,6 +62,13 @@ serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Log the attempt only after passing rate limit check
+    await supabase.from("password_recovery_attempts").insert({
+      email: normalizedEmail,
+      ip_address: clientIp,
+      success: false,
+    });
 
     // Find profile by email
     const { data: profile, error: profileError } = await supabase
