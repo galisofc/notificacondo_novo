@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PackageCard } from "@/components/packages/PackageCard";
+import { PackageCardImage } from "@/components/packages/PackageCardImage";
 import { PickupCodeDisplay } from "@/components/packages/PickupCodeDisplay";
 import { usePackages, Package as PackageType } from "@/hooks/usePackages";
 import { useUserRole } from "@/hooks/useUserRole";
