@@ -1197,6 +1197,18 @@ export default function Porteiros() {
                         <TableCell className="text-muted-foreground">
                           {format(new Date(porter.created_at), "dd/MM/yyyy", { locale: ptBR })}
                         </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Switch
+                              checked={porter.is_active}
+                              onCheckedChange={() => handleToggleActive(porter)}
+                              disabled={togglingActive === porter.id}
+                            />
+                            <span className={cn("text-xs font-medium", porter.is_active ? "text-primary" : "text-muted-foreground")}>
+                              {porter.is_active ? "Ativo" : "Inativo"}
+                            </span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <TooltipProvider>
