@@ -668,7 +668,7 @@ function SidebarNavigation() {
                               <item.icon className="w-5 h-5 shrink-0 mx-auto" />
                             </div>
                           </SidebarMenuButton>
-                          <div className="invisible opacity-0 group-hover/hover-menu:visible group-hover/hover-menu:opacity-100 transition-all duration-200 ease-out absolute left-full top-0 ml-3 z-50 min-w-52 rounded-xl border border-border/60 bg-card p-1.5 shadow-elevated backdrop-blur-sm translate-x-1 group-hover/hover-menu:translate-x-0">
+                          <div className="invisible opacity-0 scale-95 origin-left group-hover/hover-menu:visible group-hover/hover-menu:opacity-100 group-hover/hover-menu:scale-100 group-hover/hover-menu:translate-x-0 transition-[opacity,transform,visibility] duration-250 ease-out absolute left-full top-0 ml-3 z-50 min-w-52 rounded-xl border border-border/60 bg-card p-1.5 shadow-elevated backdrop-blur-sm translate-x-2">
                             <p className="px-3 pt-2 pb-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{item.title}</p>
                             <div className="h-px bg-border/50 mx-2 mb-1" />
                             {item.items.map((subItem) => {
