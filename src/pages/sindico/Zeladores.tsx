@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Wrench, Plus, Trash2, Building2, Mail, Phone, Search, Copy, Check, Loader2, Pencil, KeyRound } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,6 +31,7 @@ interface Zelador {
   user_id: string;
   condominium_id: string;
   created_at: string;
+  is_active: boolean;
   profile: {
     full_name: string;
     email: string;
@@ -115,11 +117,12 @@ export default function Zeladores() {
 
     const { data } = await supabase
       .from("user_condominiums")
-      .select(`id, user_id, condominium_id, created_at, condominium:condominiums(name)`)
+      .select(`id, user_id, condominium_id, created_at, is_active, condominium:condominiums(name)`)
       .in("condominium_id", condoIds)
       .in("user_id", zeladorUserIds);
 
-    const userIds = data?.map((p) => p.user_id) || [];
+    const records = data as any[] || [];
+    const userIds = records.map((p: any) => p.user_id);
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, full_name, email, phone")
@@ -128,8 +131,12 @@ export default function Zeladores() {
     const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
 
     setZeladores(
-      (data || []).map((z) => ({
-        ...z,
+      records.map((z: any) => ({
+        id: z.id,
+        user_id: z.user_id,
+        condominium_id: z.condominium_id,
+        created_at: z.created_at,
+        is_active: z.is_active ?? true,
         profile: profileMap.get(z.user_id) || null,
         condominium: z.condominium as { name: string } | null,
       }))
@@ -149,6 +156,29 @@ export default function Zeladores() {
       z.profile?.email.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCondo && matchesSearch;
   });
+
+  const [togglingActive, setTogglingActive] = useState<string | null>(null);
+
+  const handleToggleActive = async (zelador: Zelador) => {
+    setTogglingActive(zelador.id);
+    const newStatus = !zelador.is_active;
+    
+    const { error } = await supabase
+      .from("user_condominiums")
+      .update({ is_active: newStatus } as any)
+      .eq("id", zelador.id);
+
+    if (error) {
+      toast({ title: "Erro ao alterar status", description: "Tente novamente", variant: "destructive" });
+    } else {
+      setZeladores(prev => prev.map(z => z.id === zelador.id ? { ...z, is_active: newStatus } : z));
+      toast({
+        title: newStatus ? "Zelador ativado" : "Zelador desativado",
+        description: `${zelador.profile?.full_name || "Zelador"} foi ${newStatus ? "ativado" : "desativado"} com sucesso.`,
+      });
+    }
+    setTogglingActive(null);
+  };
 
   // --- Handlers ---
   const handleAddZelador = async () => {
@@ -437,6 +467,8 @@ export default function Zeladores() {
                       <TableHead>Telefone</TableHead>
                       <TableHead>Condomínio</TableHead>
                       <TableHead>Cadastrado em</TableHead>
+                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -468,6 +500,18 @@ export default function Zeladores() {
                         </TableCell>
                         <TableCell>
                           {format(new Date(zelador.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Switch
+                              checked={zelador.is_active}
+                              onCheckedChange={() => handleToggleActive(zelador)}
+                              disabled={togglingActive === zelador.id}
+                            />
+                            <span className={cn("text-xs font-medium", zelador.is_active ? "text-primary" : "text-muted-foreground")}>
+                              {zelador.is_active ? "Ativo" : "Inativo"}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
