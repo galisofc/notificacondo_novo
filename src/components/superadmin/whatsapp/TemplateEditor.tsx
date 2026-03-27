@@ -761,7 +761,7 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
                                   newButtons[index] = { ...btn, url_base: e.target.value };
                                   setButtons(newButtons);
                                 }}
-                                placeholder="https://notificacondo.lovable.app/acesso/"
+                                placeholder="https://notificacondo.com.br/acesso/"
                                 className="h-9 text-sm font-mono"
                               />
                             </div>

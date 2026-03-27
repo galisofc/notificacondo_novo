@@ -154,7 +154,7 @@ serve(async (req) => {
     const formattedPhone = phoneDigits.startsWith('55') ? phoneDigits : `55${phoneDigits}`;
 
     // Send WhatsApp message with the new password
-    const appUrl = whatsappConfig.app_url || "https://notificacondo.lovable.app";
+    const appUrl = whatsappConfig.app_url || "https://notificacondo.com.br";
     const message = `🔐 *NotificaCondo - Nova Senha*\n\nOlá, ${profile.full_name}!\n\nSua nova senha temporária é:\n\n*${newPassword}*\n\n⚠️ Por segurança, altere sua senha após o primeiro acesso.\n\nAcesse: ${appUrl}/auth`;
 
     const { api_url, api_key, instance_id, provider } = whatsappConfig;
