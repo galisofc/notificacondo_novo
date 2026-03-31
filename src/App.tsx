@@ -190,6 +190,7 @@ const App = () => (
               <Route path="/superadmin/cron-jobs" element={<ProtectedRoute requiredRole="super_admin"><CronJobs /></ProtectedRoute>} />
               <Route path="/superadmin/whatsapp" element={<ProtectedRoute requiredRole="super_admin"><WhatsApp /></ProtectedRoute>} />
               <Route path="/superadmin/whatsapp/config" element={<ProtectedRoute requiredRole="super_admin"><WhatsAppConfig /></ProtectedRoute>} />
+              <Route path="/superadmin/whatsapp/chat" element={<ProtectedRoute requiredRole="super_admin"><WhatsAppChat /></ProtectedRoute>} />
               <Route path="/superadmin/settings" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminSettings /></ProtectedRoute>} />
               <Route path="/superadmin/contact-messages" element={<ProtectedRoute requiredRole="super_admin"><ContactMessages /></ProtectedRoute>} />
               <Route path="/superadmin/package-types" element={<ProtectedRoute requiredRole="super_admin"><PackageTypes /></ProtectedRoute>} />
