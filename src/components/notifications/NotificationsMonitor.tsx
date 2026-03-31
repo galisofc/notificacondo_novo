@@ -358,15 +358,13 @@ export function NotificationsMonitor() {
     setCurrentPage(1);
   }, [searchQuery, moduleFilter]);
 
-  const periodLabel = subscriptionPeriod?.current_period_start && subscriptionPeriod?.current_period_end
-    ? `${formatCustom(subscriptionPeriod.current_period_start, "dd/MM/yyyy")} - ${formatCustom(subscriptionPeriod.current_period_end, "dd/MM/yyyy")}`
-    : "Período atual";
+  const periodLabel = `${formatCustom(monthStart, "dd/MM/yyyy")} - ${formatCustom(monthEnd, "dd/MM/yyyy")}`;
 
   return (
     <div ref={containerRef} className="space-y-6 overflow-auto">
       <PullIndicator />
 
-      {/* Período da Assinatura */}
+      {/* Período do Mês Corrente */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
@@ -374,7 +372,7 @@ export function NotificationsMonitor() {
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Período da Assinatura</p>
+              <p className="text-sm font-medium text-foreground">Mês Corrente</p>
               <p className="text-xs text-muted-foreground">{periodLabel}</p>
             </div>
           </div>
