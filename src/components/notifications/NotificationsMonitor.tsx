@@ -167,6 +167,7 @@ export function NotificationsMonitor() {
   const [moduleFilter, setModuleFilter] = useState<ModuleFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const { date: formatDate, custom: formatCustom } = useDateFormatter();
 
   const { containerRef, PullIndicator } = usePullToRefresh({
@@ -178,10 +179,14 @@ export function NotificationsMonitor() {
     isEnabled: isMobile,
   });
 
-  // Período = mês corrente (sem limite de assinatura)
-  const now = new Date();
-  const monthStart = startOfMonth(now).toISOString();
-  const monthEnd = endOfMonth(now).toISOString();
+  const isCurrentMonth = isSameMonth(selectedMonth, new Date());
+  const monthStart = startOfMonth(selectedMonth).toISOString();
+  const monthEnd = endOfMonth(selectedMonth).toISOString();
+
+  const handlePrevMonth = () => setSelectedMonth(prev => subMonths(prev, 1));
+  const handleNextMonth = () => {
+    if (!isCurrentMonth) setSelectedMonth(prev => addMonths(prev, 1));
+  };
 
   // Buscar assinatura apenas para dados de extras
   const { data: subscriptionPeriod } = useQuery({
