@@ -362,7 +362,7 @@ export function NotificationsMonitor() {
   // Reset para página 1 quando filtros mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, moduleFilter]);
+  }, [searchQuery, moduleFilter, selectedMonth]);
 
   const periodLabel = `${formatCustom(monthStart, "dd/MM/yyyy")} - ${formatCustom(monthEnd, "dd/MM/yyyy")}`;
   const monthLabel = format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR });
