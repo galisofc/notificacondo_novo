@@ -49,15 +49,27 @@ function MessageContent({ msg }: { msg: WhatsAppMessage }) {
     if (!msg.media_id || mediaUrl || loadingMedia) return;
     setLoadingMedia(true);
     try {
-      const { data, error } = await supabase.functions.invoke("get-whatsapp-media", {
-        body: { media_id: msg.media_id },
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("No session");
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/get-whatsapp-media`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ media_id: msg.media_id }),
       });
-      if (error) throw error;
-      // The response is binary, we need to create a blob URL
-      // Since invoke returns parsed JSON for JSON responses, we handle both cases
-      if (data instanceof Blob) {
-        setMediaUrl(URL.createObjectURL(data));
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText);
       }
+
+      const blob = await response.blob();
+      setMediaUrl(URL.createObjectURL(blob));
     } catch (err) {
       console.error("Error loading media:", err);
     } finally {
