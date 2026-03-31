@@ -255,21 +255,9 @@ export function NotificationsMonitor() {
 
   // Estatísticas por módulo
   const { data: stats } = useQuery({
-    queryKey: ["waba-stats", subscriptionPeriod?.current_period_start, subscriptionPeriod?.current_period_end],
+    queryKey: ["waba-stats", monthStart, monthEnd],
     queryFn: async () => {
-      let query = supabase
-        .from("whatsapp_notification_logs")
-        .select("function_name, success");
-
-      if (subscriptionPeriod?.current_period_start) {
-        query = query.gte("created_at", subscriptionPeriod.current_period_start);
-      }
-      if (subscriptionPeriod?.current_period_end) {
-        query = query.lte("created_at", subscriptionPeriod.current_period_end);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
+      const data = await fetchAllLogs("function_name, success", monthStart, monthEnd);
 
       const counts = {
         total: 0,
@@ -281,7 +269,7 @@ export function NotificationsMonitor() {
         other: { total: 0, success: 0, failed: 0 },
       };
 
-      (data || []).forEach((log) => {
+      (data || []).forEach((log: any) => {
         counts.total++;
         if (log.success) counts.success++;
         else counts.failed++;
