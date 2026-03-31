@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { formatPhone } from "@/components/ui/masked-input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, eachDayOfInterval, startOfDay } from "date-fns";
+import { format, eachDayOfInterval, startOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
