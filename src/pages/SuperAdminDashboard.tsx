@@ -326,6 +326,13 @@ export default function SuperAdminDashboard() {
       url: "/superadmin/settings",
       color: "bg-slate-500/10 text-slate-600",
     },
+    {
+      title: "Chat WhatsApp",
+      description: "Ver e responder mensagens recebidas",
+      icon: MessageSquare,
+      url: "/superadmin/whatsapp/chat",
+      color: "bg-emerald-500/10 text-emerald-600",
+    },
   ];
 
   return (
