@@ -328,6 +328,8 @@ Deno.serve(async (req) => {
               condominium_id: condominiumId,
               conversation_window_expires_at: windowExpires,
               resident_name: contactName || null,
+              media_id: mediaId,
+              media_mime_type: mediaMimeType,
             });
 
             console.log(`[WEBHOOK] Incoming message saved: ${msg.type} from ${cleanMsgPhone}`);
