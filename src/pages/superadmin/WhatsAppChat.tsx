@@ -97,7 +97,7 @@ export default function WhatsAppChat() {
   // Load messages for selected conversation
   const loadMessages = useCallback(async (phone: string) => {
     setLoadingMessages(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("whatsapp_messages")
       .select("*")
       .or(`from_phone.eq.${phone},to_phone.eq.${phone}`)
