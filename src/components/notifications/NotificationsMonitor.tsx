@@ -177,14 +177,18 @@ export function NotificationsMonitor() {
     isEnabled: isMobile,
   });
 
-  // Buscar período da assinatura
+  // Período = mês corrente (sem limite de assinatura)
+  const now = new Date();
+  const monthStart = startOfMonth(now).toISOString();
+  const monthEnd = endOfMonth(now).toISOString();
+
+  // Buscar assinatura apenas para dados de extras
   const { data: subscriptionPeriod } = useQuery({
     queryKey: ["subscription-period"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Buscar condomínios do usuário
       const { data: condos } = await supabase
         .from("condominiums")
         .select("id")
@@ -192,7 +196,6 @@ export function NotificationsMonitor() {
 
       if (!condos || condos.length === 0) return null;
 
-      // Buscar assinatura ativa
       const { data: subscription } = await supabase
         .from("subscriptions")
         .select("current_period_start, current_period_end, package_notifications_limit, package_notifications_used, package_notifications_extra")
@@ -204,28 +207,40 @@ export function NotificationsMonitor() {
     },
   });
 
-  // Buscar todas as notificações WABA no período
-  const { data: wabaLogs, isLoading } = useQuery({
-    queryKey: ["waba-notifications", subscriptionPeriod?.current_period_start, subscriptionPeriod?.current_period_end, moduleFilter],
-    queryFn: async () => {
-      let query = supabase
+  // Helper para buscar todos os registros paginando (sem limite de 1000)
+  async function fetchAllLogs(select: string, from: string, to: string) {
+    const PAGE = 1000;
+    let allData: any[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
         .from("whatsapp_notification_logs")
-        .select("id, created_at, function_name, phone, template_name, success, error_message, message_id")
+        .select(select)
+        .gte("created_at", from)
+        .lte("created_at", to)
         .order("created_at", { ascending: false })
-        .limit(500);
+        .range(offset, offset + PAGE - 1);
 
-      // Filtrar pelo período da assinatura se disponível
-      if (subscriptionPeriod?.current_period_start) {
-        query = query.gte("created_at", subscriptionPeriod.current_period_start);
-      }
-      if (subscriptionPeriod?.current_period_end) {
-        query = query.lte("created_at", subscriptionPeriod.current_period_end);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
+      allData = allData.concat(data || []);
+      hasMore = (data?.length || 0) === PAGE;
+      offset += PAGE;
+    }
+    return allData;
+  }
 
-      // Filtrar por módulo se necessário
+  // Buscar todas as notificações WABA no mês corrente
+  const { data: wabaLogs, isLoading } = useQuery({
+    queryKey: ["waba-notifications", monthStart, monthEnd, moduleFilter],
+    queryFn: async () => {
+      const data = await fetchAllLogs(
+        "id, created_at, function_name, phone, template_name, success, error_message, message_id",
+        monthStart,
+        monthEnd
+      );
+
       if (moduleFilter !== "all") {
         return (data as WabaLog[]).filter(log => {
           const info = getModuleInfo(log.function_name);
