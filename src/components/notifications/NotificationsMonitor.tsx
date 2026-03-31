@@ -292,23 +292,12 @@ export function NotificationsMonitor() {
 
   // Dados do gráfico por dia
   const { data: chartData } = useQuery({
-    queryKey: ["waba-chart", subscriptionPeriod?.current_period_start, subscriptionPeriod?.current_period_end],
+    queryKey: ["waba-chart", monthStart, monthEnd],
     queryFn: async () => {
-      if (!subscriptionPeriod?.current_period_start || !subscriptionPeriod?.current_period_end) {
-        return [];
-      }
+      const data = await fetchAllLogs("created_at, function_name, success", monthStart, monthEnd);
 
-      const { data, error } = await supabase
-        .from("whatsapp_notification_logs")
-        .select("created_at, function_name, success")
-        .gte("created_at", subscriptionPeriod.current_period_start)
-        .lte("created_at", subscriptionPeriod.current_period_end)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      const startDate = startOfDay(new Date(subscriptionPeriod.current_period_start));
-      const endDate = startOfDay(new Date(subscriptionPeriod.current_period_end));
+      const startDate = startOfDay(new Date(monthStart));
+      const endDate = startOfDay(new Date(monthEnd));
       const allDays = eachDayOfInterval({ start: startDate, end: endDate > new Date() ? new Date() : endDate });
 
       const dayMap = new Map<string, { packages: number; occurrences: number; party_hall: number; other: number }>();
@@ -318,7 +307,7 @@ export function NotificationsMonitor() {
         dayMap.set(key, { packages: 0, occurrences: 0, party_hall: 0, other: 0 });
       });
 
-      (data || []).forEach((log) => {
+      (data || []).forEach((log: any) => {
         const key = format(new Date(log.created_at), "yyyy-MM-dd");
         const dayData = dayMap.get(key);
         if (dayData && log.success) {
@@ -336,7 +325,7 @@ export function NotificationsMonitor() {
         ...counts,
       }));
     },
-    enabled: !!subscriptionPeriod?.current_period_start,
+    enabled: true,
   });
 
   // Dados do gráfico de pizza
