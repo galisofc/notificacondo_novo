@@ -8,7 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, MessageSquare, Clock, User, AlertCircle, Image, FileText, Mic, Play } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Loader2, Send, MessageSquare, Clock, User, AlertCircle, Image, FileText, Mic, Play, Trash2 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -357,6 +368,29 @@ export default function WhatsAppChat() {
     return phone;
   };
 
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteConversation = async () => {
+    if (!selectedPhone || deleting) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-whatsapp-conversation", {
+        body: { phone: selectedPhone },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Conversa excluída", description: "Todas as mensagens foram removidas." });
+      setSelectedPhone(null);
+      setMessages([]);
+      await loadConversations();
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const selectedConvo = conversations.find(c => c.phone === selectedPhone);
 
   return (
@@ -480,6 +514,34 @@ export default function WhatsAppChat() {
                         Janela fechada
                       </Badge>
                     )}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir conversa</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir toda a conversa com{" "}
+                            <strong>{selectedConvo?.residentName || formatPhone(selectedPhone)}</strong>?
+                            Todas as mensagens serão removidas permanentemente do banco de dados.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteConversation}
+                            disabled={deleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Trash2 className="w-4 h-4 mr-1" />}
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
 
