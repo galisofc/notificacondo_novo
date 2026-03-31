@@ -298,7 +298,7 @@ export default function WhatsAppChat() {
                   </div>
                   <div className="flex items-center gap-2">
                     {selectedConvo?.windowOpen ? (
-                      <Badge variant="outline" className="text-xs text-green-600 border-green-300">
+                      <Badge variant="outline" className="text-xs text-primary border-primary/30">
                         <Clock className="w-3 h-3 mr-1" />
                         Janela aberta
                       </Badge>
