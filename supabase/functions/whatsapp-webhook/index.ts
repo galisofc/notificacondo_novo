@@ -244,6 +244,45 @@ Deno.serve(async (req) => {
             }
           }
         }
+
+        // Also capture BSUID from incoming messages (contacts + messages arrays)
+        const incomingMessages = change.value.messages || [];
+        for (const msg of incomingMessages) {
+          const msgBsuid = msg.user_id || contactBsuid;
+          const msgPhone = msg.from || contactWaId;
+
+          if (msgBsuid && msgPhone) {
+            const cleanPhone = msgPhone.replace(/\D/g, "");
+            const phoneVariants = [cleanPhone];
+            if (cleanPhone.startsWith("55")) {
+              phoneVariants.push(cleanPhone.substring(2));
+            }
+
+            for (const phoneVar of phoneVariants) {
+              const { data: residents, error: findError } = await supabase
+                .from("residents")
+                .select("id, bsuid")
+                .or(`phone.like.%${phoneVar}`)
+                .is("bsuid", null)
+                .limit(5);
+
+              if (!findError && residents && residents.length > 0) {
+                for (const resident of residents) {
+                  const { error: updateError } = await supabase
+                    .from("residents")
+                    .update({ bsuid: msgBsuid })
+                    .eq("id", resident.id);
+
+                  if (!updateError) {
+                    totalBsuidsCapured++;
+                    console.log(`[WEBHOOK] BSUID captured from incoming msg for resident ${resident.id}: ${msgBsuid}`);
+                  }
+                }
+                break;
+              }
+            }
+          }
+        }
       }
     }
 
