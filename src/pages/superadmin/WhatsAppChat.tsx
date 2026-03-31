@@ -54,7 +54,7 @@ export default function WhatsAppChat() {
 
   // Load conversations
   const loadConversations = useCallback(async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("whatsapp_messages")
       .select("*")
       .order("created_at", { ascending: false });
