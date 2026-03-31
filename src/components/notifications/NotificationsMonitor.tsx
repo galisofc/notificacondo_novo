@@ -371,17 +371,31 @@ export function NotificationsMonitor() {
     <div ref={containerRef} className="space-y-6 overflow-auto">
       <PullIndicator />
 
-      {/* Período do Mês Corrente */}
+      {/* Seletor de Mês */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Calendar className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground capitalize">{monthLabel}</p>
+                <p className="text-xs text-muted-foreground">{periodLabel}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">Mês Corrente</p>
-              <p className="text-xs text-muted-foreground">{periodLabel}</p>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleNextMonth} 
+              disabled={isCurrentMonth}
+              className="h-8 w-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
