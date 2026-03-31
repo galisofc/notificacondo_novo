@@ -368,6 +368,29 @@ export default function WhatsAppChat() {
     return phone;
   };
 
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteConversation = async () => {
+    if (!selectedPhone || deleting) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-whatsapp-conversation", {
+        body: { phone: selectedPhone },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Conversa excluída", description: "Todas as mensagens foram removidas." });
+      setSelectedPhone(null);
+      setMessages([]);
+      await loadConversations();
+    } catch (err: any) {
+      toast({ title: "Erro ao excluir", description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const selectedConvo = conversations.find(c => c.phone === selectedPhone);
 
   return (
