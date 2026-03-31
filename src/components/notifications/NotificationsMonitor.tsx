@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { formatPhone } from "@/components/ui/masked-input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, eachDayOfInterval, startOfDay, startOfMonth, endOfMonth } from "date-fns";
+import { format, eachDayOfInterval, startOfDay, startOfMonth, endOfMonth, subMonths, addMonths, isSameMonth } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -166,6 +167,7 @@ export function NotificationsMonitor() {
   const [moduleFilter, setModuleFilter] = useState<ModuleFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const { date: formatDate, custom: formatCustom } = useDateFormatter();
 
   const { containerRef, PullIndicator } = usePullToRefresh({
@@ -177,10 +179,14 @@ export function NotificationsMonitor() {
     isEnabled: isMobile,
   });
 
-  // Período = mês corrente (sem limite de assinatura)
-  const now = new Date();
-  const monthStart = startOfMonth(now).toISOString();
-  const monthEnd = endOfMonth(now).toISOString();
+  const isCurrentMonth = isSameMonth(selectedMonth, new Date());
+  const monthStart = startOfMonth(selectedMonth).toISOString();
+  const monthEnd = endOfMonth(selectedMonth).toISOString();
+
+  const handlePrevMonth = () => setSelectedMonth(prev => subMonths(prev, 1));
+  const handleNextMonth = () => {
+    if (!isCurrentMonth) setSelectedMonth(prev => addMonths(prev, 1));
+  };
 
   // Buscar assinatura apenas para dados de extras
   const { data: subscriptionPeriod } = useQuery({
@@ -356,25 +362,40 @@ export function NotificationsMonitor() {
   // Reset para página 1 quando filtros mudam
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, moduleFilter]);
+  }, [searchQuery, moduleFilter, selectedMonth]);
 
   const periodLabel = `${formatCustom(monthStart, "dd/MM/yyyy")} - ${formatCustom(monthEnd, "dd/MM/yyyy")}`;
+  const monthLabel = format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR });
 
   return (
     <div ref={containerRef} className="space-y-6 overflow-auto">
       <PullIndicator />
 
-      {/* Período do Mês Corrente */}
+      {/* Seletor de Mês */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Calendar className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground capitalize">{monthLabel}</p>
+                <p className="text-xs text-muted-foreground">{periodLabel}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">Mês Corrente</p>
-              <p className="text-xs text-muted-foreground">{periodLabel}</p>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleNextMonth} 
+              disabled={isCurrentMonth}
+              className="h-8 w-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>
