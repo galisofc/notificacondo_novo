@@ -27,6 +27,9 @@ interface WhatsAppMessage {
   resident_id: string | null;
   resident_name: string | null;
   conversation_window_expires_at: string | null;
+  media_id: string | null;
+  media_mime_type: string | null;
+  media_url: string | null;
 }
 
 interface Conversation {
