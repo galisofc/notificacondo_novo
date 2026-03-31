@@ -245,12 +245,59 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Also capture BSUID from incoming messages (contacts + messages arrays)
+        // Also capture BSUID from incoming messages and save to whatsapp_messages
         const incomingMessages = change.value.messages || [];
         for (const msg of incomingMessages) {
           const msgBsuid = msg.user_id || contactBsuid;
           const msgPhone = msg.from || contactWaId;
+          const contactName = contacts.length > 0 ? contacts[0].profile?.name : null;
 
+          // Save incoming message to whatsapp_messages table
+          if (msgPhone) {
+            const cleanMsgPhone = msgPhone.replace(/\D/g, "");
+            const messageContent = (msg as any).text?.body || (msg as any).caption || `[${msg.type}]`;
+            const windowExpires = new Date(parseInt(msg.timestamp) * 1000 + 24 * 60 * 60 * 1000).toISOString();
+
+            // Try to find resident by phone
+            let residentId: string | null = null;
+            let condominiumId: string | null = null;
+            const phoneVariantsMsg = [cleanMsgPhone];
+            if (cleanMsgPhone.startsWith("55")) {
+              phoneVariantsMsg.push(cleanMsgPhone.substring(2));
+            }
+            for (const pv of phoneVariantsMsg) {
+              const { data: res } = await supabase
+                .from("residents")
+                .select("id, condominium_id")
+                .or(`phone.like.%${pv}`)
+                .limit(1)
+                .single();
+              if (res) {
+                residentId = res.id;
+                condominiumId = res.condominium_id;
+                break;
+              }
+            }
+
+            await supabase.from("whatsapp_messages").insert({
+              direction: "inbound",
+              from_phone: cleanMsgPhone,
+              to_phone: change.value.metadata.phone_number_id,
+              bsuid: msgBsuid || null,
+              message_type: msg.type,
+              content: messageContent,
+              meta_message_id: msg.id,
+              status: "received",
+              resident_id: residentId,
+              condominium_id: condominiumId,
+              conversation_window_expires_at: windowExpires,
+              resident_name: contactName || null,
+            });
+
+            console.log(`[WEBHOOK] Incoming message saved: ${msg.type} from ${cleanMsgPhone}`);
+          }
+
+          // Capture BSUID
           if (msgBsuid && msgPhone) {
             const cleanPhone = msgPhone.replace(/\D/g, "");
             const phoneVariants = [cleanPhone];
