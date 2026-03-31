@@ -175,3 +175,6 @@ verify_jwt = false
 
 [functions.send-whatsapp-reply]
 verify_jwt = false
+
+[functions.get-whatsapp-media]
+verify_jwt = false
