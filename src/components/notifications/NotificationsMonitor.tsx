@@ -365,6 +365,7 @@ export function NotificationsMonitor() {
   }, [searchQuery, moduleFilter]);
 
   const periodLabel = `${formatCustom(monthStart, "dd/MM/yyyy")} - ${formatCustom(monthEnd, "dd/MM/yyyy")}`;
+  const monthLabel = format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR });
 
   return (
     <div ref={containerRef} className="space-y-6 overflow-auto">
