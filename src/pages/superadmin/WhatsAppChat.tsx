@@ -338,9 +338,7 @@ export default function WhatsAppChat() {
                                 : "bg-muted rounded-bl-md"
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap break-words">
-                              {msg.content || `[${msg.message_type}]`}
-                            </p>
+                            <MessageContent msg={msg} />
                             <p className={`text-[10px] mt-1 ${
                               msg.direction === "outbound" ? "text-primary-foreground/70" : "text-muted-foreground"
                             }`}>
