@@ -44,21 +44,29 @@ interface Conversation {
 function MessageContent({ msg }: { msg: WhatsAppMessage }) {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [loadingMedia, setLoadingMedia] = useState(false);
+  const autoLoadTriggeredRef = useRef(false);
 
   const loadMedia = useCallback(async () => {
     if (!msg.media_id || mediaUrl || loadingMedia) return;
     setLoadingMedia(true);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("No session");
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const client = supabase as unknown as { supabaseUrl?: string; supabaseKey?: string };
+      const supabaseUrl = client.supabaseUrl;
+      const supabaseAnonKey = client.supabaseKey;
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error("Supabase client config não encontrada");
+      }
+
       const response = await fetch(`${supabaseUrl}/functions/v1/get-whatsapp-media`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`,
-          "apikey": import.meta.env.VITE_SUPABASE_ANON_KEY,
+          "apikey": supabaseAnonKey,
         },
         body: JSON.stringify({ media_id: msg.media_id }),
       });
@@ -78,10 +86,21 @@ function MessageContent({ msg }: { msg: WhatsAppMessage }) {
   }, [msg.media_id, mediaUrl, loadingMedia]);
 
   useEffect(() => {
-    if (msg.media_id && ["image", "sticker"].includes(msg.message_type)) {
-      loadMedia();
+    if (
+      msg.media_id &&
+      ["image", "sticker"].includes(msg.message_type) &&
+      !autoLoadTriggeredRef.current
+    ) {
+      autoLoadTriggeredRef.current = true;
+      void loadMedia();
     }
   }, [msg.media_id, msg.message_type, loadMedia]);
+
+  useEffect(() => {
+    return () => {
+      if (mediaUrl) URL.revokeObjectURL(mediaUrl);
+    };
+  }, [mediaUrl]);
 
   const isOutbound = msg.direction === "outbound";
   const textColor = isOutbound ? "text-primary-foreground" : "text-foreground";
