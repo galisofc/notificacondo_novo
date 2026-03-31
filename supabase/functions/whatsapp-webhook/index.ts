@@ -19,6 +19,13 @@ interface MetaWebhookEntry {
         wa_id?: string;
         user_id?: string;
       }>;
+      messages?: Array<{
+        id: string;
+        from: string;
+        user_id?: string;
+        type: string;
+        timestamp: string;
+      }>;
       statuses?: Array<{
         id: string;
         status: string;
