@@ -25,6 +25,13 @@ interface MetaWebhookEntry {
         user_id?: string;
         type: string;
         timestamp: string;
+        text?: { body?: string };
+        image?: { id?: string; mime_type?: string; caption?: string };
+        audio?: { id?: string; mime_type?: string };
+        video?: { id?: string; mime_type?: string; caption?: string };
+        document?: { id?: string; mime_type?: string; filename?: string; caption?: string };
+        sticker?: { id?: string; mime_type?: string };
+        location?: { latitude?: number; longitude?: number; name?: string };
       }>;
       statuses?: Array<{
         id: string;
