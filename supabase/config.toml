@@ -172,3 +172,6 @@ verify_jwt = false
 # Exclusão de zelador
 [functions.delete-zelador]
 verify_jwt = false
+
+[functions.send-whatsapp-reply]
+verify_jwt = false

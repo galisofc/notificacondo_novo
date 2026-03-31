@@ -61,6 +61,7 @@ const CronJobs = lazy(() => import("./pages/superadmin/CronJobs"));
 const Transfers = lazy(() => import("./pages/superadmin/Transfers"));
 const WhatsApp = lazy(() => import("./pages/superadmin/WhatsApp"));
 const WhatsAppConfig = lazy(() => import("./pages/superadmin/WhatsAppConfig"));
+const WhatsAppChat = lazy(() => import("./pages/superadmin/WhatsAppChat"));
 const SuperAdminSettings = lazy(() => import("./pages/superadmin/Settings"));
 const PorteiroSettings = lazy(() => import("./pages/porteiro/Settings"));
 const ContactMessages = lazy(() => import("./pages/superadmin/ContactMessages"));
@@ -189,6 +190,7 @@ const App = () => (
               <Route path="/superadmin/cron-jobs" element={<ProtectedRoute requiredRole="super_admin"><CronJobs /></ProtectedRoute>} />
               <Route path="/superadmin/whatsapp" element={<ProtectedRoute requiredRole="super_admin"><WhatsApp /></ProtectedRoute>} />
               <Route path="/superadmin/whatsapp/config" element={<ProtectedRoute requiredRole="super_admin"><WhatsAppConfig /></ProtectedRoute>} />
+              <Route path="/superadmin/whatsapp/chat" element={<ProtectedRoute requiredRole="super_admin"><WhatsAppChat /></ProtectedRoute>} />
               <Route path="/superadmin/settings" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminSettings /></ProtectedRoute>} />
               <Route path="/superadmin/contact-messages" element={<ProtectedRoute requiredRole="super_admin"><ContactMessages /></ProtectedRoute>} />
               <Route path="/superadmin/package-types" element={<ProtectedRoute requiredRole="super_admin"><PackageTypes /></ProtectedRoute>} />
