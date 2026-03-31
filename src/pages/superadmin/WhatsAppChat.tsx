@@ -254,7 +254,7 @@ export default function WhatsAppChat() {
                           })}
                         </span>
                         {convo.windowOpen ? (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 text-green-600 border-green-300">
+                          <Badge variant="outline" className="text-[10px] px-1 py-0 text-primary border-primary/30">
                             24h
                           </Badge>
                         ) : (
