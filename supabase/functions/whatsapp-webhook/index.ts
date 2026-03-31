@@ -25,6 +25,13 @@ interface MetaWebhookEntry {
         user_id?: string;
         type: string;
         timestamp: string;
+        text?: { body?: string };
+        image?: { id?: string; mime_type?: string; caption?: string };
+        audio?: { id?: string; mime_type?: string };
+        video?: { id?: string; mime_type?: string; caption?: string };
+        document?: { id?: string; mime_type?: string; filename?: string; caption?: string };
+        sticker?: { id?: string; mime_type?: string };
+        location?: { latitude?: number; longitude?: number; name?: string };
       }>;
       statuses?: Array<{
         id: string;
@@ -255,7 +262,36 @@ Deno.serve(async (req) => {
           // Save incoming message to whatsapp_messages table
           if (msgPhone) {
             const cleanMsgPhone = msgPhone.replace(/\D/g, "");
-            const messageContent = (msg as any).text?.body || (msg as any).caption || `[${msg.type}]`;
+            // Extract content and media info based on message type
+            let messageContent = `[${msg.type}]`;
+            let mediaId: string | null = null;
+            let mediaMimeType: string | null = null;
+
+            if (msg.type === "text" && msg.text?.body) {
+              messageContent = msg.text.body;
+            } else if (msg.type === "image" && msg.image) {
+              messageContent = msg.image.caption || "[Imagem]";
+              mediaId = msg.image.id || null;
+              mediaMimeType = msg.image.mime_type || "image/jpeg";
+            } else if (msg.type === "audio" && msg.audio) {
+              messageContent = "[Áudio]";
+              mediaId = msg.audio.id || null;
+              mediaMimeType = msg.audio.mime_type || "audio/ogg";
+            } else if (msg.type === "video" && msg.video) {
+              messageContent = msg.video.caption || "[Vídeo]";
+              mediaId = msg.video.id || null;
+              mediaMimeType = msg.video.mime_type || "video/mp4";
+            } else if (msg.type === "document" && msg.document) {
+              messageContent = msg.document.filename || msg.document.caption || "[Documento]";
+              mediaId = msg.document.id || null;
+              mediaMimeType = msg.document.mime_type || "application/pdf";
+            } else if (msg.type === "sticker" && msg.sticker) {
+              messageContent = "[Sticker]";
+              mediaId = msg.sticker.id || null;
+              mediaMimeType = msg.sticker.mime_type || "image/webp";
+            } else if (msg.type === "location" && msg.location) {
+              messageContent = `📍 ${msg.location.name || ''} (${msg.location.latitude}, ${msg.location.longitude})`;
+            }
             const windowExpires = new Date(parseInt(msg.timestamp) * 1000 + 24 * 60 * 60 * 1000).toISOString();
 
             // Try to find resident by phone
@@ -292,6 +328,8 @@ Deno.serve(async (req) => {
               condominium_id: condominiumId,
               conversation_window_expires_at: windowExpires,
               resident_name: contactName || null,
+              media_id: mediaId,
+              media_mime_type: mediaMimeType,
             });
 
             console.log(`[WEBHOOK] Incoming message saved: ${msg.type} from ${cleanMsgPhone}`);

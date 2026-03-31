@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Send, MessageSquare, Clock, User, AlertCircle } from "lucide-react";
+import { Loader2, Send, MessageSquare, Clock, User, AlertCircle, Image, FileText, Mic, Play } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +27,9 @@ interface WhatsAppMessage {
   resident_id: string | null;
   resident_name: string | null;
   conversation_window_expires_at: string | null;
+  media_id: string | null;
+  media_mime_type: string | null;
+  media_url: string | null;
 }
 
 interface Conversation {
@@ -35,6 +38,144 @@ interface Conversation {
   unreadCount: number;
   residentName: string | null;
   windowOpen: boolean;
+}
+
+// Media content component
+function MessageContent({ msg }: { msg: WhatsAppMessage }) {
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [loadingMedia, setLoadingMedia] = useState(false);
+
+  const loadMedia = useCallback(async () => {
+    if (!msg.media_id || mediaUrl || loadingMedia) return;
+    setLoadingMedia(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-whatsapp-media", {
+        body: { media_id: msg.media_id },
+      });
+      if (error) throw error;
+      // The response is binary, we need to create a blob URL
+      // Since invoke returns parsed JSON for JSON responses, we handle both cases
+      if (data instanceof Blob) {
+        setMediaUrl(URL.createObjectURL(data));
+      }
+    } catch (err) {
+      console.error("Error loading media:", err);
+    } finally {
+      setLoadingMedia(false);
+    }
+  }, [msg.media_id, mediaUrl, loadingMedia]);
+
+  useEffect(() => {
+    if (msg.media_id && ["image", "sticker"].includes(msg.message_type)) {
+      loadMedia();
+    }
+  }, [msg.media_id, msg.message_type, loadMedia]);
+
+  const isOutbound = msg.direction === "outbound";
+  const textColor = isOutbound ? "text-primary-foreground" : "text-foreground";
+
+  // Image / Sticker
+  if (["image", "sticker"].includes(msg.message_type) && msg.media_id) {
+    return (
+      <div className="space-y-1">
+        {loadingMedia ? (
+          <div className="w-48 h-32 rounded-lg bg-background/20 flex items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin" />
+          </div>
+        ) : mediaUrl ? (
+          <img
+            src={mediaUrl}
+            alt="Imagem"
+            className="max-w-[250px] rounded-lg cursor-pointer"
+            onClick={() => window.open(mediaUrl, "_blank")}
+          />
+        ) : (
+          <button onClick={loadMedia} className={`flex items-center gap-2 text-sm ${textColor} opacity-80 hover:opacity-100`}>
+            <Image className="w-4 h-4" />
+            Carregar imagem
+          </button>
+        )}
+        {msg.content && msg.content !== "[Imagem]" && msg.content !== "[Sticker]" && (
+          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Audio
+  if (msg.message_type === "audio" && msg.media_id) {
+    return (
+      <div className="space-y-1">
+        {mediaUrl ? (
+          <audio controls className="max-w-[250px]">
+            <source src={mediaUrl} type={msg.media_mime_type || "audio/ogg"} />
+          </audio>
+        ) : (
+          <button
+            onClick={loadMedia}
+            disabled={loadingMedia}
+            className={`flex items-center gap-2 text-sm ${textColor} opacity-80 hover:opacity-100`}
+          >
+            {loadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+            {loadingMedia ? "Carregando..." : "Ouvir áudio"}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // Video
+  if (msg.message_type === "video" && msg.media_id) {
+    return (
+      <div className="space-y-1">
+        {mediaUrl ? (
+          <video controls className="max-w-[250px] rounded-lg">
+            <source src={mediaUrl} type={msg.media_mime_type || "video/mp4"} />
+          </video>
+        ) : (
+          <button
+            onClick={loadMedia}
+            disabled={loadingMedia}
+            className={`flex items-center gap-2 text-sm ${textColor} opacity-80 hover:opacity-100`}
+          >
+            {loadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {loadingMedia ? "Carregando..." : "Ver vídeo"}
+          </button>
+        )}
+        {msg.content && msg.content !== "[Vídeo]" && (
+          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+        )}
+      </div>
+    );
+  }
+
+  // Document
+  if (msg.message_type === "document" && msg.media_id) {
+    return (
+      <div className="space-y-1">
+        <button
+          onClick={loadMedia}
+          disabled={loadingMedia}
+          className={`flex items-center gap-2 text-sm ${textColor} opacity-80 hover:opacity-100`}
+        >
+          {loadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+          {msg.content || "Documento"}
+        </button>
+        {mediaUrl && (
+          <a href={mediaUrl} download className="text-xs underline opacity-70">
+            Baixar arquivo
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  // Text / location / default
+  return (
+    <p className="text-sm whitespace-pre-wrap break-words">
+      {msg.content || `[${msg.message_type}]`}
+    </p>
+  );
 }
 
 export default function WhatsAppChat() {
@@ -335,9 +476,7 @@ export default function WhatsAppChat() {
                                 : "bg-muted rounded-bl-md"
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap break-words">
-                              {msg.content || `[${msg.message_type}]`}
-                            </p>
+                            <MessageContent msg={msg} />
                             <p className={`text-[10px] mt-1 ${
                               msg.direction === "outbound" ? "text-primary-foreground/70" : "text-muted-foreground"
                             }`}>
