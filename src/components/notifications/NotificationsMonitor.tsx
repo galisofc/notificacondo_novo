@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { formatPhone } from "@/components/ui/masked-input";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, eachDayOfInterval, startOfDay } from "date-fns";
+import { format, eachDayOfInterval, startOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -177,14 +177,18 @@ export function NotificationsMonitor() {
     isEnabled: isMobile,
   });
 
-  // Buscar período da assinatura
+  // Período = mês corrente (sem limite de assinatura)
+  const now = new Date();
+  const monthStart = startOfMonth(now).toISOString();
+  const monthEnd = endOfMonth(now).toISOString();
+
+  // Buscar assinatura apenas para dados de extras
   const { data: subscriptionPeriod } = useQuery({
     queryKey: ["subscription-period"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
-      // Buscar condomínios do usuário
       const { data: condos } = await supabase
         .from("condominiums")
         .select("id")
@@ -192,7 +196,6 @@ export function NotificationsMonitor() {
 
       if (!condos || condos.length === 0) return null;
 
-      // Buscar assinatura ativa
       const { data: subscription } = await supabase
         .from("subscriptions")
         .select("current_period_start, current_period_end, package_notifications_limit, package_notifications_used, package_notifications_extra")
@@ -204,28 +207,40 @@ export function NotificationsMonitor() {
     },
   });
 
-  // Buscar todas as notificações WABA no período
-  const { data: wabaLogs, isLoading } = useQuery({
-    queryKey: ["waba-notifications", subscriptionPeriod?.current_period_start, subscriptionPeriod?.current_period_end, moduleFilter],
-    queryFn: async () => {
-      let query = supabase
+  // Helper para buscar todos os registros paginando (sem limite de 1000)
+  async function fetchAllLogs(select: string, from: string, to: string) {
+    const PAGE = 1000;
+    let allData: any[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
         .from("whatsapp_notification_logs")
-        .select("id, created_at, function_name, phone, template_name, success, error_message, message_id")
+        .select(select)
+        .gte("created_at", from)
+        .lte("created_at", to)
         .order("created_at", { ascending: false })
-        .limit(500);
+        .range(offset, offset + PAGE - 1);
 
-      // Filtrar pelo período da assinatura se disponível
-      if (subscriptionPeriod?.current_period_start) {
-        query = query.gte("created_at", subscriptionPeriod.current_period_start);
-      }
-      if (subscriptionPeriod?.current_period_end) {
-        query = query.lte("created_at", subscriptionPeriod.current_period_end);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
+      allData = allData.concat(data || []);
+      hasMore = (data?.length || 0) === PAGE;
+      offset += PAGE;
+    }
+    return allData;
+  }
 
-      // Filtrar por módulo se necessário
+  // Buscar todas as notificações WABA no mês corrente
+  const { data: wabaLogs, isLoading } = useQuery({
+    queryKey: ["waba-notifications", monthStart, monthEnd, moduleFilter],
+    queryFn: async () => {
+      const data = await fetchAllLogs(
+        "id, created_at, function_name, phone, template_name, success, error_message, message_id",
+        monthStart,
+        monthEnd
+      );
+
       if (moduleFilter !== "all") {
         return (data as WabaLog[]).filter(log => {
           const info = getModuleInfo(log.function_name);
@@ -240,21 +255,9 @@ export function NotificationsMonitor() {
 
   // Estatísticas por módulo
   const { data: stats } = useQuery({
-    queryKey: ["waba-stats", subscriptionPeriod?.current_period_start, subscriptionPeriod?.current_period_end],
+    queryKey: ["waba-stats", monthStart, monthEnd],
     queryFn: async () => {
-      let query = supabase
-        .from("whatsapp_notification_logs")
-        .select("function_name, success");
-
-      if (subscriptionPeriod?.current_period_start) {
-        query = query.gte("created_at", subscriptionPeriod.current_period_start);
-      }
-      if (subscriptionPeriod?.current_period_end) {
-        query = query.lte("created_at", subscriptionPeriod.current_period_end);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
+      const data = await fetchAllLogs("function_name, success", monthStart, monthEnd);
 
       const counts = {
         total: 0,
@@ -266,7 +269,7 @@ export function NotificationsMonitor() {
         other: { total: 0, success: 0, failed: 0 },
       };
 
-      (data || []).forEach((log) => {
+      (data || []).forEach((log: any) => {
         counts.total++;
         if (log.success) counts.success++;
         else counts.failed++;
@@ -289,23 +292,12 @@ export function NotificationsMonitor() {
 
   // Dados do gráfico por dia
   const { data: chartData } = useQuery({
-    queryKey: ["waba-chart", subscriptionPeriod?.current_period_start, subscriptionPeriod?.current_period_end],
+    queryKey: ["waba-chart", monthStart, monthEnd],
     queryFn: async () => {
-      if (!subscriptionPeriod?.current_period_start || !subscriptionPeriod?.current_period_end) {
-        return [];
-      }
+      const data = await fetchAllLogs("created_at, function_name, success", monthStart, monthEnd);
 
-      const { data, error } = await supabase
-        .from("whatsapp_notification_logs")
-        .select("created_at, function_name, success")
-        .gte("created_at", subscriptionPeriod.current_period_start)
-        .lte("created_at", subscriptionPeriod.current_period_end)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      const startDate = startOfDay(new Date(subscriptionPeriod.current_period_start));
-      const endDate = startOfDay(new Date(subscriptionPeriod.current_period_end));
+      const startDate = startOfDay(new Date(monthStart));
+      const endDate = startOfDay(new Date(monthEnd));
       const allDays = eachDayOfInterval({ start: startDate, end: endDate > new Date() ? new Date() : endDate });
 
       const dayMap = new Map<string, { packages: number; occurrences: number; party_hall: number; other: number }>();
@@ -315,7 +307,7 @@ export function NotificationsMonitor() {
         dayMap.set(key, { packages: 0, occurrences: 0, party_hall: 0, other: 0 });
       });
 
-      (data || []).forEach((log) => {
+      (data || []).forEach((log: any) => {
         const key = format(new Date(log.created_at), "yyyy-MM-dd");
         const dayData = dayMap.get(key);
         if (dayData && log.success) {
@@ -333,7 +325,7 @@ export function NotificationsMonitor() {
         ...counts,
       }));
     },
-    enabled: !!subscriptionPeriod?.current_period_start,
+    enabled: true,
   });
 
   // Dados do gráfico de pizza
@@ -366,15 +358,13 @@ export function NotificationsMonitor() {
     setCurrentPage(1);
   }, [searchQuery, moduleFilter]);
 
-  const periodLabel = subscriptionPeriod?.current_period_start && subscriptionPeriod?.current_period_end
-    ? `${formatCustom(subscriptionPeriod.current_period_start, "dd/MM/yyyy")} - ${formatCustom(subscriptionPeriod.current_period_end, "dd/MM/yyyy")}`
-    : "Período atual";
+  const periodLabel = `${formatCustom(monthStart, "dd/MM/yyyy")} - ${formatCustom(monthEnd, "dd/MM/yyyy")}`;
 
   return (
     <div ref={containerRef} className="space-y-6 overflow-auto">
       <PullIndicator />
 
-      {/* Período da Assinatura */}
+      {/* Período do Mês Corrente */}
       <Card className="border-primary/20 bg-primary/5">
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
@@ -382,7 +372,7 @@ export function NotificationsMonitor() {
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Período da Assinatura</p>
+              <p className="text-sm font-medium text-foreground">Mês Corrente</p>
               <p className="text-xs text-muted-foreground">{periodLabel}</p>
             </div>
           </div>
