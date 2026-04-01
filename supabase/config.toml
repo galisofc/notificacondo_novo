@@ -178,3 +178,6 @@ verify_jwt = false
 
 [functions.get-whatsapp-media]
 verify_jwt = false
+
+[functions.delete-whatsapp-conversation]
+verify_jwt = false
