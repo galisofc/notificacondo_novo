@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, PartyPopper, Settings, Plus, Check, X, ClipboardList, MessageCircle, Eye, CalendarDays, LayoutGrid, Pencil, History } from "lucide-react";
+import { Calendar as CalendarIcon, PartyPopper, Settings, Plus, Check, X, ClipboardList, MessageCircle, Eye, CalendarDays, LayoutGrid, Pencil, History, FileCheck2 } from "lucide-react";
 import { format, parseISO, isToday, isTomorrow, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import BookingFormDialog from "@/components/party-hall/BookingFormDialog";
@@ -24,6 +24,7 @@ import BookingDetailsDialog from "@/components/party-hall/BookingDetailsDialog";
 import BookingCalendar from "@/components/party-hall/BookingCalendar";
 import BookingEditDialog from "@/components/party-hall/BookingEditDialog";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
+import DigitalChecklistsTab from "@/components/party-hall/DigitalChecklistsTab";
 import { useNavigate } from "react-router-dom";
 
 interface Booking {
@@ -503,7 +504,7 @@ export default function PartyHall() {
         ) : (
           /* List View - Tabs */
           <Tabs defaultValue="upcoming" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="upcoming" className="gap-2">
                 <CalendarIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">Próximas</span>
@@ -517,6 +518,10 @@ export default function PartyHall() {
                 {activeBookings.length > 0 && (
                   <Badge variant="secondary" className="ml-1">{activeBookings.length}</Badge>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="checklists" className="gap-2">
+                <FileCheck2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Checklists</span>
               </TabsTrigger>
               <TabsTrigger value="history" className="gap-2">
                 <ClipboardList className="h-4 w-4" />
@@ -554,6 +559,10 @@ export default function PartyHall() {
                   {activeBookings.map(renderBookingCard)}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="checklists" className="space-y-4">
+              <DigitalChecklistsTab condominiumIds={condominiums.map(c => c.id)} />
             </TabsContent>
 
             <TabsContent value="history" className="space-y-4">
