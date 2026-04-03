@@ -212,8 +212,8 @@ serve(async (req) => {
               const metaResult = await sendMetaTemplate({
                 phone: resident.phone,
                 bsuid: resident.bsuid || undefined,
-                templateName: templateInfo.template_name,
-                language: templateInfo.language || 'pt_BR',
+                templateName: templateInfo.waba_template_name,
+                language: templateInfo.waba_language || 'pt_BR',
                 bodyParams,
                 bodyParamNames,
               });
