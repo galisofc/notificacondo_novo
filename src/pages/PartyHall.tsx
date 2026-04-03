@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, PartyPopper, Settings, Plus, Check, X, ClipboardList, MessageCircle, Eye, CalendarDays, LayoutGrid, Pencil, History } from "lucide-react";
+import { Calendar as CalendarIcon, PartyPopper, Settings, Plus, Check, X, ClipboardList, MessageCircle, Eye, CalendarDays, LayoutGrid, Pencil, History, FileCheck2 } from "lucide-react";
 import { format, parseISO, isToday, isTomorrow, isPast, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import BookingFormDialog from "@/components/party-hall/BookingFormDialog";
