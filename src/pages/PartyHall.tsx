@@ -290,7 +290,16 @@ export default function PartyHall() {
   };
 
   const handleFinish = (booking: Booking) => {
-    updateStatusMutation.mutate({ bookingId: booking.id, status: "finalizada" });
+    setBookingToFinish(booking);
+    setFinishDialogOpen(true);
+  };
+
+  const confirmFinish = () => {
+    if (bookingToFinish) {
+      updateStatusMutation.mutate({ bookingId: bookingToFinish.id, status: "finalizada" });
+    }
+    setFinishDialogOpen(false);
+    setBookingToFinish(null);
   };
 
   const handleChecklist = (booking: Booking, type: "entrada" | "saida") => {
