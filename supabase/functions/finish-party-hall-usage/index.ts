@@ -59,9 +59,9 @@ serve(async (req) => {
     const saoPauloDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
     const today = saoPauloDate.toISOString().split('T')[0];
 
-    console.log(`Looking for in_use bookings for today: ${today}`);
+    console.log(`Looking for in_use bookings for today or earlier: ${today}`);
 
-    // Find all bookings that are currently in use for today
+    // Find all bookings that are in use for today or past days (handles missed cron runs)
     const { data: bookings, error: bookingsError } = await supabase
       .from('party_hall_bookings')
       .select(`
@@ -73,7 +73,7 @@ serve(async (req) => {
         condominium_id,
         party_hall_setting_id
       `)
-      .eq('booking_date', today)
+      .lte('booking_date', today)
       .eq('status', 'in_use');
 
     if (bookingsError) {
