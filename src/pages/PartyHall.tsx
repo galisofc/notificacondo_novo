@@ -88,6 +88,8 @@ export default function PartyHall() {
   const [viewMode, setViewMode] = useViewModePreference("partyHallViewMode", "list" as "list" | "calendar");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [startUseDialogOpen, setStartUseDialogOpen] = useState(false);
+  const [bookingToStartUse, setBookingToStartUse] = useState<Booking | null>(null);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
