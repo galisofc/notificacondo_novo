@@ -272,7 +272,8 @@ export default function PartyHall() {
   };
 
   const handleStartUse = (booking: Booking) => {
-    updateStatusMutation.mutate({ bookingId: booking.id, status: "em_uso" });
+    const checklistToken = crypto.randomUUID();
+    updateStatusMutation.mutate({ bookingId: booking.id, status: "em_uso", checklistToken });
   };
 
   const handleFinish = (booking: Booking) => {
