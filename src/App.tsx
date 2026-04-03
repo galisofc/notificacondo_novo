@@ -84,6 +84,7 @@ const ManutencoesHistorico = lazy(() => import("./pages/sindico/ManutencoesHisto
 const ZeladorDashboard = lazy(() => import("./pages/zelador/Dashboard"));
 const ZeladorManutencoes = lazy(() => import("./pages/zelador/Manutencoes"));
 const ZeladorSettings = lazy(() => import("./pages/zelador/Settings"));
+const ChecklistEntrada = lazy(() => import("./pages/ChecklistEntrada"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
