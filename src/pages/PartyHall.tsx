@@ -24,6 +24,7 @@ import BookingDetailsDialog from "@/components/party-hall/BookingDetailsDialog";
 import BookingCalendar from "@/components/party-hall/BookingCalendar";
 import BookingEditDialog from "@/components/party-hall/BookingEditDialog";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
+import DigitalChecklistsTab from "@/components/party-hall/DigitalChecklistsTab";
 import { useNavigate } from "react-router-dom";
 
 interface Booking {
