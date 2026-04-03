@@ -1,27 +1,40 @@
 
 
-# Atualização da URL do Checklist de Entrada
+# Correção das Migrations Duplicadas do Checklist
 
-## Mudança
+## Problema
 
-No plano do Checklist de Entrada Digital, a URL enviada no WhatsApp será construída usando o domínio oficial `https://notificacondo.com.br`, seguindo o padrão já usado em todas as outras edge functions do projeto.
+Existem 4 migrations no banco remoto (2 pares duplicados) tentando criar as mesmas policies que já existem. O erro ocorre porque `CREATE POLICY` não suporta `IF NOT EXISTS`.
 
-## Como será feito
+## Solução
 
-Na edge function `start-party-hall-usage`, ao montar o link do checklist, buscar a URL base da tabela `app_settings` (chave `app_url`) ou `whatsapp_config.app_url`, com fallback para `https://notificacondo.com.br`:
+1. **Corrigir a migration de schema** (`20260403_checklist_entrada_digital.sql`): Adicionar `DROP POLICY IF EXISTS` antes de cada `CREATE POLICY` para tornar a migration idempotente.
 
-```typescript
-const { data: appSettings } = await supabase
-  .from("app_settings")
-  .select("value")
-  .eq("key", "app_url")
-  .maybeSingle();
+2. **Remover as migrations duplicadas do banco remoto**: As migrations com prefixo `20260403203740_` e `20260403203741_` e `20260403204731_` e `20260403204732_` que aparecem no push são versões antigas duplicadas que o Supabase está tentando aplicar. Como o schema já existe no banco, você precisará marcar essas migrations como já aplicadas no banco remoto usando `supabase migration repair`.
 
-const appBaseUrl = (appSettings?.value as string) || "https://notificacondo.com.br";
-const checklistLink = `${appBaseUrl}/checklist-entrada/${checklistToken}`;
+## Alteração no arquivo
+
+**`supabase/migrations/20260403_checklist_entrada_digital.sql`** — adicionar `DROP POLICY IF EXISTS` antes de cada `CREATE POLICY`:
+
+```sql
+-- Drop policies if they already exist (idempotent)
+DROP POLICY IF EXISTS "Public can insert checklists via token" ON party_hall_digital_checklists;
+DROP POLICY IF EXISTS "Public can select checklists by token" ON party_hall_digital_checklists;
+
+CREATE POLICY "Public can insert checklists via token" ...
+CREATE POLICY "Public can select checklists by token" ...
 ```
 
-Resultado: o morador recebe no WhatsApp o link `https://notificacondo.com.br/checklist-entrada/{token}`.
+## Ação manual necessária no terminal
 
-O plano principal do checklist será atualizado para refletir esta URL.
+Após a correção, as 4 migrations antigas no banco remoto precisam ser marcadas como aplicadas (já que o schema já existe):
+
+```bash
+npx supabase migration repair 20260403203740 --status applied
+npx supabase migration repair 20260403203741 --status applied
+npx supabase migration repair 20260403204731 --status applied
+npx supabase migration repair 20260403204732 --status applied
+```
+
+Depois rode `npx supabase db push --linked` novamente para aplicar a migration corrigida.
 
