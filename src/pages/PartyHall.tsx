@@ -274,8 +274,17 @@ export default function PartyHall() {
   };
 
   const handleStartUse = (booking: Booking) => {
-    const checklistToken = crypto.randomUUID();
-    updateStatusMutation.mutate({ bookingId: booking.id, status: "em_uso", checklistToken });
+    setBookingToStartUse(booking);
+    setStartUseDialogOpen(true);
+  };
+
+  const confirmStartUse = () => {
+    if (bookingToStartUse) {
+      const checklistToken = crypto.randomUUID();
+      updateStatusMutation.mutate({ bookingId: bookingToStartUse.id, status: "em_uso", checklistToken });
+    }
+    setStartUseDialogOpen(false);
+    setBookingToStartUse(null);
   };
 
   const handleFinish = (booking: Booking) => {
