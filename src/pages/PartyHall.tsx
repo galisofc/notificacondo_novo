@@ -561,6 +561,10 @@ export default function PartyHall() {
               )}
             </TabsContent>
 
+            <TabsContent value="checklists" className="space-y-4">
+              <DigitalChecklistsTab condominiumIds={condominiums.map(c => c.id)} />
+            </TabsContent>
+
             <TabsContent value="history" className="space-y-4">
               {pastBookings.length === 0 ? (
                 <Card>
