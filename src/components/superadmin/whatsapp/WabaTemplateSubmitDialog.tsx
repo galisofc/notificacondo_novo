@@ -806,7 +806,7 @@ export function WabaTemplateSubmitDialog({
                   )}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t mt-4">
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
