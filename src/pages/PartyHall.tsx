@@ -90,6 +90,8 @@ export default function PartyHall() {
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
   const [startUseDialogOpen, setStartUseDialogOpen] = useState(false);
   const [bookingToStartUse, setBookingToStartUse] = useState<Booking | null>(null);
+  const [finishDialogOpen, setFinishDialogOpen] = useState(false);
+  const [bookingToFinish, setBookingToFinish] = useState<Booking | null>(null);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
