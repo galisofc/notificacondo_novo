@@ -504,7 +504,7 @@ export default function PartyHall() {
         ) : (
           /* List View - Tabs */
           <Tabs defaultValue="upcoming" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="upcoming" className="gap-2">
                 <CalendarIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">Próximas</span>
@@ -518,6 +518,10 @@ export default function PartyHall() {
                 {activeBookings.length > 0 && (
                   <Badge variant="secondary" className="ml-1">{activeBookings.length}</Badge>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="checklists" className="gap-2">
+                <FileCheck2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Checklists</span>
               </TabsTrigger>
               <TabsTrigger value="history" className="gap-2">
                 <ClipboardList className="h-4 w-4" />
