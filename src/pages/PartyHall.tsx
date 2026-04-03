@@ -88,6 +88,8 @@ export default function PartyHall() {
   const [viewMode, setViewMode] = useViewModePreference("partyHallViewMode", "list" as "list" | "calendar");
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [startUseDialogOpen, setStartUseDialogOpen] = useState(false);
+  const [bookingToStartUse, setBookingToStartUse] = useState<Booking | null>(null);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
@@ -272,8 +274,17 @@ export default function PartyHall() {
   };
 
   const handleStartUse = (booking: Booking) => {
-    const checklistToken = crypto.randomUUID();
-    updateStatusMutation.mutate({ bookingId: booking.id, status: "em_uso", checklistToken });
+    setBookingToStartUse(booking);
+    setStartUseDialogOpen(true);
+  };
+
+  const confirmStartUse = () => {
+    if (bookingToStartUse) {
+      const checklistToken = crypto.randomUUID();
+      updateStatusMutation.mutate({ bookingId: bookingToStartUse.id, status: "em_uso", checklistToken });
+    }
+    setStartUseDialogOpen(false);
+    setBookingToStartUse(null);
   };
 
   const handleFinish = (booking: Booking) => {
@@ -642,6 +653,28 @@ export default function PartyHall() {
               <AlertDialogCancel>Voltar</AlertDialogCancel>
               <AlertDialogAction onClick={confirmCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Confirmar Cancelamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={startUseDialogOpen} onOpenChange={setStartUseDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Iniciar Uso do Salão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja iniciar o uso do salão? Um checklist de entrada será enviado ao morador via WhatsApp.
+                {bookingToStartUse && (
+                  <span className="block mt-2 font-medium text-foreground">
+                    {bookingToStartUse.resident.full_name} - {format(parseISO(bookingToStartUse.booking_date), "dd/MM/yyyy", { locale: ptBR })}
+                  </span>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmStartUse}>
+                Confirmar Início
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
