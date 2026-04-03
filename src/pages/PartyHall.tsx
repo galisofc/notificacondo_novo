@@ -90,6 +90,8 @@ export default function PartyHall() {
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
   const [startUseDialogOpen, setStartUseDialogOpen] = useState(false);
   const [bookingToStartUse, setBookingToStartUse] = useState<Booking | null>(null);
+  const [finishDialogOpen, setFinishDialogOpen] = useState(false);
+  const [bookingToFinish, setBookingToFinish] = useState<Booking | null>(null);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
@@ -288,7 +290,16 @@ export default function PartyHall() {
   };
 
   const handleFinish = (booking: Booking) => {
-    updateStatusMutation.mutate({ bookingId: booking.id, status: "finalizada" });
+    setBookingToFinish(booking);
+    setFinishDialogOpen(true);
+  };
+
+  const confirmFinish = () => {
+    if (bookingToFinish) {
+      updateStatusMutation.mutate({ bookingId: bookingToFinish.id, status: "finalizada" });
+    }
+    setFinishDialogOpen(false);
+    setBookingToFinish(null);
   };
 
   const handleChecklist = (booking: Booking, type: "entrada" | "saida") => {
@@ -675,6 +686,28 @@ export default function PartyHall() {
               <AlertDialogCancel>Voltar</AlertDialogCancel>
               <AlertDialogAction onClick={confirmStartUse}>
                 Confirmar Início
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={finishDialogOpen} onOpenChange={setFinishDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Finalizar Uso do Salão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja finalizar o uso do salão?
+                {bookingToFinish && (
+                  <span className="block mt-2 font-medium text-foreground">
+                    {bookingToFinish.resident.full_name} - {format(parseISO(bookingToFinish.booking_date), "dd/MM/yyyy", { locale: ptBR })}
+                  </span>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmFinish}>
+                Confirmar Finalização
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
