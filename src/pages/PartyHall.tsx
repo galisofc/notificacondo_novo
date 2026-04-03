@@ -657,6 +657,28 @@ export default function PartyHall() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={startUseDialogOpen} onOpenChange={setStartUseDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Iniciar Uso do Salão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja iniciar o uso do salão? Um checklist de entrada será enviado ao morador via WhatsApp.
+                {bookingToStartUse && (
+                  <span className="block mt-2 font-medium text-foreground">
+                    {bookingToStartUse.resident.full_name} - {format(parseISO(bookingToStartUse.booking_date), "dd/MM/yyyy", { locale: ptBR })}
+                  </span>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmStartUse}>
+                Confirmar Início
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       </SubscriptionGate>
     </DashboardLayout>
