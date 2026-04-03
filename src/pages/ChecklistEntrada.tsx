@@ -283,8 +283,8 @@ export default function ChecklistEntrada() {
         <div className="flex items-center gap-2 text-sm">
           <MapPin className="h-4 w-4" />
           {geoStatus === "loading" && <span className="text-muted-foreground">Obtendo localização...</span>}
-          {geoStatus === "success" && <span className="text-green-600">Localização capturada</span>}
-          {geoStatus === "denied" && <span className="text-amber-600">Localização não disponível</span>}
+          {geoStatus === "success" && <span className="text-primary">Localização capturada</span>}
+          {geoStatus === "denied" && <span className="text-muted-foreground">Localização não disponível</span>}
         </div>
 
         {/* Checklist Items by Category */}
