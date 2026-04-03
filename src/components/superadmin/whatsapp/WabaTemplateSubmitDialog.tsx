@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
   Loader2,
   Send,
@@ -29,8 +30,15 @@ import {
   RefreshCw,
   Zap,
   ExternalLink,
+  Plus,
+  Trash2,
+  Eye,
+  Phone,
+  MessageSquare,
+  Variable,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { VARIABLE_EXAMPLES } from "./TemplateCategories";
 
 interface MetaTemplate {
   id: string;
@@ -48,10 +56,10 @@ interface WabaTemplateSubmitDialogProps {
   onTemplateLinked?: (templateName: string, language: string) => void;
 }
 
-const TEMPLATE_CATEGORIES = [
-  { value: "UTILITY", label: "Utilitário", description: "Notificações de pedidos, atualizações de conta" },
+const META_CATEGORIES = [
+  { value: "UTILITY", label: "Utilitário", description: "Notificações, atualizações de conta, lembretes" },
   { value: "MARKETING", label: "Marketing", description: "Promoções, ofertas e campanhas" },
-  { value: "AUTHENTICATION", label: "Autenticação", description: "Códigos de verificação" },
+  { value: "AUTHENTICATION", label: "Autenticação", description: "Códigos de verificação e OTP" },
 ];
 
 const LANGUAGES = [
@@ -60,6 +68,25 @@ const LANGUAGES = [
   { value: "es", label: "Español" },
 ];
 
+// Predefined parameters grouped by context
+const PREDEFINED_PARAMS = [
+  { group: "Geral", params: ["nome", "condominio", "link", "data"] },
+  { group: "Ocorrências", params: ["tipo", "titulo", "justificativa", "nome_morador"] },
+  { group: "Salão de Festas", params: ["espaco", "horario_inicio", "horario_fim", "checklist", "link_checklist"] },
+  { group: "Faturamento", params: ["valor", "numero_fatura", "periodo", "data_vencimento", "metodo_pagamento", "data_pagamento", "descricao_fatura"] },
+  { group: "Trial", params: ["dias_restantes", "data_expiracao", "link_planos", "link_dashboard"] },
+  { group: "Transferência", params: ["nome_novo_sindico", "nome_antigo_sindico", "data_transferencia", "observacoes"] },
+  { group: "Encomendas", params: ["bloco", "apartamento", "codigo", "tipo_encomenda", "codigo_rastreio"] },
+];
+
+interface ButtonEntry {
+  type: "url" | "quick_reply" | "phone";
+  text: string;
+  url_base?: string;
+  has_dynamic_suffix?: boolean;
+  phone_number?: string;
+}
+
 export function WabaTemplateSubmitDialog({ 
   open, 
   onOpenChange,
@@ -67,7 +94,9 @@ export function WabaTemplateSubmitDialog({
 }: WabaTemplateSubmitDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [activeTab, setActiveTab] = useState<"create" | "link">("link");
+  const [showPreview, setShowPreview] = useState(false);
   
   // Create new template state
   const [templateName, setTemplateName] = useState("");
@@ -78,12 +107,11 @@ export function WabaTemplateSubmitDialog({
   const [footerText, setFooterText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Button state
-  const [hasButton, setHasButton] = useState(false);
-  const [buttonType, setButtonType] = useState<"url" | "quick_reply">("url");
-  const [buttonText, setButtonText] = useState("");
-  const [buttonUrlBase, setButtonUrlBase] = useState("");
-  const [hasDynamicSuffix, setHasDynamicSuffix] = useState(false);
+  // Tracked parameters (mapped to {{1}}, {{2}}, etc.)
+  const [paramsList, setParamsList] = useState<string[]>([]);
+  
+  // Multiple buttons state (Meta allows up to 3)
+  const [buttons, setButtons] = useState<ButtonEntry[]>([]);
   
   // Link existing template state
   const [metaTemplates, setMetaTemplates] = useState<MetaTemplate[]>([]);
@@ -93,7 +121,6 @@ export function WabaTemplateSubmitDialog({
   const [isSyncing, setIsSyncing] = useState(false);
   const [localTemplates, setLocalTemplates] = useState<Array<{ id: string; slug: string; waba_template_name: string | null }>>([]);
 
-  // Load Meta templates and local templates when dialog opens on link tab
   useEffect(() => {
     if (open && activeTab === "link") {
       loadMetaTemplates();
@@ -105,67 +132,118 @@ export function WabaTemplateSubmitDialog({
     const { data } = await supabase
       .from("whatsapp_templates")
       .select("id, slug, waba_template_name");
-    if (data) {
-      setLocalTemplates(data);
-    }
+    if (data) setLocalTemplates(data);
   };
 
   const loadMetaTemplates = async () => {
     setIsLoadingTemplates(true);
     try {
       const { data, error } = await supabase.functions.invoke("list-waba-templates");
-      
       if (error) throw error;
-      
       if (data?.success) {
         setMetaTemplates(data.templates || []);
       } else {
-        toast({
-          title: "Erro ao carregar templates",
-          description: data?.error || "Falha ao buscar templates da Meta",
-          variant: "destructive",
-        });
+        toast({ title: "Erro ao carregar templates", description: data?.error || "Falha ao buscar templates da Meta", variant: "destructive" });
       }
     } catch (err: any) {
-      toast({
-        title: "Erro",
-        description: err.message || "Erro ao carregar templates",
-        variant: "destructive",
-      });
+      toast({ title: "Erro", description: err.message || "Erro ao carregar templates", variant: "destructive" });
     } finally {
       setIsLoadingTemplates(false);
     }
   };
 
+  // Insert a variable at cursor position in body
+  const insertVariable = (paramName: string) => {
+    let paramIndex = paramsList.indexOf(paramName);
+    if (paramIndex === -1) {
+      setParamsList(prev => [...prev, paramName]);
+      paramIndex = paramsList.length;
+    }
+    const varTag = `{{${paramIndex + 1}}}`;
+    
+    if (bodyRef.current) {
+      const textarea = bodyRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newBody = bodyText.substring(0, start) + varTag + bodyText.substring(end);
+      setBodyText(newBody);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + varTag.length, start + varTag.length);
+      }, 0);
+    } else {
+      setBodyText(prev => prev + varTag);
+    }
+  };
+
+  // Remove a parameter and re-index
+  const removeParam = (index: number) => {
+    const oldNum = index + 1;
+    const newParams = paramsList.filter((_, i) => i !== index);
+    setParamsList(newParams);
+    
+    // Re-index variables in body text
+    let newBody = bodyText;
+    // Remove references to the deleted param
+    newBody = newBody.replace(new RegExp(`\\{\\{${oldNum}\\}\\}`, 'g'), `[REMOVIDO]`);
+    // Re-index higher params
+    for (let i = paramsList.length; i > oldNum; i--) {
+      newBody = newBody.replace(new RegExp(`\\{\\{${i}\\}\\}`, 'g'), `{{${i - 1}}}`);
+    }
+    setBodyText(newBody);
+  };
+
+  // Button management
+  const addButton = (type: "url" | "quick_reply" | "phone") => {
+    if (buttons.length >= 3) {
+      toast({ title: "Limite atingido", description: "A Meta permite no máximo 3 botões por template", variant: "destructive" });
+      return;
+    }
+    setButtons(prev => [...prev, { type, text: "", url_base: "", has_dynamic_suffix: false, phone_number: "" }]);
+  };
+
+  const updateButton = (index: number, updates: Partial<ButtonEntry>) => {
+    setButtons(prev => prev.map((b, i) => i === index ? { ...b, ...updates } : b));
+  };
+
+  const removeButton = (index: number) => {
+    setButtons(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Build preview text
+  const getPreviewText = () => {
+    let preview = bodyText;
+    paramsList.forEach((param, i) => {
+      const example = VARIABLE_EXAMPLES[param] || `[${param}]`;
+      preview = preview.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, 'g'), example);
+    });
+    return preview;
+  };
+
   const handleCreateTemplate = async () => {
     if (!templateName.trim() || !bodyText.trim()) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Nome e conteúdo do corpo são obrigatórios",
-        variant: "destructive",
-      });
+      toast({ title: "Campos obrigatórios", description: "Nome e conteúdo do corpo são obrigatórios", variant: "destructive" });
       return;
     }
 
-    // Validate name format
     const namePattern = /^[a-z0-9_]+$/;
     if (!namePattern.test(templateName)) {
-      toast({
-        title: "Nome inválido",
-        description: "Use apenas letras minúsculas, números e underscores",
-        variant: "destructive",
-      });
+      toast({ title: "Nome inválido", description: "Use apenas letras minúsculas, números e underscores", variant: "destructive" });
       return;
     }
 
-    // Validate button if enabled
-    if (hasButton && buttonType === "url") {
-      if (!buttonText.trim() || !buttonUrlBase.trim()) {
-        toast({
-          title: "Botão incompleto",
-          description: "Preencha o texto e a URL base do botão",
-          variant: "destructive",
-        });
+    // Validate buttons
+    for (const btn of buttons) {
+      if (!btn.text.trim()) {
+        toast({ title: "Botão incompleto", description: "Preencha o texto de todos os botões", variant: "destructive" });
+        return;
+      }
+      if (btn.type === "url" && !btn.url_base?.trim()) {
+        toast({ title: "Botão incompleto", description: "Preencha a URL base do botão", variant: "destructive" });
+        return;
+      }
+      if (btn.type === "phone" && !btn.phone_number?.trim()) {
+        toast({ title: "Botão incompleto", description: "Preencha o número de telefone do botão", variant: "destructive" });
         return;
       }
     }
@@ -174,55 +252,54 @@ export function WabaTemplateSubmitDialog({
     try {
       const components: any[] = [];
       
-      // Add header if provided
       if (headerText.trim()) {
-        components.push({
-          type: "HEADER",
-          format: "TEXT",
-          text: headerText,
-        });
+        components.push({ type: "HEADER", format: "TEXT", text: headerText });
       }
       
-      // Add body (required)
-      // Extract variables from body
       const bodyVariables = bodyText.match(/\{\{(\d+)\}\}/g) || [];
-      const bodyComponent: any = {
-        type: "BODY",
-        text: bodyText,
-      };
+      const bodyComponent: any = { type: "BODY", text: bodyText };
       
       if (bodyVariables.length > 0) {
         bodyComponent.example = {
-          body_text: [bodyVariables.map((_, i) => `exemplo_${i + 1}`)],
+          body_text: [paramsList.map((param) => VARIABLE_EXAMPLES[param] || `exemplo_${param}`)],
         };
       }
-      
       components.push(bodyComponent);
       
-      // Add footer if provided
       if (footerText.trim()) {
-        components.push({
-          type: "FOOTER",
-          text: footerText,
-        });
+        components.push({ type: "FOOTER", text: footerText });
       }
 
-      // Add button if enabled
-      if (hasButton && buttonType === "url" && buttonText.trim() && buttonUrlBase.trim()) {
+      // Build buttons component
+      if (buttons.length > 0) {
         const buttonComponent: any = {
           type: "BUTTONS",
-          buttons: [{
-            type: "URL",
-            text: buttonText,
-            url: hasDynamicSuffix ? `${buttonUrlBase}{{1}}` : buttonUrlBase,
-          }],
+          buttons: buttons.map((btn) => {
+            if (btn.type === "url") {
+              const button: any = {
+                type: "URL",
+                text: btn.text,
+                url: btn.has_dynamic_suffix ? `${btn.url_base}{{1}}` : btn.url_base!,
+              };
+              if (btn.has_dynamic_suffix) {
+                button.example = ["exemplo_token_123"];
+              }
+              return button;
+            }
+            if (btn.type === "phone") {
+              return {
+                type: "PHONE_NUMBER",
+                text: btn.text,
+                phone_number: btn.phone_number,
+              };
+            }
+            // quick_reply
+            return {
+              type: "QUICK_REPLY",
+              text: btn.text,
+            };
+          }),
         };
-        
-        // Add example for dynamic URL
-        if (hasDynamicSuffix) {
-          buttonComponent.buttons[0].example = ["exemplo_token_123"];
-        }
-        
         components.push(buttonComponent);
       }
 
@@ -238,27 +315,15 @@ export function WabaTemplateSubmitDialog({
       if (error) throw error;
 
       if (data?.success) {
-        toast({
-          title: "✅ Template enviado para aprovação!",
-          description: `Template "${templateName}" foi enviado para análise da Meta.`,
-        });
+        toast({ title: "✅ Template enviado para aprovação!", description: `Template "${templateName}" foi enviado para análise da Meta.` });
         onOpenChange(false);
         resetForm();
-        // Reload templates list
         loadMetaTemplates();
       } else {
-        toast({
-          title: "Erro ao criar template",
-          description: data?.error || "Falha ao enviar template",
-          variant: "destructive",
-        });
+        toast({ title: "Erro ao criar template", description: data?.error || "Falha ao enviar template", variant: "destructive" });
       }
     } catch (err: any) {
-      toast({
-        title: "Erro",
-        description: err.message || "Erro ao criar template",
-        variant: "destructive",
-      });
+      toast({ title: "Erro", description: err.message || "Erro ao criar template", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
@@ -266,118 +331,69 @@ export function WabaTemplateSubmitDialog({
 
   const handleLinkTemplate = () => {
     if (!selectedTemplate) {
-      toast({
-        title: "Selecione um template",
-        description: "Escolha um template da lista para vincular",
-        variant: "destructive",
-      });
+      toast({ title: "Selecione um template", description: "Escolha um template da lista para vincular", variant: "destructive" });
       return;
     }
-
     onTemplateLinked?.(selectedTemplate.name, selectedTemplate.language);
-    toast({
-      title: "✅ Template vinculado!",
-      description: `Template "${selectedTemplate.name}" foi selecionado. Salve para confirmar.`,
-    });
+    toast({ title: "✅ Template vinculado!", description: `Template "${selectedTemplate.name}" foi selecionado. Salve para confirmar.` });
     onOpenChange(false);
   };
 
-  // Mapeamento explícito de templates locais para templates WABA da Meta
   const TEMPLATE_MAPPING: Record<string, string> = {
     "package_arrival": "encomenda_management_5",
     "notification_occurrence": "notificacao_ocorrencia",
     "notify_sindico_defense": "nova_defesa",
   };
 
-  // Auto-sync templates by matching Meta template name to local slug
   const handleAutoSync = async () => {
     setIsSyncing(true);
     try {
-      // Get approved Meta templates
       const approvedMeta = metaTemplates.filter(t => t.status === "APPROVED");
-      
-      // Find matches between local slugs and Meta template names
       const matches: { localId: string; localSlug: string; metaName: string; metaLanguage: string }[] = [];
       
       for (const local of localTemplates) {
-        // Skip if already linked
         if (local.waba_template_name) continue;
         
-        // 1. First check explicit mapping
         const explicitMapping = TEMPLATE_MAPPING[local.slug];
         if (explicitMapping) {
           const metaMatch = approvedMeta.find(m => m.name === explicitMapping);
           if (metaMatch) {
-            matches.push({
-              localId: local.id,
-              localSlug: local.slug,
-              metaName: metaMatch.name,
-              metaLanguage: metaMatch.language,
-            });
+            matches.push({ localId: local.id, localSlug: local.slug, metaName: metaMatch.name, metaLanguage: metaMatch.language });
             continue;
           }
         }
         
-        // 2. Try to find a matching Meta template by name similarity
         const match = approvedMeta.find(meta => {
           const metaNameNormalized = meta.name.toLowerCase();
           const slugNormalized = local.slug.toLowerCase();
-          
-          // Exact match or contains match
-          return metaNameNormalized === slugNormalized || 
-                 metaNameNormalized.includes(slugNormalized) ||
-                 slugNormalized.includes(metaNameNormalized);
+          return metaNameNormalized === slugNormalized || metaNameNormalized.includes(slugNormalized) || slugNormalized.includes(metaNameNormalized);
         });
         
         if (match) {
-          matches.push({
-            localId: local.id,
-            localSlug: local.slug,
-            metaName: match.name,
-            metaLanguage: match.language,
-          });
+          matches.push({ localId: local.id, localSlug: local.slug, metaName: match.name, metaLanguage: match.language });
         }
       }
       
       if (matches.length === 0) {
-        toast({
-          title: "Nenhum match encontrado",
-          description: "Nenhum template local corresponde a templates aprovados na Meta",
-        });
+        toast({ title: "Nenhum match encontrado", description: "Nenhum template local corresponde a templates aprovados na Meta" });
         setIsSyncing(false);
         return;
       }
       
-      // Update local templates with matched Meta names
       let successCount = 0;
       for (const match of matches) {
         const { error } = await supabase
           .from("whatsapp_templates")
-          .update({
-            waba_template_name: match.metaName,
-            waba_language: match.metaLanguage,
-          })
+          .update({ waba_template_name: match.metaName, waba_language: match.metaLanguage })
           .eq("id", match.localId);
-        
-        if (!error) {
-          successCount++;
-        }
+        if (!error) successCount++;
       }
       
-      // Refresh data
       await loadLocalTemplates();
       queryClient.invalidateQueries({ queryKey: ["whatsapp-templates"] });
-      
-      toast({
-        title: "✅ Sincronização concluída!",
-        description: `${successCount} de ${matches.length} templates foram vinculados automaticamente`,
-      });
+      toast({ title: "✅ Sincronização concluída!", description: `${successCount} de ${matches.length} templates foram vinculados automaticamente` });
     } catch (err: any) {
-      toast({
-        title: "Erro na sincronização",
-        description: err.message || "Erro ao sincronizar templates",
-        variant: "destructive",
-      });
+      toast({ title: "Erro na sincronização", description: err.message || "Erro ao sincronizar templates", variant: "destructive" });
     } finally {
       setIsSyncing(false);
     }
@@ -390,62 +406,40 @@ export function WabaTemplateSubmitDialog({
     setHeaderText("");
     setBodyText("");
     setFooterText("");
-    setHasButton(false);
-    setButtonType("url");
-    setButtonText("");
-    setButtonUrlBase("");
-    setHasDynamicSuffix(false);
+    setParamsList([]);
+    setButtons([]);
+    setShowPreview(false);
     setSelectedTemplate(null);
     setSearchQuery("");
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return (
-          <Badge className="bg-green-500/10 text-green-600 border-green-500/20 gap-1">
-            <CheckCircle className="h-3 w-3" />
-            Aprovado
-          </Badge>
-        );
-      case "PENDING":
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 gap-1">
-            <Clock className="h-3 w-3" />
-            Pendente
-          </Badge>
-        );
-      case "REJECTED":
-        return (
-          <Badge className="bg-red-500/10 text-red-600 border-red-500/20 gap-1">
-            <XCircle className="h-3 w-3" />
-            Rejeitado
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="secondary" className="gap-1">
-            <AlertCircle className="h-3 w-3" />
-            {status}
-          </Badge>
-        );
-    }
+    const configs: Record<string, { icon: typeof CheckCircle; label: string; className: string }> = {
+      APPROVED: { icon: CheckCircle, label: "Aprovado", className: "bg-green-500/10 text-green-600 border-green-500/20" },
+      PENDING: { icon: Clock, label: "Pendente", className: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" },
+      REJECTED: { icon: XCircle, label: "Rejeitado", className: "bg-red-500/10 text-red-600 border-red-500/20" },
+    };
+    const config = configs[status] || { icon: AlertCircle, label: status, className: "" };
+    const Icon = config.icon;
+    return (
+      <Badge className={`${config.className} gap-1`} variant={configs[status] ? undefined : "secondary"}>
+        <Icon className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
   };
 
   const linkedWabaNames = new Set(
-    localTemplates
-      .filter(lt => lt.waba_template_name)
-      .map(lt => lt.waba_template_name!.toLowerCase())
+    localTemplates.filter(lt => lt.waba_template_name).map(lt => lt.waba_template_name!.toLowerCase())
   );
 
   const filteredTemplates = metaTemplates.filter((t) =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    !linkedWabaNames.has(t.name.toLowerCase())
+    t.name.toLowerCase().includes(searchQuery.toLowerCase()) && !linkedWabaNames.has(t.name.toLowerCase())
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -468,6 +462,7 @@ export function WabaTemplateSubmitDialog({
             </TabsTrigger>
           </TabsList>
 
+          {/* Link Tab */}
           <TabsContent value="link" className="flex-1 overflow-hidden flex flex-col mt-4">
             <div className="flex items-center gap-2 mb-3">
               <Input
@@ -476,12 +471,7 @@ export function WabaTemplateSubmitDialog({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={loadMetaTemplates}
-                disabled={isLoadingTemplates}
-              >
+              <Button variant="outline" size="icon" onClick={loadMetaTemplates} disabled={isLoadingTemplates}>
                 <RefreshCw className={`h-4 w-4 ${isLoadingTemplates ? "animate-spin" : ""}`} />
               </Button>
             </div>
@@ -503,29 +493,19 @@ export function WabaTemplateSubmitDialog({
                         key={template.id}
                         onClick={() => setSelectedTemplate(template)}
                         className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                          selectedTemplate?.id === template.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:bg-muted/50"
+                          selectedTemplate?.id === template.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="font-mono text-sm font-medium truncate">
-                              {template.name}
-                            </p>
+                            <p className="font-mono text-sm font-medium truncate">{template.name}</p>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               {getStatusBadge(template.status)}
-                              <Badge variant="outline" className="text-xs">
-                                {template.language}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {template.category}
-                              </Badge>
+                              <Badge variant="outline" className="text-xs">{template.language}</Badge>
+                              <Badge variant="secondary" className="text-xs">{template.category}</Badge>
                             </div>
                             {template.rejected_reason && (
-                              <p className="text-xs text-red-500 mt-1.5">
-                                Motivo: {template.rejected_reason}
-                              </p>
+                              <p className="text-xs text-red-500 mt-1.5">Motivo: {template.rejected_reason}</p>
                             )}
                           </div>
                           {selectedTemplate?.id === template.id && (
@@ -540,27 +520,13 @@ export function WabaTemplateSubmitDialog({
             )}
 
             <div className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t mt-4">
-              <Button 
-                variant="secondary"
-                onClick={handleAutoSync}
-                disabled={isSyncing || isLoadingTemplates || metaTemplates.length === 0}
-                className="gap-2"
-              >
-                {isSyncing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Zap className="h-4 w-4" />
-                )}
+              <Button variant="secondary" onClick={handleAutoSync} disabled={isSyncing || isLoadingTemplates || metaTemplates.length === 0} className="gap-2">
+                {isSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                 Sincronizar por Slug
               </Button>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancelar
-                </Button>
-                <Button 
-                  onClick={handleLinkTemplate}
-                  disabled={!selectedTemplate || selectedTemplate.status !== "APPROVED"}
-                >
+                <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                <Button onClick={handleLinkTemplate} disabled={!selectedTemplate || selectedTemplate.status !== "APPROVED"}>
                   <Link2 className="h-4 w-4 mr-2" />
                   Vincular
                 </Button>
@@ -568,17 +534,20 @@ export function WabaTemplateSubmitDialog({
             </div>
           </TabsContent>
 
+          {/* Create Tab */}
           <TabsContent value="create" className="flex-1 overflow-hidden flex flex-col mt-4">
             <ScrollArea className="flex-1 -mx-6 px-6">
               <div className="space-y-4">
+                {/* Tip */}
                 <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
                   <p className="text-xs text-amber-700 dark:text-amber-300">
-                    <strong>Dica:</strong> Templates devem seguir as políticas da Meta. Use {"{{1}}"}, {"{{2}}"} para variáveis.
+                    <strong>Dica:</strong> Templates devem seguir as políticas da Meta. Use os parâmetros predefinidos abaixo para inserir variáveis.
                     O template será analisado e pode levar de minutos a horas para aprovação.
                   </p>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                {/* Name + Category + Language */}
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div className="space-y-2">
                     <Label>Nome do Template *</Label>
                     <Input
@@ -587,19 +556,14 @@ export function WabaTemplateSubmitDialog({
                       placeholder="meu_template_v1"
                       className="font-mono"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Apenas letras minúsculas, números e underscores
-                    </p>
+                    <p className="text-xs text-muted-foreground">Letras minúsculas, números e _</p>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Categoria *</Label>
                     <Select value={templateCategory} onValueChange={setTemplateCategory}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {TEMPLATE_CATEGORIES.map((cat) => (
+                        {META_CATEGORIES.map((cat) => (
                           <SelectItem key={cat.value} value={cat.value}>
                             <div>
                               <p>{cat.label}</p>
@@ -610,118 +574,234 @@ export function WabaTemplateSubmitDialog({
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="space-y-2">
+                    <Label>Idioma</Label>
+                    <Select value={templateLanguage} onValueChange={setTemplateLanguage}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LANGUAGES.map((lang) => (
+                          <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Idioma</Label>
-                  <Select value={templateLanguage} onValueChange={setTemplateLanguage}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LANGUAGES.map((lang) => (
-                        <SelectItem key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
+                {/* Header */}
                 <div className="space-y-2">
                   <Label>Cabeçalho (opcional)</Label>
-                  <Input
-                    value={headerText}
-                    onChange={(e) => setHeaderText(e.target.value)}
-                    placeholder="Título do template"
-                  />
+                  <Input value={headerText} onChange={(e) => setHeaderText(e.target.value)} placeholder="Título do template" />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Corpo da Mensagem *</Label>
-                  <Textarea
-                    value={bodyText}
-                    onChange={(e) => setBodyText(e.target.value)}
-                    placeholder="Olá {{1}}, sua encomenda chegou no bloco {{2}}..."
-                    className="min-h-[120px] font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use {"{{1}}"}, {"{{2}}"}, {"{{3}}"} para variáveis dinâmicas
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Rodapé (opcional)</Label>
-                  <Input
-                    value={footerText}
-                    onChange={(e) => setFooterText(e.target.value)}
-                    placeholder="Não responda a esta mensagem"
-                  />
-                </div>
-
-                {/* Button Section */}
+                {/* Predefined Parameters */}
                 <div className="space-y-3 rounded-lg border p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base font-medium flex items-center gap-2">
-                        <ExternalLink className="h-4 w-4" />
-                        Botão de Ação
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Adicionar botão com link</p>
+                  <div className="flex items-center gap-2">
+                    <Variable className="h-4 w-4 text-primary" />
+                    <Label className="text-base font-medium">Parâmetros Predefinidos</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Clique para inserir a variável no corpo da mensagem. A posição do cursor será usada.
+                  </p>
+
+                  {/* Active params */}
+                  {paramsList.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pb-2">
+                      {paramsList.map((param, index) => (
+                        <Badge key={param} variant="secondary" className="gap-1.5 pl-2 pr-1 py-1">
+                          <span className="text-xs font-mono text-primary">{`{{${index + 1}}}`}</span>
+                          <span className="text-xs">{param}</span>
+                          <button onClick={() => removeParam(index)} className="ml-0.5 rounded-full hover:bg-destructive/20 p-0.5">
+                            <XCircle className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        </Badge>
+                      ))}
                     </div>
-                    <Switch
-                      checked={hasButton}
-                      onCheckedChange={setHasButton}
-                    />
+                  )}
+
+                  <Separator />
+
+                  {/* Parameter groups */}
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {PREDEFINED_PARAMS.map((group) => (
+                      <div key={group.group}>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{group.group}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {group.params.map((param) => {
+                            const isActive = paramsList.includes(param);
+                            return (
+                              <Button
+                                key={param}
+                                type="button"
+                                variant={isActive ? "default" : "outline"}
+                                size="sm"
+                                className="h-6 px-2 text-[11px] font-mono"
+                                disabled={isActive}
+                                onClick={() => insertVariable(param)}
+                              >
+                                {param}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Corpo da Mensagem *</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-xs"
+                      onClick={() => setShowPreview(!showPreview)}
+                    >
+                      <Eye className="h-3 w-3" />
+                      {showPreview ? "Editar" : "Preview"}
+                    </Button>
                   </div>
 
-                  {hasButton && (
-                    <div className="space-y-3 pt-2 border-t">
-                      <div className="space-y-2">
-                        <Label>Texto do Botão *</Label>
-                        <Input
-                          value={buttonText}
-                          onChange={(e) => setButtonText(e.target.value)}
-                          placeholder="Ver Detalhes"
-                        />
+                  {showPreview ? (
+                    <div className="rounded-lg border bg-[#e5ddd5] dark:bg-[#0b141a] p-4 min-h-[160px]">
+                      <div className="max-w-[85%] rounded-lg bg-[#dcf8c6] dark:bg-[#005c4b] p-3 shadow-sm">
+                        {headerText && (
+                          <p className="font-bold text-sm mb-1 text-foreground">{headerText}</p>
+                        )}
+                        <p className="text-sm whitespace-pre-wrap text-foreground">{getPreviewText()}</p>
+                        {footerText && (
+                          <p className="text-[11px] text-muted-foreground mt-2">{footerText}</p>
+                        )}
                       </div>
-
-                      <div className="space-y-2">
-                        <Label>URL Base *</Label>
-                        <Input
-                          value={buttonUrlBase}
-                          onChange={(e) => setButtonUrlBase(e.target.value)}
-                          placeholder="https://notificacondo.lovable.app/acesso/"
-                          className="font-mono text-sm"
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between rounded-lg border p-3">
-                        <div className="space-y-0.5">
-                          <Label className="text-sm font-medium">Sufixo Dinâmico</Label>
-                          <p className="text-xs text-muted-foreground">
-                            Adiciona {"{{1}}"} ao final da URL
-                          </p>
-                        </div>
-                        <Switch
-                          checked={hasDynamicSuffix}
-                          onCheckedChange={setHasDynamicSuffix}
-                        />
-                      </div>
-
-                      {hasDynamicSuffix && (
-                        <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
-                          <p className="text-xs font-medium text-primary">
-                            Preview da URL:
-                          </p>
-                          <code className="text-xs bg-background px-2 py-1 rounded mt-1 block truncate">
-                            {buttonUrlBase || "https://..."}{"{{1}}"}
-                          </code>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            O {"{{1}}"} será substituído pelo token único de cada morador.
-                          </p>
+                      {buttons.length > 0 && (
+                        <div className="max-w-[85%] mt-1 space-y-1">
+                          {buttons.map((btn, i) => (
+                            <div key={i} className="rounded-lg bg-background border p-2 text-center text-sm text-primary font-medium flex items-center justify-center gap-1.5">
+                              {btn.type === "url" && <ExternalLink className="h-3.5 w-3.5" />}
+                              {btn.type === "phone" && <Phone className="h-3.5 w-3.5" />}
+                              {btn.type === "quick_reply" && <MessageSquare className="h-3.5 w-3.5" />}
+                              {btn.text || "Botão"}
+                            </div>
+                          ))}
                         </div>
                       )}
+                    </div>
+                  ) : (
+                    <Textarea
+                      ref={bodyRef}
+                      value={bodyText}
+                      onChange={(e) => setBodyText(e.target.value)}
+                      placeholder="Olá {{1}}, sua reserva no {{2}} está confirmada para {{3}}..."
+                      className="min-h-[160px] font-mono text-sm"
+                    />
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="space-y-2">
+                  <Label>Rodapé (opcional)</Label>
+                  <Input value={footerText} onChange={(e) => setFooterText(e.target.value)} placeholder="Mensagem automática - NotificaCondo" />
+                </div>
+
+                {/* Buttons Section */}
+                <div className="space-y-3 rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium flex items-center gap-2">
+                        <ExternalLink className="h-4 w-4" />
+                        Botões de Ação
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">Até 3 botões por template (regra da Meta)</p>
+                    </div>
+                    <Badge variant="secondary">{buttons.length}/3</Badge>
+                  </div>
+
+                  {buttons.map((btn, index) => (
+                    <div key={index} className="rounded-lg border p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {btn.type === "url" ? "🔗 URL" : btn.type === "phone" ? "📞 Telefone" : "💬 Resposta Rápida"}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">Botão {index + 1}</span>
+                        </div>
+                        <Button type="button" variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => removeButton(index)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs">Texto do Botão *</Label>
+                        <Input
+                          value={btn.text}
+                          onChange={(e) => updateButton(index, { text: e.target.value })}
+                          placeholder={btn.type === "url" ? "Ver Detalhes" : btn.type === "phone" ? "Ligar Agora" : "Confirmar"}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+
+                      {btn.type === "url" && (
+                        <>
+                          <div className="space-y-2">
+                            <Label className="text-xs">URL Base *</Label>
+                            <Input
+                              value={btn.url_base}
+                              onChange={(e) => updateButton(index, { url_base: e.target.value })}
+                              placeholder="https://notificacondo.com.br/acesso/"
+                              className="h-8 text-sm font-mono"
+                            />
+                          </div>
+                          <div className="flex items-center justify-between rounded-lg border p-2.5">
+                            <div>
+                              <Label className="text-xs font-medium">Sufixo Dinâmico</Label>
+                              <p className="text-[10px] text-muted-foreground">Adiciona {"{{1}}"} ao final da URL</p>
+                            </div>
+                            <Switch
+                              checked={btn.has_dynamic_suffix}
+                              onCheckedChange={(checked) => updateButton(index, { has_dynamic_suffix: checked })}
+                            />
+                          </div>
+                          {btn.has_dynamic_suffix && (
+                            <div className="rounded-lg bg-primary/5 border border-primary/20 p-2.5">
+                              <p className="text-[10px] font-medium text-primary">Preview:</p>
+                              <code className="text-[11px] bg-background px-2 py-0.5 rounded mt-0.5 block truncate">
+                                {btn.url_base || "https://..."}{"{{1}}"}
+                              </code>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {btn.type === "phone" && (
+                        <div className="space-y-2">
+                          <Label className="text-xs">Número de Telefone *</Label>
+                          <Input
+                            value={btn.phone_number}
+                            onChange={(e) => updateButton(index, { phone_number: e.target.value })}
+                            placeholder="+5511999999999"
+                            className="h-8 text-sm font-mono"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {buttons.length < 3 && (
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => addButton("url")}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Link URL
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => addButton("phone")}>
+                        <Phone className="h-3.5 w-3.5" />
+                        Telefone
+                      </Button>
+                      <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => addButton("quick_reply")}>
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        Resposta Rápida
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -729,18 +809,9 @@ export function WabaTemplateSubmitDialog({
             </ScrollArea>
 
             <div className="flex justify-end gap-2 pt-4 border-t mt-4">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleCreateTemplate}
-                disabled={isSubmitting || !templateName.trim() || !bodyText.trim()}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4 mr-2" />
-                )}
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button onClick={handleCreateTemplate} disabled={isSubmitting || !templateName.trim() || !bodyText.trim()}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                 Enviar para Aprovação
               </Button>
             </div>
