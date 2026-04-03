@@ -182,12 +182,26 @@ export default function PartyHall() {
 
   // Update booking status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
+    mutationFn: async ({ bookingId, status, checklistToken }: { bookingId: string; status: string; checklistToken?: string }) => {
+      const updateData: Record<string, string> = { status };
+      if (checklistToken) updateData.checklist_token = checklistToken;
+
       const { error } = await supabase
         .from("party_hall_bookings")
-        .update({ status })
+        .update(updateData)
         .eq("id", bookingId);
       if (error) throw error;
+
+      // When starting usage, invoke edge function to send WhatsApp checklist
+      if (status === "em_uso") {
+        try {
+          await supabase.functions.invoke("start-party-hall-usage", {
+            body: { bookingId },
+          });
+        } catch (e) {
+          console.error("Erro ao enviar checklist WhatsApp:", e);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["party-hall-bookings"] });
@@ -258,7 +272,8 @@ export default function PartyHall() {
   };
 
   const handleStartUse = (booking: Booking) => {
-    updateStatusMutation.mutate({ bookingId: booking.id, status: "em_uso" });
+    const checklistToken = crypto.randomUUID();
+    updateStatusMutation.mutate({ bookingId: booking.id, status: "em_uso", checklistToken });
   };
 
   const handleFinish = (booking: Booking) => {
