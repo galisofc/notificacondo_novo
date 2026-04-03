@@ -535,8 +535,8 @@ export function WabaTemplateSubmitDialog({
           </TabsContent>
 
           {/* Create Tab */}
-          <TabsContent value="create" className="flex-1 overflow-hidden flex flex-col mt-4">
-            <ScrollArea className="flex-1 -mx-6 px-6">
+          <TabsContent value="create" className="mt-4">
+            <div className="overflow-y-auto max-h-[calc(90vh-220px)] -mx-6 px-6">
               <div className="space-y-4">
                 {/* Tip */}
                 <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
@@ -806,7 +806,7 @@ export function WabaTemplateSubmitDialog({
                   )}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t mt-4">
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
