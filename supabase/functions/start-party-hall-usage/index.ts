@@ -136,6 +136,8 @@ serve(async (req) => {
       templateInfo = template;
       if (!templateInfo) {
         console.log('Template party_hall_checklist_entrada not found or inactive, will skip WhatsApp notification');
+      } else {
+        console.log(`Template found: ${templateInfo.waba_template_name}, params: ${templateInfo.params_order}`);
       }
     }
 
