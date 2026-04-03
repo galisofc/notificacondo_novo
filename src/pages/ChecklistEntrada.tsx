@@ -77,10 +77,10 @@ export default function ChecklistEntrada() {
       }
 
       // Validate booking
-      const { data: booking, error: bookingError } = await supabase
+      const { data: booking, error: bookingError } = await (supabase
         .from("party_hall_bookings")
-        .select("id, booking_date, start_time, end_time, status, condominium_id")
-        .eq("checklist_token" as any, token)
+        .select("id, booking_date, start_time, end_time, status, condominium_id") as any)
+        .eq("checklist_token", token)
         .single();
 
       if (bookingError || !booking) {
