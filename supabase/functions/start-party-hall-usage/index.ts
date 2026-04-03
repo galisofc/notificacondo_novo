@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendMetaTemplate, getMetaConfig, isMetaConfigured, buildParamsArray } from "../_shared/meta-whatsapp.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -110,25 +111,148 @@ serve(async (req) => {
 
     console.log(`Found ${bookings.length} confirmed bookings for today`);
 
+    // Get app base URL
+    const { data: appSettings } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'app_url')
+      .maybeSingle();
+
+    const appBaseUrl = (appSettings?.value as string) || 'https://notificacondo.com.br';
+
+    // Check if WhatsApp is configured
+    const whatsappConfigured = isMetaConfigured();
+
+    // Get WhatsApp template info if configured
+    let templateInfo: any = null;
+    if (whatsappConfigured) {
+      const { data: template } = await supabase
+        .from('whatsapp_templates')
+        .select('id, template_name, params_order, language')
+        .eq('template_name', 'party_hall_checklist_entrada')
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      templateInfo = template;
+      if (!templateInfo) {
+        console.log('Template party_hall_checklist_entrada not found or inactive, will skip WhatsApp notification');
+      }
+    }
+
     let successCount = 0;
     let errorCount = 0;
-    const results: Array<{ bookingId: string; success: boolean; error?: string }> = [];
+    let whatsappSent = 0;
+    let whatsappErrors = 0;
+    const results: Array<{ bookingId: string; success: boolean; error?: string; whatsappSent?: boolean }> = [];
 
     // Update each booking to 'in_use' status
     for (const booking of bookings) {
       try {
+        // Generate checklist token
+        const checklistToken = crypto.randomUUID();
+
         const { error: updateError } = await supabase
           .from('party_hall_bookings')
-          .update({ status: 'in_use' })
+          .update({ status: 'in_use', checklist_token: checklistToken })
           .eq('id', booking.id);
 
         if (updateError) {
           throw updateError;
         }
 
-        console.log(`Booking ${booking.id} status updated to 'in_use'`);
+        console.log(`Booking ${booking.id} status updated to 'in_use' with token ${checklistToken}`);
         successCount++;
-        results.push({ bookingId: booking.id, success: true });
+
+        // Send WhatsApp notification with checklist link
+        let whatsappResult = false;
+        if (whatsappConfigured && templateInfo && booking.resident_id) {
+          try {
+            // Get resident info
+            const { data: resident } = await supabase
+              .from('residents')
+              .select('name, phone, bsuid')
+              .eq('id', booking.resident_id)
+              .single();
+
+            if (resident?.phone) {
+              // Get condominium name
+              const { data: condo } = await supabase
+                .from('condominiums')
+                .select('name')
+                .eq('id', booking.condominium_id)
+                .single();
+
+              // Get party hall setting name
+              const { data: hallSetting } = await supabase
+                .from('party_hall_settings')
+                .select('space_name')
+                .eq('id', booking.party_hall_setting_id)
+                .single();
+
+              const checklistLink = `${appBaseUrl}/checklist-entrada/${checklistToken}`;
+              const spaceName = hallSetting?.space_name || 'Salão de Festas';
+              const residentName = resident.name || 'Morador';
+              const bookingDate = booking.booking_date;
+
+              // Parse params_order from template
+              const paramsOrder = templateInfo.params_order || [];
+              
+              const variables: Record<string, string> = {
+                nome: residentName,
+                espaco: spaceName,
+                data: bookingDate,
+                link_checklist: checklistLink,
+                condominio: condo?.name || '',
+              };
+
+              const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
+
+              const metaResult = await sendMetaTemplate({
+                phone: resident.phone,
+                bsuid: resident.bsuid || undefined,
+                templateName: templateInfo.template_name,
+                language: templateInfo.language || 'pt_BR',
+                bodyParams,
+                bodyParamNames,
+              });
+
+              if (metaResult.success) {
+                whatsappSent++;
+                whatsappResult = true;
+                console.log(`WhatsApp checklist sent to ${resident.phone} for booking ${booking.id}`);
+
+                // Log the notification
+                await supabase.from('whatsapp_notification_logs').insert({
+                  resident_id: booking.resident_id,
+                  condominium_id: booking.condominium_id,
+                  phone: resident.phone,
+                  template_name: templateInfo.template_name,
+                  status: 'sent',
+                  message_id: metaResult.messageId,
+                  provider: 'waba',
+                });
+              } else {
+                whatsappErrors++;
+                console.error(`WhatsApp error for booking ${booking.id}:`, metaResult.error);
+                
+                await supabase.from('whatsapp_notification_logs').insert({
+                  resident_id: booking.resident_id,
+                  condominium_id: booking.condominium_id,
+                  phone: resident.phone,
+                  template_name: templateInfo.template_name,
+                  status: 'failed',
+                  error_message: metaResult.error,
+                  provider: 'waba',
+                });
+              }
+            }
+          } catch (whatsappError) {
+            whatsappErrors++;
+            console.error(`WhatsApp notification error for booking ${booking.id}:`, whatsappError);
+          }
+        }
+
+        results.push({ bookingId: booking.id, success: true, whatsappSent: whatsappResult });
       } catch (error) {
         console.error(`Error updating booking ${booking.id}:`, error);
         errorCount++;
@@ -155,6 +279,8 @@ serve(async (req) => {
           totalBookings: bookings.length,
           successCount,
           errorCount,
+          whatsappSent,
+          whatsappErrors,
           results,
         },
       })
@@ -167,6 +293,8 @@ serve(async (req) => {
         totalBookings: bookings.length,
         successCount,
         errorCount,
+        whatsappSent,
+        whatsappErrors,
         results,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
