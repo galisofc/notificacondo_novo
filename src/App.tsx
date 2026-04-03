@@ -84,6 +84,7 @@ const ManutencoesHistorico = lazy(() => import("./pages/sindico/ManutencoesHisto
 const ZeladorDashboard = lazy(() => import("./pages/zelador/Dashboard"));
 const ZeladorManutencoes = lazy(() => import("./pages/zelador/Manutencoes"));
 const ZeladorSettings = lazy(() => import("./pages/zelador/Settings"));
+const ChecklistEntrada = lazy(() => import("./pages/ChecklistEntrada"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -156,6 +157,7 @@ const App = () => (
               <Route path="/resident/occurrences/:id" element={<ProtectedRoute requiredRole="morador"><ResidentOccurrenceDetails /></ProtectedRoute>} />
               <Route path="/resident/profile" element={<ProtectedRoute requiredRole="morador"><ResidentProfile /></ProtectedRoute>} />
               <Route path="/resident/packages" element={<ProtectedRoute requiredRole="morador"><ResidentPackages /></ProtectedRoute>} />
+              <Route path="/checklist-entrada/:token" element={<ChecklistEntrada />} />
               <Route path="/acesso/:token" element={<ResidentAccess />} />
               <Route path="/resident/access" element={<ResidentAccess />} />
 
