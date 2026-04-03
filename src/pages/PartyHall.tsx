@@ -690,6 +690,28 @@ export default function PartyHall() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog open={finishDialogOpen} onOpenChange={setFinishDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Finalizar Uso do Salão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja finalizar o uso do salão?
+                {bookingToFinish && (
+                  <span className="block mt-2 font-medium text-foreground">
+                    {bookingToFinish.resident.full_name} - {format(parseISO(bookingToFinish.booking_date), "dd/MM/yyyy", { locale: ptBR })}
+                  </span>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Voltar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmFinish}>
+                Confirmar Finalização
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       </SubscriptionGate>
     </DashboardLayout>
