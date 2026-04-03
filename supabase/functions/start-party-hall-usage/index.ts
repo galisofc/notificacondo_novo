@@ -128,14 +128,16 @@ serve(async (req) => {
     if (whatsappConfigured) {
       const { data: template } = await supabase
         .from('whatsapp_templates')
-        .select('id, template_name, params_order, language')
-        .eq('template_name', 'party_hall_checklist_entrada')
+        .select('id, waba_template_name, params_order, waba_language')
+        .eq('slug', 'party_hall_checklist_entrada')
         .eq('is_active', true)
         .maybeSingle();
       
       templateInfo = template;
       if (!templateInfo) {
         console.log('Template party_hall_checklist_entrada not found or inactive, will skip WhatsApp notification');
+      } else {
+        console.log(`Template found: ${templateInfo.waba_template_name}, params: ${templateInfo.params_order}`);
       }
     }
 
@@ -210,8 +212,8 @@ serve(async (req) => {
               const metaResult = await sendMetaTemplate({
                 phone: resident.phone,
                 bsuid: resident.bsuid || undefined,
-                templateName: templateInfo.template_name,
-                language: templateInfo.language || 'pt_BR',
+                templateName: templateInfo.waba_template_name,
+                language: templateInfo.waba_language || 'pt_BR',
                 bodyParams,
                 bodyParamNames,
               });
