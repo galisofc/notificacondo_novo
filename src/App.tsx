@@ -157,6 +157,7 @@ const App = () => (
               <Route path="/resident/occurrences/:id" element={<ProtectedRoute requiredRole="morador"><ResidentOccurrenceDetails /></ProtectedRoute>} />
               <Route path="/resident/profile" element={<ProtectedRoute requiredRole="morador"><ResidentProfile /></ProtectedRoute>} />
               <Route path="/resident/packages" element={<ProtectedRoute requiredRole="morador"><ResidentPackages /></ProtectedRoute>} />
+              <Route path="/checklist-entrada/:token" element={<ChecklistEntrada />} />
               <Route path="/acesso/:token" element={<ResidentAccess />} />
               <Route path="/resident/access" element={<ResidentAccess />} />
 

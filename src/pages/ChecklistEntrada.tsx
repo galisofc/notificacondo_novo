@@ -302,7 +302,7 @@ export default function ChecklistEntrada() {
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm">{item.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className={`text-xs ${item.is_ok ? "text-green-600" : "text-destructive"}`}>
+                        <span className={`text-xs ${item.is_ok ? "text-primary" : "text-destructive"}`}>
                           {item.is_ok ? "OK" : "Problema"}
                         </span>
                         <Switch
