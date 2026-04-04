@@ -38,7 +38,7 @@ interface ChecklistTemplate {
   display_order: number;
 }
 
-const CATEGORIES = ["Geral", "Elétrica", "Móveis", "Limpeza", "Utensílios", "Decoração", "Segurança"];
+const DEFAULT_CATEGORIES = ["Geral", "Elétrica", "Móveis", "Limpeza", "Utensílios", "Decoração", "Segurança", "Estrutura", "Equipamentos", "Hidráulica"];
 
 function SortableItem({
   item,
@@ -91,6 +91,8 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState({ item_name: "", category: "Geral" });
+  const [customCategory, setCustomCategory] = useState("");
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -111,12 +113,18 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
     enabled: !!condominiumId,
   });
 
+  // Merge default + existing custom categories
+  const existingCategories = [...new Set(templates.map((t) => t.category || "Geral"))];
+  const allCategories = [...new Set([...DEFAULT_CATEGORIES, ...existingCategories])].sort();
+
   const createMutation = useMutation({
     mutationFn: async () => {
+      const category = useCustomCategory ? customCategory.trim() : newItem.category;
+      if (!category) throw new Error("Categoria obrigatória");
       const { error } = await supabase.from("party_hall_checklist_templates").insert({
         condominium_id: condominiumId,
         item_name: newItem.item_name,
-        category: newItem.category,
+        category,
         display_order: templates.length,
       });
       if (error) throw error;
@@ -125,6 +133,8 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
       queryClient.invalidateQueries({ queryKey: ["checklist-templates"] });
       setDialogOpen(false);
       setNewItem({ item_name: "", category: "Geral" });
+      setCustomCategory("");
+      setUseCustomCategory(false);
       toast({ title: "Item adicionado!" });
     },
     onError: () => toast({ title: "Erro ao adicionar item", variant: "destructive" }),
@@ -216,21 +226,41 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
               </div>
               <div className="grid gap-2">
                 <Label>Categoria</Label>
-                <Select value={newItem.category} onValueChange={(v) => setNewItem({ ...newItem, category: v })}>
+                <Select
+                  value={useCustomCategory ? "__custom__" : newItem.category}
+                  onValueChange={(v) => {
+                    if (v === "__custom__") {
+                      setUseCustomCategory(true);
+                    } else {
+                      setUseCustomCategory(false);
+                      setCustomCategory("");
+                      setNewItem({ ...newItem, category: v });
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((cat) => (
+                    {allCategories.map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
+                    <SelectItem value="__custom__">+ Nova categoria...</SelectItem>
                   </SelectContent>
                 </Select>
+                {useCustomCategory && (
+                  <Input
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Digite o nome da nova categoria"
+                    autoFocus
+                  />
+                )}
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={() => createMutation.mutate()} disabled={!newItem.item_name || createMutation.isPending}>
+              <Button onClick={() => createMutation.mutate()} disabled={!newItem.item_name || (useCustomCategory && !customCategory.trim()) || createMutation.isPending}>
                 Adicionar Item
               </Button>
             </DialogFooter>
