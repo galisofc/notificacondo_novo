@@ -17,7 +17,7 @@ async function sendChecklistWhatsApp(
 
   const { data: resident } = await supabase
     .from('residents')
-    .select('name, phone, bsuid')
+    .select('full_name, phone, bsuid')
     .eq('id', booking.resident_id)
     .single();
 
