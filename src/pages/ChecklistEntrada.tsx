@@ -412,7 +412,6 @@ export default function ChecklistEntrada() {
 
         <p className="text-xs text-muted-foreground text-center pb-8">
           Ao assinar, você confirma que verificou todos os itens acima e que as informações são verdadeiras.
-          {geolocation && ` Localização: ${geolocation.lat.toFixed(4)}, ${geolocation.lng.toFixed(4)}`}
         </p>
       </div>
     </div>
