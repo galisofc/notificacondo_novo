@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, XCircle, MapPin, Loader2, AlertTriangle, PartyPopper } from "lucide-react";
+import { CheckCircle2, Loader2, AlertTriangle, PartyPopper } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChecklistItem {
