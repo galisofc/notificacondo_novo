@@ -17,7 +17,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { token, items, signer_name, signer_email, signature_image, geolocation, general_observations } = body;
+    const { token, items, signer_name, signer_email, signature_image, general_observations } = body;
 
     // Validate required fields
     if (!token || !signer_name || !signer_email || !signature_image || !items) {
