@@ -38,7 +38,7 @@ async function sendChecklistWhatsApp(
   const checklistToken = booking.checklist_token;
   const checklistLink = `${appBaseUrl}/checklist-entrada/${checklistToken}`;
   const spaceName = hallSetting?.space_name || 'Salão de Festas';
-  const residentName = resident.name || 'Morador';
+  const residentName = resident.full_name || 'Morador';
 
   const paramsOrder = templateInfo.params_order || [];
   const variables: Record<string, string> = {
