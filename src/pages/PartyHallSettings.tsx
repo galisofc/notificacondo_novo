@@ -41,7 +41,6 @@ export default function PartyHallSettings() {
   const queryClient = useQueryClient();
   const [selectedCondominium, setSelectedCondominium] = useState<string>("");
   const [newSpaceDialogOpen, setNewSpaceDialogOpen] = useState(false);
-  const [newTemplateDialogOpen, setNewTemplateDialogOpen] = useState(false);
   const [editingSpace, setEditingSpace] = useState<PartyHallSetting | null>(null);
   
   // Form states for new space
