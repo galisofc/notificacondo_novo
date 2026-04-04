@@ -530,33 +530,53 @@ export default function PartyHallSettings() {
                 </CardContent>
               </Card>
             ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Itens do Checklist</CardTitle>
-                  <CardDescription>
-                    Estes itens serão usados nos checklists de entrada e saída
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="divide-y">
-                    {templates.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between py-3">
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline">{item.category}</Badge>
-                          <span>{item.item_name}</span>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => deleteTemplateMutation.mutate(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+              (() => {
+                const grouped = templates.reduce<Record<string, ChecklistTemplate[]>>((acc, item) => {
+                  const cat = item.category || "Geral";
+                  if (!acc[cat]) acc[cat] = [];
+                  acc[cat].push(item);
+                  return acc;
+                }, {});
+
+                return (
+                  <div className="space-y-4">
+                    {Object.entries(grouped).map(([category, categoryItems]) => (
+                      <Card key={category}>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            {category}
+                            <Badge variant="secondary">{categoryItems.length}</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {categoryItems.map((item) => (
+                            <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                              <span className={`flex-1 text-sm ${!item.is_active ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                                {item.item_name}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={item.is_active}
+                                  onCheckedChange={(checked) => toggleTemplateMutation.mutate({ id: item.id, is_active: checked })}
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => deleteTemplateMutation.mutate(item.id)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
+                );
+              })()
             )}
           </TabsContent>
         </Tabs>
