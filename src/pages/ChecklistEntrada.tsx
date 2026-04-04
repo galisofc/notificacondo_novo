@@ -43,7 +43,7 @@ export default function ChecklistEntrada() {
   const [error, setError] = useState<string | null>(null);
   const [bookingInfo, setBookingInfo] = useState<any>(null);
 
-  const [items, setItems] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST_ITEMS);
+  const [items, setItems] = useState<ChecklistItem[]>([]);
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [generalObservations, setGeneralObservations] = useState("");
@@ -90,6 +90,29 @@ export default function ChecklistEntrada() {
       }
 
       setBookingInfo(booking);
+
+      // Load checklist templates from DB for this condominium
+      const { data: templates } = await supabase
+        .from("party_hall_checklist_templates")
+        .select("item_name, category")
+        .eq("condominium_id", booking.condominium_id)
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (templates && templates.length > 0) {
+        setItems(
+          templates.map((t) => ({
+            name: t.item_name,
+            category: t.category || "Geral",
+            is_ok: true,
+            observation: "",
+          }))
+        );
+      } else {
+        // Fallback to defaults if no templates configured
+        setItems(DEFAULT_CHECKLIST_ITEMS);
+      }
+
       setLoading(false);
     }
 
