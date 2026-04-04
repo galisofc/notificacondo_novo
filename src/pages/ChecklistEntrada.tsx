@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { CheckCircle2, XCircle, MapPin, Loader2, AlertTriangle, PartyPopper } from "lucide-react";
+import { CheckCircle2, Loader2, AlertTriangle, PartyPopper } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChecklistItem {
@@ -47,8 +47,6 @@ export default function ChecklistEntrada() {
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [generalObservations, setGeneralObservations] = useState("");
-  const [geolocation, setGeolocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "success" | "denied">("idle");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -119,24 +117,6 @@ export default function ChecklistEntrada() {
     validateToken();
   }, [token]);
 
-  // Request geolocation
-  useEffect(() => {
-    if (!loading && !error && !submitted) {
-      setGeoStatus("loading");
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setGeolocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-            setGeoStatus("success");
-          },
-          () => setGeoStatus("denied"),
-          { timeout: 10000 }
-        );
-      } else {
-        setGeoStatus("denied");
-      }
-    }
-  }, [loading, error, submitted]);
 
   // Canvas drawing
   const getCanvasCoords = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -232,7 +212,7 @@ export default function ChecklistEntrada() {
           signer_name: signerName.trim(),
           signer_email: signerEmail.trim(),
           signature_image: signatureImage,
-          geolocation,
+          geolocation: null,
           general_observations: generalObservations.trim() || null,
         },
       });
@@ -302,13 +282,6 @@ export default function ChecklistEntrada() {
           )}
         </div>
 
-        {/* Geolocation Status */}
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4" />
-          {geoStatus === "loading" && <span className="text-muted-foreground">Obtendo localização...</span>}
-          {geoStatus === "success" && <span className="text-primary">Localização capturada</span>}
-          {geoStatus === "denied" && <span className="text-muted-foreground">Localização não disponível</span>}
-        </div>
 
         {/* Checklist Items by Category */}
         {categories.map(category => (
@@ -439,7 +412,6 @@ export default function ChecklistEntrada() {
 
         <p className="text-xs text-muted-foreground text-center pb-8">
           Ao assinar, você confirma que verificou todos os itens acima e que as informações são verdadeiras.
-          {geolocation && ` Localização: ${geolocation.lat.toFixed(4)}, ${geolocation.lng.toFixed(4)}`}
         </p>
       </div>
     </div>
