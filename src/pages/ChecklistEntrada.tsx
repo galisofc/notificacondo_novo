@@ -47,8 +47,6 @@ export default function ChecklistEntrada() {
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [generalObservations, setGeneralObservations] = useState("");
-  const [geolocation, setGeolocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "success" | "denied">("idle");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
