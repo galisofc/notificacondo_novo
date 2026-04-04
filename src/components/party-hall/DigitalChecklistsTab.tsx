@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileCheck2, Eye, MapPin, Mail, User, Clock } from "lucide-react";
+import { FileCheck2, Eye, Mail, User, Clock } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -16,8 +16,6 @@ interface DigitalChecklist {
   token: string;
   signer_name: string;
   signer_email: string;
-  signer_ip: string | null;
-  signer_geolocation: { lat: number; lng: number } | null;
   signature_image: string;
   items: Array<{ name: string; category: string; is_ok: boolean; observation: string }>;
   general_observations: string | null;
@@ -59,8 +57,6 @@ export default function DigitalChecklistsTab({ condominiumIds }: DigitalChecklis
           token,
           signer_name,
           signer_email,
-          signer_ip,
-          signer_geolocation,
           signature_image,
           items,
           general_observations,
@@ -239,17 +235,6 @@ export default function DigitalChecklistsTab({ condominiumIds }: DigitalChecklis
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span>{format(parseISO(selectedChecklist.signed_at), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}</span>
                     </div>
-                    {selectedChecklist.signer_geolocation && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{selectedChecklist.signer_geolocation.lat.toFixed(4)}, {selectedChecklist.signer_geolocation.lng.toFixed(4)}</span>
-                      </div>
-                    )}
-                    {selectedChecklist.signer_ip && (
-                      <div className="text-xs text-muted-foreground">
-                        IP: {selectedChecklist.signer_ip}
-                      </div>
-                    )}
                   </div>
                 </div>
 
