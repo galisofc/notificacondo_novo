@@ -260,7 +260,7 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={() => createMutation.mutate()} disabled={!newItem.item_name || createMutation.isPending}>
+              <Button onClick={() => createMutation.mutate()} disabled={!newItem.item_name || (useCustomCategory && !customCategory.trim()) || createMutation.isPending}>
                 Adicionar Item
               </Button>
             </DialogFooter>
