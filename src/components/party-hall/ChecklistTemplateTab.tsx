@@ -113,6 +113,10 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
     enabled: !!condominiumId,
   });
 
+  // Merge default + existing custom categories
+  const existingCategories = [...new Set(templates.map((t) => t.category || "Geral"))];
+  const allCategories = [...new Set([...DEFAULT_CATEGORIES, ...existingCategories])].sort();
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("party_hall_checklist_templates").insert({
