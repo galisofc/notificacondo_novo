@@ -148,15 +148,17 @@ serve(async (req) => {
 
     // Check WhatsApp config and template
     const whatsappConfigured = isMetaConfigured();
+    console.log(`[DEBUG] WhatsApp configured: ${whatsappConfigured}`);
     let templateInfo: any = null;
     if (whatsappConfigured) {
-      const { data: template } = await supabase
+      const { data: template, error: templateError } = await supabase
         .from('whatsapp_templates')
         .select('id, waba_template_name, params_order, waba_language')
         .eq('slug', 'party_hall_checklist_entrada')
         .eq('is_active', true)
         .maybeSingle();
       templateInfo = template;
+      console.log(`[DEBUG] Template found: ${JSON.stringify(template)}, error: ${JSON.stringify(templateError)}`);
     }
 
     // ─── MANUAL MODE: single booking ───
@@ -173,14 +175,20 @@ serve(async (req) => {
         throw new Error(`Booking not found: ${manualBookingId}`);
       }
 
+      console.log(`[DEBUG] Booking resident_id: ${booking.resident_id}, checklist_token: ${booking.checklist_token}`);
+
       let whatsappSent = false;
       if (whatsappConfigured && templateInfo) {
         try {
+          console.log(`[DEBUG] Calling sendChecklistWhatsApp...`);
           const result = await sendChecklistWhatsApp(supabase, booking, templateInfo, appBaseUrl);
           whatsappSent = result.sent;
+          console.log(`[DEBUG] sendChecklistWhatsApp result: ${JSON.stringify(result)}`);
         } catch (e) {
           console.error('WhatsApp error:', e);
         }
+      } else {
+        console.log(`[DEBUG] Skipping WhatsApp: configured=${whatsappConfigured}, templateInfo=${!!templateInfo}`);
       }
 
       await supabase.from('edge_function_logs').update({
