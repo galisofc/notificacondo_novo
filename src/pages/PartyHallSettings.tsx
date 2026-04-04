@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Plus, Trash2, Building2, ClipboardList, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import ChecklistTemplateTab from "@/components/party-hall/ChecklistTemplateTab";
 
 interface PartyHallSetting {
   id: string;
@@ -33,14 +34,6 @@ interface PartyHallSetting {
   };
 }
 
-interface ChecklistTemplate {
-  id: string;
-  condominium_id: string;
-  item_name: string;
-  category: string;
-  is_active: boolean;
-  display_order: number;
-}
 
 export default function PartyHallSettings() {
   const { user } = useAuth();
@@ -48,7 +41,6 @@ export default function PartyHallSettings() {
   const queryClient = useQueryClient();
   const [selectedCondominium, setSelectedCondominium] = useState<string>("");
   const [newSpaceDialogOpen, setNewSpaceDialogOpen] = useState(false);
-  const [newTemplateDialogOpen, setNewTemplateDialogOpen] = useState(false);
   const [editingSpace, setEditingSpace] = useState<PartyHallSetting | null>(null);
   
   // Form states for new space
@@ -62,11 +54,6 @@ export default function PartyHallSettings() {
     max_guests: 50,
   });
 
-  // Form state for new template item
-  const [newTemplateItem, setNewTemplateItem] = useState({
-    item_name: "",
-    category: "Geral",
-  });
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
@@ -104,22 +91,6 @@ export default function PartyHallSettings() {
       return data as PartyHallSetting[];
     },
     enabled: !!user?.id,
-  });
-
-  // Fetch checklist templates
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
-    queryKey: ["checklist-templates", selectedCondominium],
-    queryFn: async () => {
-      if (!selectedCondominium) return [];
-      const { data, error } = await supabase
-        .from("party_hall_checklist_templates")
-        .select("*")
-        .eq("condominium_id", selectedCondominium)
-        .order("display_order");
-      if (error) throw error;
-      return data as ChecklistTemplate[];
-    },
-    enabled: !!selectedCondominium,
   });
 
   // Create space mutation
@@ -198,64 +169,6 @@ export default function PartyHallSettings() {
       toast({ title: "Erro ao excluir espaço", description: error.message, variant: "destructive" });
     },
   });
-
-  // Create template item mutation
-  const createTemplateMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedCondominium) throw new Error("Selecione um condomínio");
-      const { error } = await supabase
-        .from("party_hall_checklist_templates")
-        .insert({
-          condominium_id: selectedCondominium,
-          item_name: newTemplateItem.item_name,
-          category: newTemplateItem.category,
-          display_order: templates.length,
-        });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["checklist-templates"] });
-      setNewTemplateDialogOpen(false);
-      setNewTemplateItem({ item_name: "", category: "Geral" });
-      toast({ title: "Item de checklist criado com sucesso!" });
-    },
-    onError: (error) => {
-      toast({ title: "Erro ao criar item", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Toggle template active status
-  const toggleTemplateMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase
-        .from("party_hall_checklist_templates")
-        .update({ is_active })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["checklist-templates"] }),
-    onError: () => toast({ title: "Erro ao atualizar item", variant: "destructive" }),
-  });
-
-  // Delete template item mutation
-  const deleteTemplateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("party_hall_checklist_templates")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["checklist-templates"] });
-      toast({ title: "Item excluído com sucesso!" });
-    },
-    onError: (error) => {
-      toast({ title: "Erro ao excluir item", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const categories = ["Geral", "Elétrica", "Móveis", "Limpeza", "Utensílios", "Decoração", "Segurança"];
 
   return (
     <DashboardLayout>
@@ -477,120 +390,7 @@ export default function PartyHallSettings() {
           </TabsContent>
 
           <TabsContent value="checklist" className="space-y-4">
-            <div className="flex justify-end">
-              <Dialog open={newTemplateDialogOpen} onOpenChange={setNewTemplateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Novo Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Novo Item de Checklist</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="item_name">Nome do Item</Label>
-                      <Input
-                        id="item_name"
-                        value={newTemplateItem.item_name}
-                        onChange={(e) => setNewTemplateItem({ ...newTemplateItem, item_name: e.target.value })}
-                        placeholder="Ex: Ar Condicionado"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="category">Categoria</Label>
-                      <Select 
-                        value={newTemplateItem.category} 
-                        onValueChange={(value) => setNewTemplateItem({ ...newTemplateItem, category: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setNewTemplateDialogOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button 
-                      onClick={() => createTemplateMutation.mutate()}
-                      disabled={!newTemplateItem.item_name || createTemplateMutation.isPending}
-                    >
-                      Adicionar Item
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {templatesLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-            ) : templates.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    Nenhum item de checklist cadastrado. Clique em 'Novo Item' para começar.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              (() => {
-                const grouped = templates.reduce<Record<string, ChecklistTemplate[]>>((acc, item) => {
-                  const cat = item.category || "Geral";
-                  if (!acc[cat]) acc[cat] = [];
-                  acc[cat].push(item);
-                  return acc;
-                }, {});
-
-                return (
-                  <div className="space-y-4">
-                    {Object.entries(grouped).map(([category, categoryItems]) => (
-                      <Card key={category}>
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            <ClipboardList className="h-5 w-5" />
-                            {category}
-                            <Badge variant="secondary">{categoryItems.length}</Badge>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {categoryItems.map((item) => (
-                            <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                              <span className={`flex-1 text-sm ${!item.is_active ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                                {item.item_name}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <Switch
-                                  checked={item.is_active}
-                                  onCheckedChange={(checked) => toggleTemplateMutation.mutate({ id: item.id, is_active: checked })}
-                                />
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => deleteTemplateMutation.mutate(item.id)}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                );
-              })()
-            )}
+            <ChecklistTemplateTab condominiumId={selectedCondominium} />
           </TabsContent>
         </Tabs>
 
