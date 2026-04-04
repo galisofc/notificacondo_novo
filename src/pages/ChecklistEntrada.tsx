@@ -43,7 +43,7 @@ export default function ChecklistEntrada() {
   const [error, setError] = useState<string | null>(null);
   const [bookingInfo, setBookingInfo] = useState<any>(null);
 
-  const [items, setItems] = useState<ChecklistItem[]>(DEFAULT_CHECKLIST_ITEMS);
+  const [items, setItems] = useState<ChecklistItem[]>([]);
   const [signerName, setSignerName] = useState("");
   const [signerEmail, setSignerEmail] = useState("");
   const [generalObservations, setGeneralObservations] = useState("");
