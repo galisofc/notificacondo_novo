@@ -117,24 +117,6 @@ export default function ChecklistEntrada() {
     validateToken();
   }, [token]);
 
-  // Request geolocation
-  useEffect(() => {
-    if (!loading && !error && !submitted) {
-      setGeoStatus("loading");
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setGeolocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-            setGeoStatus("success");
-          },
-          () => setGeoStatus("denied"),
-          { timeout: 10000 }
-        );
-      } else {
-        setGeoStatus("denied");
-      }
-    }
-  }, [loading, error, submitted]);
 
   // Canvas drawing
   const getCanvasCoords = useCallback((e: React.MouseEvent | React.TouchEvent) => {
