@@ -34,14 +34,6 @@ interface PartyHallSetting {
   };
 }
 
-interface ChecklistTemplate {
-  id: string;
-  condominium_id: string;
-  item_name: string;
-  category: string;
-  is_active: boolean;
-  display_order: number;
-}
 
 export default function PartyHallSettings() {
   const { user } = useAuth();
