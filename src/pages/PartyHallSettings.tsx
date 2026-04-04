@@ -224,6 +224,19 @@ export default function PartyHallSettings() {
     },
   });
 
+  // Toggle template active status
+  const toggleTemplateMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from("party_hall_checklist_templates")
+        .update({ is_active })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["checklist-templates"] }),
+    onError: () => toast({ title: "Erro ao atualizar item", variant: "destructive" }),
+  });
+
   // Delete template item mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: string) => {
