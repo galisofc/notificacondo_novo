@@ -55,11 +55,6 @@ serve(async (req) => {
       );
     }
 
-    // Capture IP from headers
-    const signerIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
-      || req.headers.get('x-real-ip') 
-      || 'unknown';
-
     // Insert checklist
     const { error: insertError } = await supabase
       .from('party_hall_digital_checklists')
@@ -69,8 +64,8 @@ serve(async (req) => {
         token,
         signer_name,
         signer_email,
-        signer_ip: signerIp,
-        signer_geolocation: geolocation || null,
+        signer_ip: null,
+        signer_geolocation: null,
         signature_image,
         items,
         general_observations: general_observations || null,
