@@ -133,6 +133,8 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
       queryClient.invalidateQueries({ queryKey: ["checklist-templates"] });
       setDialogOpen(false);
       setNewItem({ item_name: "", category: "Geral" });
+      setCustomCategory("");
+      setUseCustomCategory(false);
       toast({ title: "Item adicionado!" });
     },
     onError: () => toast({ title: "Erro ao adicionar item", variant: "destructive" }),
