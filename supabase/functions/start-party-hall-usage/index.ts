@@ -51,6 +51,21 @@ async function sendChecklistWhatsApp(
 
   const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
 
+  const buttonConfigs = templateInfo.button_config
+    ? (Array.isArray(templateInfo.button_config) ? templateInfo.button_config : [templateInfo.button_config])
+    : [];
+
+  const urlButtonsWithSuffix = buttonConfigs
+    .map((btn: any, idx: number) => ({ btn, idx }))
+    .filter(({ btn }: any) => btn.type === 'url' && btn.has_dynamic_suffix);
+
+  const buttonParams = urlButtonsWithSuffix.map(({ idx }: any) => ({
+    type: 'button' as const,
+    subType: 'url' as const,
+    index: idx,
+    parameters: [{ type: 'text' as const, text: checklistToken }],
+  }));
+
   const metaResult = await sendMetaTemplate({
     phone: resident.phone,
     bsuid: resident.bsuid || undefined,
@@ -58,6 +73,7 @@ async function sendChecklistWhatsApp(
     language: templateInfo.waba_language || 'pt_BR',
     bodyParams,
     bodyParamNames,
+    buttonParams: buttonParams.length > 0 ? buttonParams : undefined,
   });
 
   // Log notification
@@ -153,7 +169,7 @@ serve(async (req) => {
     if (whatsappConfigured) {
       const { data: template, error: templateError } = await supabase
         .from('whatsapp_templates')
-        .select('id, waba_template_name, params_order, waba_language')
+        .select('id, waba_template_name, params_order, waba_language, button_config')
         .eq('slug', 'party_hall_checklist_entrada')
         .eq('is_active', true)
         .maybeSingle();
