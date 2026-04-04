@@ -54,11 +54,6 @@ export default function PartyHallSettings() {
     max_guests: 50,
   });
 
-  // Form state for new template item
-  const [newTemplateItem, setNewTemplateItem] = useState({
-    item_name: "",
-    category: "Geral",
-  });
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
