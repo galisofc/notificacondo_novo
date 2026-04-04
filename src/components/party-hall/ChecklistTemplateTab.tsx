@@ -91,6 +91,8 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState({ item_name: "", category: "Geral" });
+  const [customCategory, setCustomCategory] = useState("");
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
