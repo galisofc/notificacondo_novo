@@ -181,3 +181,7 @@ verify_jwt = false
 
 [functions.delete-whatsapp-conversation]
 verify_jwt = false
+
+# Checklist de entrada - página pública acessada via link/token sem login
+[functions.submit-checklist-entrada]
+verify_jwt = false
