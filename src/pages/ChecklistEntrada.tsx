@@ -212,7 +212,7 @@ export default function ChecklistEntrada() {
           signer_name: signerName.trim(),
           signer_email: signerEmail.trim(),
           signature_image: signatureImage,
-          geolocation,
+          geolocation: null,
           general_observations: generalObservations.trim() || null,
         },
       });
