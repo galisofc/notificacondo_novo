@@ -119,10 +119,12 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      const category = useCustomCategory ? customCategory.trim() : newItem.category;
+      if (!category) throw new Error("Categoria obrigatória");
       const { error } = await supabase.from("party_hall_checklist_templates").insert({
         condominium_id: condominiumId,
         item_name: newItem.item_name,
-        category: newItem.category,
+        category,
         display_order: templates.length,
       });
       if (error) throw error;
