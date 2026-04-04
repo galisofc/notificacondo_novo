@@ -38,7 +38,7 @@ interface ChecklistTemplate {
   display_order: number;
 }
 
-const CATEGORIES = ["Geral", "Elétrica", "Móveis", "Limpeza", "Utensílios", "Decoração", "Segurança"];
+const DEFAULT_CATEGORIES = ["Geral", "Elétrica", "Móveis", "Limpeza", "Utensílios", "Decoração", "Segurança", "Estrutura", "Equipamentos", "Hidráulica"];
 
 function SortableItem({
   item,
