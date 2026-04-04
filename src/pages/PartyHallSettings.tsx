@@ -93,6 +93,82 @@ export default function PartyHallSettings() {
     enabled: !!user?.id,
   });
 
+  // Create space mutation
+  const createSpaceMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedCondominium) throw new Error("Selecione um condomínio");
+      const { error } = await supabase
+        .from("party_hall_settings")
+        .insert({
+          condominium_id: selectedCondominium,
+          ...newSpace,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["party-hall-settings"] });
+      setNewSpaceDialogOpen(false);
+      setNewSpace({
+        name: "",
+        rental_fee: 0,
+        rules: "",
+        advance_days_required: 3,
+        check_in_time: "08:00",
+        check_out_time: "22:00",
+        max_guests: 50,
+      });
+      toast({ title: "Espaço criado com sucesso!" });
+    },
+    onError: (error) => {
+      toast({ title: "Erro ao criar espaço", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Update space mutation
+  const updateSpaceMutation = useMutation({
+    mutationFn: async (space: PartyHallSetting) => {
+      const { error } = await supabase
+        .from("party_hall_settings")
+        .update({
+          name: space.name,
+          rental_fee: space.rental_fee,
+          rules: space.rules,
+          advance_days_required: space.advance_days_required,
+          check_in_time: space.check_in_time,
+          check_out_time: space.check_out_time,
+          max_guests: space.max_guests,
+          is_active: space.is_active,
+        })
+        .eq("id", space.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["party-hall-settings"] });
+      setEditingSpace(null);
+      toast({ title: "Espaço atualizado com sucesso!" });
+    },
+    onError: (error) => {
+      toast({ title: "Erro ao atualizar espaço", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Delete space mutation
+  const deleteSpaceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("party_hall_settings")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["party-hall-settings"] });
+      toast({ title: "Espaço excluído com sucesso!" });
+    },
+    onError: (error) => {
+      toast({ title: "Erro ao excluir espaço", description: error.message, variant: "destructive" });
+    },
+  });
 
   return (
     <DashboardLayout>
