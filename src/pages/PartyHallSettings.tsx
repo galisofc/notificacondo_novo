@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Plus, Trash2, Building2, ClipboardList, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import ChecklistTemplateTab from "@/components/party-hall/ChecklistTemplateTab";
 
 interface PartyHallSetting {
   id: string;
