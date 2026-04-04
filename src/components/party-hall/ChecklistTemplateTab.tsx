@@ -226,16 +226,36 @@ export default function ChecklistTemplateTab({ condominiumId }: { condominiumId:
               </div>
               <div className="grid gap-2">
                 <Label>Categoria</Label>
-                <Select value={newItem.category} onValueChange={(v) => setNewItem({ ...newItem, category: v })}>
+                <Select
+                  value={useCustomCategory ? "__custom__" : newItem.category}
+                  onValueChange={(v) => {
+                    if (v === "__custom__") {
+                      setUseCustomCategory(true);
+                    } else {
+                      setUseCustomCategory(false);
+                      setCustomCategory("");
+                      setNewItem({ ...newItem, category: v });
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((cat) => (
+                    {allCategories.map((cat) => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
+                    <SelectItem value="__custom__">+ Nova categoria...</SelectItem>
                   </SelectContent>
                 </Select>
+                {useCustomCategory && (
+                  <Input
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Digite o nome da nova categoria"
+                    autoFocus
+                  />
+                )}
               </div>
             </div>
             <DialogFooter>
