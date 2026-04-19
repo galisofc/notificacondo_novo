@@ -211,8 +211,14 @@ export function generateSampleOccurrencePdf(
     yPos += 6;
   }
 
-  // Penalty (use notificacao for sample)
-  const penaltyParagraph = interpolate(template.penalty_notificacao_paragraph, SAMPLE);
+  // Penalty (selected variant)
+  const penaltySource =
+    penaltyType === "advertencia"
+      ? template.penalty_advertencia_paragraph
+      : penaltyType === "multa"
+      ? template.penalty_multa_paragraph
+      : template.penalty_notificacao_paragraph;
+  const penaltyParagraph = interpolate(penaltySource, SAMPLE);
   if (penaltyParagraph.trim()) {
     drawJustifiedPaginated(penaltyParagraph, 5, indent);
     yPos += 6;
