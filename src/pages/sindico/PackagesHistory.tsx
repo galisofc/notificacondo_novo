@@ -926,6 +926,12 @@ const PackagesHistory = () => {
           </Card>
         )}
       </div>
+
+      <PackageDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        package_={selectedPackage}
+      />
     </DashboardLayout>
   );
 };
