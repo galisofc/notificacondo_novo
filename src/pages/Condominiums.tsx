@@ -335,7 +335,9 @@ const Condominiums = () => {
             city: formData.city || null,
             state: formData.state || null,
             defense_deadline_days: parseInt(formData.defense_deadline_days) || 10,
-          })
+            logo_url: formData.logo_url || null,
+            sindico_name: formData.sindico_name || null,
+          } as any)
           .select()
           .single();
 
@@ -374,6 +376,8 @@ const Condominiums = () => {
         state: "", 
         plan_slug: "start",
         defense_deadline_days: "10",
+        logo_url: "",
+        sindico_name: "",
       });
       fetchCondominiums();
     } catch (error: any) {
@@ -402,6 +406,8 @@ const Condominiums = () => {
       state: condo.state || "",
       plan_slug: condo.subscription?.plan || "start",
       defense_deadline_days: String(condo.defense_deadline_days || 10),
+      logo_url: condo.logo_url || "",
+      sindico_name: condo.sindico_name || "",
     });
     setIsDialogOpen(true);
   };
@@ -444,6 +450,8 @@ const Condominiums = () => {
       state: "", 
       plan_slug: "start",
       defense_deadline_days: "10",
+      logo_url: "",
+      sindico_name: "",
     });
     setIsDialogOpen(true);
   };
