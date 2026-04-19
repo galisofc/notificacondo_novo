@@ -850,14 +850,13 @@ const OccurrenceDetails = () => {
       doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, leftY);
       leftY += 6;
 
-      doc.setFont("helvetica", "normal");
-      doc.text("Bloco: ", margin, leftY);
       doc.setFont("helvetica", "bold");
-      doc.text(blockName, margin + 14, leftY);
+      doc.text(blockName, margin, leftY);
+      const blockWidth = doc.getTextWidth(blockName);
       doc.setFont("helvetica", "normal");
-      doc.text("APTO: ", margin + 35, leftY);
+      doc.text("APTO: ", margin + blockWidth + 6, leftY);
       doc.setFont("helvetica", "bold");
-      doc.text(aptNumber, margin + 49, leftY);
+      doc.text(aptNumber, margin + blockWidth + 6 + doc.getTextWidth("APTO: "), leftY);
       leftY += 6;
 
       doc.setFont("helvetica", "normal");
