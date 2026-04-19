@@ -192,7 +192,7 @@ export default function PartyHall() {
 
       const { error } = await supabase
         .from("party_hall_bookings")
-        .update(updateData)
+        .update(updateData as never)
         .eq("id", bookingId);
       if (error) throw error;
 
