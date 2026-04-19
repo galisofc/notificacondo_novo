@@ -63,6 +63,7 @@ import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import SindicoBreadcrumbs from "@/components/sindico/SindicoBreadcrumbs";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
+import { fetchOccurrencePdfTemplate, interpolate } from "@/hooks/useOccurrencePdfTemplate";
 
 interface Occurrence {
   id: string;
@@ -648,6 +649,7 @@ const OccurrenceDetails = () => {
 
   const generatePDF = async () => {
     if (!occurrence) return;
+    const pdfTemplate = await fetchOccurrencePdfTemplate();
 
     // Determine sindico name: prefer the condominium-level sindico_name, fallback to owner profile
     let sindicoName = occurrence.condominiums?.sindico_name || "";
@@ -962,11 +964,31 @@ const OccurrenceDetails = () => {
     // Body paragraphs use a first-line indent like a Word document
     const indent = 12;
 
+    // Build template variables for placeholder interpolation
+    const occurrenceDate = formatShortDate(occurrence.occurred_at);
+    const occurrenceTime = formatTime(occurrence.occurred_at);
+    const deadlineDays = occurrence.condominiums?.defense_deadline_days || 10;
+    const deadlineWritten =
+      deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
+    const templateVars: Record<string, string> = {
+      data: occurrenceDate,
+      hora: occurrenceTime,
+      bloco: occurrence.blocks?.name || "",
+      apartamento: occurrence.apartments?.number || "",
+      morador: occurrence.residents?.full_name || "",
+      descricao_ocorrencia: occurrence.description || "",
+      local: occurrence.location || "",
+      condominio: occurrence.condominiums?.name || "",
+      sindico: sindicoName || "",
+      prazo_defesa: deadlineWritten,
+    };
+
     // Intro paragraph
-    const introParagraph =
-      "Na qualidade de síndico deste Condomínio, no uso de minhas atribuições legais e conforme determinação do corpo diretivo, sirvo-me da presente para notificá-lo(a) acerca do descumprimento das normas previstas no Regulamento Interno.";
-    await drawJustifiedPaginated(introParagraph, 5, indent);
-    yPos += 6;
+    const introParagraph = interpolate(pdfTemplate.intro_paragraph, templateVars);
+    if (introParagraph.trim()) {
+      await drawJustifiedPaginated(introParagraph, 5, indent);
+      yPos += 6;
+    }
 
     // Highlighted legal basis (light yellow block) - aligned to text margins, italic
     const legalParts: string[] = [];
@@ -998,9 +1020,7 @@ const OccurrenceDetails = () => {
       doc.setFont("helvetica", "normal");
     }
 
-    // Description paragraph
-    const occurrenceDate = formatShortDate(occurrence.occurred_at);
-    const occurrenceTime = formatTime(occurrence.occurred_at);
+    // Description paragraph (built from occurrence data — kept dynamic, not templated)
     let descriptionParagraph = `No dia ${occurrenceDate}, por volta das ${occurrenceTime}`;
     if (occurrence.location) descriptionParagraph += `, no local: ${occurrence.location}`;
     descriptionParagraph += `, foi constatado que: ${occurrence.description}`;
@@ -1008,43 +1028,39 @@ const OccurrenceDetails = () => {
     yPos += 6;
 
     // Role paragraph
-    const rolePara =
-      "Ressaltamos que o cargo de síndico tem por finalidade a gestão do condomínio e o fiel cumprimento do Regimento Interno, cuja versão atualizada está disponível para consulta de todos os condôminos, conforme aprovado em assembleia.";
-    await drawJustifiedPaginated(rolePara, 5, indent);
-    yPos += 6;
-
-    // Penalty paragraph
-    let penaltyParagraph = "";
-    if (occurrence.type === "multa") {
-      penaltyParagraph =
-        "Diante do ocorrido, torna-se necessária a aplicação da multa prevista no Regimento Interno deste Condomínio, a qual será lançada juntamente com a quota condominial.";
-    } else if (occurrence.type === "advertencia") {
-      penaltyParagraph =
-        "Diante do ocorrido, esta notificação está sendo emitida como advertência formal, sendo o próximo passo, em caso de reincidência, a aplicação da multa prevista no Regimento Interno.";
-    } else {
-      penaltyParagraph =
-        "Diante do ocorrido, serve a presente como NOTIFICAÇÃO FORMAL sobre o descumprimento das normas condominiais.";
+    const rolePara = interpolate(pdfTemplate.syndic_role_paragraph, templateVars);
+    if (rolePara.trim()) {
+      await drawJustifiedPaginated(rolePara, 5, indent);
+      yPos += 6;
     }
-    await drawJustifiedPaginated(penaltyParagraph, 5, indent);
-    yPos += 6;
+
+    // Penalty paragraph (varies by occurrence type)
+    let penaltyTemplate = pdfTemplate.penalty_notificacao_paragraph;
+    if (occurrence.type === "multa") penaltyTemplate = pdfTemplate.penalty_multa_paragraph;
+    else if (occurrence.type === "advertencia") penaltyTemplate = pdfTemplate.penalty_advertencia_paragraph;
+    const penaltyParagraph = interpolate(penaltyTemplate, templateVars);
+    if (penaltyParagraph.trim()) {
+      await drawJustifiedPaginated(penaltyParagraph, 5, indent);
+      yPos += 6;
+    }
 
     // Defense deadline
-    const deadlineDays = occurrence.condominiums?.defense_deadline_days || 10;
-    const deadlineWritten =
-      deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
-    const defenseParagraph = `Fica estipulado o prazo de ${deadlineWritten} dias para que V. Sa. apresente, se assim desejar, suas razões mediante defesa por escrito, a qual será submetida à análise do Conselho Consultivo.`;
-    await drawJustifiedPaginated(defenseParagraph, 5, indent);
-    yPos += 6;
+    const defenseParagraph = interpolate(pdfTemplate.defense_deadline_paragraph, templateVars);
+    if (defenseParagraph.trim()) {
+      await drawJustifiedPaginated(defenseParagraph, 5, indent);
+      yPos += 6;
+    }
 
     // Closing
-    const closingPara =
-      "Contamos com a sua compreensão e colaboração no sentido de mantermos o respeito às normas e a boa convivência entre os moradores.";
-    await drawJustifiedPaginated(closingPara, 5, indent);
-    yPos += 10;
+    const closingPara = interpolate(pdfTemplate.closing_remarks, templateVars);
+    if (closingPara.trim()) {
+      await drawJustifiedPaginated(closingPara, 5, indent);
+      yPos += 10;
+    }
 
     // Signature block — keep together on the same page
     await ensureSpace(35);
-    doc.text("Atenciosamente;", margin, yPos);
+    doc.text(pdfTemplate.signature_label || "Atenciosamente;", margin, yPos);
     yPos += 18;
 
     // Signature

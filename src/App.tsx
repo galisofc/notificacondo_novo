@@ -67,6 +67,7 @@ const PorteiroSettings = lazy(() => import("./pages/porteiro/Settings"));
 const ContactMessages = lazy(() => import("./pages/superadmin/ContactMessages"));
 const PackageTypes = lazy(() => import("./pages/superadmin/PackageTypes"));
 const ExportDatabase = lazy(() => import("./pages/superadmin/ExportDatabase"));
+const OccurrencePdfTemplate = lazy(() => import("./pages/superadmin/OccurrencePdfTemplate"));
 const PorteiroDashboard = lazy(() => import("./pages/porteiro/Dashboard"));
 const RegisterPackage = lazy(() => import("./pages/porteiro/RegisterPackage"));
 const PorteiroPackages = lazy(() => import("./pages/porteiro/Packages"));
@@ -197,6 +198,7 @@ const App = () => (
               <Route path="/superadmin/contact-messages" element={<ProtectedRoute requiredRole="super_admin"><ContactMessages /></ProtectedRoute>} />
               <Route path="/superadmin/package-types" element={<ProtectedRoute requiredRole="super_admin"><PackageTypes /></ProtectedRoute>} />
               <Route path="/superadmin/export-database" element={<ProtectedRoute requiredRole="super_admin"><ExportDatabase /></ProtectedRoute>} />
+              <Route path="/superadmin/pdf-template" element={<ProtectedRoute requiredRole="super_admin"><OccurrencePdfTemplate /></ProtectedRoute>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
