@@ -343,7 +343,7 @@ const OccurrenceDetails = () => {
 
       // Build timeline
       buildTimeline(
-        occurrenceData,
+        occurrenceData as any,
         evidencesData || [],
         defensesData || [],
         decisionsData || [],
