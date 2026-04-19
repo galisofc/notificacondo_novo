@@ -1040,6 +1040,7 @@ const PackagesCondominiumHistory = () => {
                         <TableHead>Retirado por</TableHead>
                         <TableHead>Data Retirada</TableHead>
                         <TableHead>Tempo Espera</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1072,6 +1073,41 @@ const PackagesCondominiumHistory = () => {
                               : "-"}
                           </TableCell>
                           <TableCell>{getWaitingTime(pkg)}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedPackage({
+                                  id: pkg.id,
+                                  condominium_id: pkg.condominium?.id || "",
+                                  block_id: pkg.block?.id || "",
+                                  apartment_id: pkg.apartment?.id || "",
+                                  resident_id: pkg.resident?.id || null,
+                                  received_by: pkg.received_by,
+                                  pickup_code: pkg.pickup_code,
+                                  description: pkg.description,
+                                  photo_url: pkg.photo_url,
+                                  status: pkg.status,
+                                  received_at: pkg.received_at,
+                                  picked_up_at: pkg.picked_up_at,
+                                  picked_up_by: pkg.picked_up_by,
+                                  picked_up_by_name: pkg.picked_up_by_name,
+                                  created_at: pkg.received_at,
+                                  notification_sent: null,
+                                  notification_sent_at: null,
+                                  notification_count: null,
+                                  condominium: pkg.condominium ? { name: pkg.condominium.name } : undefined,
+                                  block: pkg.block ? { name: pkg.block.name } : undefined,
+                                  apartment: pkg.apartment ? { number: pkg.apartment.number } : undefined,
+                                } as PackageType);
+                                setDetailsOpen(true);
+                              }}
+                              title="Ver detalhes e histórico de envios"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
