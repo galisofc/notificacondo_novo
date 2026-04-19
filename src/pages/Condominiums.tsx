@@ -463,6 +463,7 @@ const Condominiums = () => {
       defense_deadline_days: "10",
       logo_url: "",
       sindico_name: "",
+      default_fine_percentage: "50",
     });
     setIsDialogOpen(true);
   };
