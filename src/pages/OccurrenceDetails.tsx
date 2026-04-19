@@ -668,6 +668,41 @@ const OccurrenceDetails = () => {
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
 
+    // Justify text manually so the LAST line stays left-aligned (avoids huge gaps)
+    const drawJustified = (
+      text: string,
+      x: number,
+      y: number,
+      maxWidth: number,
+      lineHeight = 5
+    ): number => {
+      const paragraphs = String(text).split(/\n/);
+      let cursorY = y;
+      paragraphs.forEach((para) => {
+        const lines: string[] = doc.splitTextToSize(para, maxWidth);
+        lines.forEach((line, idx) => {
+          const isLast = idx === lines.length - 1;
+          const words = line.split(" ").filter(Boolean);
+          const lineWidth = doc.getTextWidth(line);
+          if (isLast || words.length < 2 || lineWidth >= maxWidth - 0.5) {
+            doc.text(line, x, cursorY);
+          } else {
+            const wordsWidth = words.reduce((s, w) => s + doc.getTextWidth(w), 0);
+            const gap = (maxWidth - wordsWidth) / (words.length - 1);
+            let cx = x;
+            words.forEach((w, i) => {
+              doc.text(w, cx, cursorY);
+              cx += doc.getTextWidth(w) + gap;
+              void i;
+            });
+          }
+          cursorY += lineHeight;
+        });
+      });
+      return cursorY;
+    };
+
+
     const typeLabels: Record<string, string> = {
       advertencia: "Advertência",
       notificacao: "Notificação",
@@ -818,9 +853,7 @@ const OccurrenceDetails = () => {
     // Intro paragraph
     const introParagraph =
       "Na qualidade de síndico deste Condomínio, no uso de minhas atribuições legais e conforme determinação do corpo diretivo, sirvo-me da presente para notificá-lo(a) acerca do descumprimento das normas previstas no Regulamento Interno.";
-    const introLines = doc.splitTextToSize(introParagraph, contentWidth);
-    doc.text(introLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
-    yPos += introLines.length * 5 + 6;
+    yPos = drawJustified(introParagraph, margin, yPos, contentWidth) + 4;
 
     // Highlighted legal basis (yellow background block)
     const legalParts: string[] = [];
@@ -838,14 +871,10 @@ const OccurrenceDetails = () => {
       doc.setFontSize(11);
       const legalLines = doc.splitTextToSize(legalText, contentWidth - padX * 2);
       const blockHeight = legalLines.length * lineH + padY * 2;
-      // Light yellow highlight background
       doc.setFillColor(255, 249, 196);
       doc.rect(margin, yPos, contentWidth, blockHeight, "F");
       doc.setTextColor(33, 33, 33);
-      doc.text(legalLines, margin + padX, yPos + padY + 4, {
-        align: "justify",
-        maxWidth: contentWidth - padX * 2,
-      });
+      drawJustified(legalText, margin + padX, yPos + padY + 4, contentWidth - padX * 2, lineH);
       yPos += blockHeight + 6;
       doc.setFont("helvetica", "normal");
     }
@@ -856,16 +885,12 @@ const OccurrenceDetails = () => {
     let descriptionParagraph = `No dia ${occurrenceDate}, por volta das ${occurrenceTime}`;
     if (occurrence.location) descriptionParagraph += `, no local: ${occurrence.location}`;
     descriptionParagraph += `, foi constatado que: ${occurrence.description}`;
-    const descLines = doc.splitTextToSize(descriptionParagraph, contentWidth);
-    doc.text(descLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
-    yPos += descLines.length * 5 + 6;
+    yPos = drawJustified(descriptionParagraph, margin, yPos, contentWidth) + 4;
 
     // Role paragraph
     const rolePara =
       "Ressaltamos que o cargo de síndico tem por finalidade a gestão do condomínio e o fiel cumprimento do Regimento Interno, cuja versão atualizada está disponível para consulta de todos os condôminos, conforme aprovado em assembleia.";
-    const roleLines = doc.splitTextToSize(rolePara, contentWidth);
-    doc.text(roleLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
-    yPos += roleLines.length * 5 + 6;
+    yPos = drawJustified(rolePara, margin, yPos, contentWidth) + 4;
 
     // Penalty paragraph
     let penaltyParagraph = "";
@@ -879,25 +904,20 @@ const OccurrenceDetails = () => {
       penaltyParagraph =
         "Diante do ocorrido, serve a presente como NOTIFICAÇÃO FORMAL sobre o descumprimento das normas condominiais.";
     }
-    const penaltyLines = doc.splitTextToSize(penaltyParagraph, contentWidth);
-    doc.text(penaltyLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
-    yPos += penaltyLines.length * 5 + 6;
+    yPos = drawJustified(penaltyParagraph, margin, yPos, contentWidth) + 4;
 
     // Defense deadline
     const deadlineDays = occurrence.condominiums?.defense_deadline_days || 10;
     const deadlineWritten =
       deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
     const defenseParagraph = `Fica estipulado o prazo de ${deadlineWritten} dias para que V. Sa. apresente, se assim desejar, suas razões mediante defesa por escrito, a qual será submetida à análise do Conselho Consultivo.`;
-    const defenseLines = doc.splitTextToSize(defenseParagraph, contentWidth);
-    doc.text(defenseLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
-    yPos += defenseLines.length * 5 + 8;
+    yPos = drawJustified(defenseParagraph, margin, yPos, contentWidth) + 6;
 
     // Closing
     const closingPara =
       "Contamos com a sua compreensão e colaboração no sentido de mantermos o respeito às normas e a boa convivência entre os moradores.";
-    const closingLines = doc.splitTextToSize(closingPara, contentWidth);
-    doc.text(closingLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
-    yPos += closingLines.length * 5 + 12;
+    yPos = drawJustified(closingPara, margin, yPos, contentWidth) + 10;
+
 
     doc.text("Atenciosamente;", margin, yPos);
     yPos += 18;
