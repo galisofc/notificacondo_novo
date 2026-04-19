@@ -51,6 +51,7 @@ const SAMPLE_VARS: Record<string, string> = {
   condominio: "Residencial Exemplo",
   sindico: "Maria Santos",
   prazo_defesa: "10 (dez)",
+  percentual_multa: "50",
 };
 
 export default function OccurrencePdfTemplatePage() {
