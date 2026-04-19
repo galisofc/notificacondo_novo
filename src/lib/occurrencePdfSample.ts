@@ -7,7 +7,12 @@ import { interpolate, type OccurrencePdfTemplate } from "@/hooks/useOccurrencePd
  * (top block, ref line, body paragraphs, yellow legal block, signature),
  * but without touching the database or fetching evidences.
  */
-export function generateSampleOccurrencePdf(template: OccurrencePdfTemplate): jsPDF {
+export type SamplePenaltyType = "notificacao" | "advertencia" | "multa";
+
+export function generateSampleOccurrencePdf(
+  template: OccurrencePdfTemplate,
+  penaltyType: SamplePenaltyType = "notificacao",
+): jsPDF {
   const SAMPLE = {
     data: "15/04/2026",
     hora: "14h30",
@@ -21,7 +26,12 @@ export function generateSampleOccurrencePdf(template: OccurrencePdfTemplate): js
     sindico: "Maria Santos",
     prazo_defesa: "10 (dez)",
   };
-  const refType = "NOTIFICAÇÃO – Infração a Convenção";
+  const refTypeMap: Record<SamplePenaltyType, string> = {
+    notificacao: "NOTIFICAÇÃO – Infração a Convenção",
+    advertencia: "ADVERTÊNCIA – Infração a Convenção",
+    multa: "MULTA – Infração a Convenção",
+  };
+  const refType = refTypeMap[penaltyType];
   const condominiumName = SAMPLE.condominio;
   const sindicoName = SAMPLE.sindico;
   const headerCity = "São Paulo";
