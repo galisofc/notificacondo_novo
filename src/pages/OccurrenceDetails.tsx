@@ -80,7 +80,17 @@ interface Occurrence {
   apartment_id: string | null;
   resident_id: string | null;
   condominium_id: string;
-  condominiums: { name: string; defense_deadline_days: number } | null;
+  condominiums: {
+    name: string;
+    defense_deadline_days: number;
+    address: string | null;
+    address_number: string | null;
+    neighborhood: string | null;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+    owner_id: string;
+  } | null;
   blocks: { name: string } | null;
   apartments: { number: string } | null;
   residents: { id: string; full_name: string; email: string } | null;
@@ -248,7 +258,7 @@ const OccurrenceDetails = () => {
         .from("occurrences")
         .select(`
           *,
-          condominiums(name, defense_deadline_days),
+          condominiums(name, defense_deadline_days, address, address_number, neighborhood, city, state, zip_code, owner_id),
           blocks(name),
           apartments(number),
           residents(id, full_name, email)
@@ -262,7 +272,7 @@ const OccurrenceDetails = () => {
         navigate("/occurrences");
         return;
       }
-      setOccurrence(occurrenceData);
+      setOccurrence(occurrenceData as unknown as Occurrence);
 
       // Fetch evidences
       const { data: evidencesData } = await supabase
