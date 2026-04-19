@@ -1064,9 +1064,12 @@ const OccurrenceDetails = () => {
     }
 
     // Signature block — keep together on the same page
-    // Real height: "Atenciosamente" (yPos) + 18 + 5 (condominio) + 5 (SÍNDICO) + 0 (nome) ≈ 28
-    const signatureBlockHeight = 30;
-    if (yPos + signatureBlockHeight > bottomLimit) {
+    // Real height: "Atenciosamente" (1 line) + 18 gap + 3 lines × 5 = 28mm.
+    // We allow it to use part of the footer reserve area if needed (signature
+    // sits above the drawn footer at pageHeight - 25, so total available = pageHeight - 25).
+    const signatureBlockHeight = 28;
+    const signatureBottomLimit = pageHeight - 27; // just above the footer line
+    if (yPos + signatureBlockHeight > signatureBottomLimit) {
       doc.addPage();
       yPos = await renderTopBlock();
     }
