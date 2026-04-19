@@ -27,6 +27,7 @@ export const TEMPLATE_PLACEHOLDERS = [
   { key: "condominio", label: "Nome do condomínio" },
   { key: "sindico", label: "Nome do síndico" },
   { key: "prazo_defesa", label: "Prazo de defesa (dias por extenso)" },
+  { key: "percentual_multa", label: "Percentual da multa (somente Multa)" },
 ] as const;
 
 export function interpolate(template: string, vars: Record<string, string | number | null | undefined>): string {
