@@ -726,19 +726,29 @@ const OccurrenceDetails = () => {
       .join(" – ");
     const addressLine = [fullAddress, cityState].filter(Boolean).join(" – ");
     const cepLine = condo?.zip_code ? `CEP: ${condo.zip_code}` : "";
-    const today = new Date().toISOString();
-    const headerCity = city || "São Paulo";
 
     // Reference number: year/sequential placeholder using occurrence id last 4
     const refNumber = `${new Date().getFullYear()}/${occurrence.id.slice(-4).toUpperCase()}`;
 
     // ===== PAGE 1: FORMAL LETTER =====
-    // Logo (if available) - centered at the top
+    // Top section: recipient block on the LEFT, date + logo stacked on the RIGHT
+    const topStartY = yPos;
+    const rightColX = pageWidth - margin;
+    const today = new Date().toISOString();
+    const headerCity = city || "São Paulo";
+
+    // Right column: date (top) and logo (below date), right-aligned
+    doc.setFontSize(11);
+    doc.setTextColor(33, 33, 33);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${headerCity}, ${formatFullDate(today)}`, rightColX, topStartY, { align: "right" });
+
+    let rightYAfter = topStartY;
     if (condo?.logo_url) {
       const logoData = await loadImageAsDataUrl(condo.logo_url);
       if (logoData && logoData.width > 0) {
-        const maxLogoH = 25;
-        const maxLogoW = 50;
+        const maxLogoH = 22;
+        const maxLogoW = 55;
         const ratio = logoData.width / logoData.height;
         let logoH = maxLogoH;
         let logoW = logoH * ratio;
@@ -746,55 +756,53 @@ const OccurrenceDetails = () => {
           logoW = maxLogoW;
           logoH = logoW / ratio;
         }
-        const logoX = (pageWidth - logoW) / 2;
+        const logoX = rightColX - logoW;
+        const logoY = topStartY + 6;
         try {
-          doc.addImage(logoData.dataUrl, logoData.format, logoX, yPos, logoW, logoH);
-          yPos += logoH + 6;
+          doc.addImage(logoData.dataUrl, logoData.format, logoX, logoY, logoW, logoH);
+          rightYAfter = logoY + logoH;
         } catch (e) {
           console.warn("Failed to add logo to PDF", e);
         }
       }
     }
 
-    // Header date
+    // Left column: recipient block
+    let leftY = topStartY + 12;
     doc.setFontSize(11);
-    doc.setTextColor(33, 33, 33);
     doc.setFont("helvetica", "normal");
-    doc.text(`${headerCity}, ${formatFullDate(today)}`, margin, yPos);
-    yPos += 12;
-
-    // Recipient
-    doc.text("Ao Senhor(a):", margin, yPos);
-    yPos += 6;
+    doc.text("Ao Senhor(a):", margin, leftY);
+    leftY += 6;
     doc.setFont("helvetica", "bold");
-    doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, yPos);
-    yPos += 6;
+    doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, leftY);
+    leftY += 6;
 
     const blockName = occurrence.blocks?.name || "-";
     const aptNumber = occurrence.apartments?.number || "-";
     doc.setFont("helvetica", "normal");
-    doc.text("Bloco: ", margin, yPos);
+    doc.text("Bloco: ", margin, leftY);
     doc.setFont("helvetica", "bold");
-    doc.text(blockName, margin + 14, yPos);
+    doc.text(blockName, margin + 14, leftY);
     doc.setFont("helvetica", "normal");
-    doc.text("APTO: ", margin + 35, yPos);
+    doc.text("APTO: ", margin + 35, leftY);
     doc.setFont("helvetica", "bold");
-    doc.text(aptNumber, margin + 49, yPos);
-    yPos += 6;
+    doc.text(aptNumber, margin + 49, leftY);
+    leftY += 6;
 
     doc.setFont("helvetica", "normal");
-    doc.text(condominiumName.toUpperCase(), margin, yPos);
-    yPos += 5;
+    doc.text(condominiumName.toUpperCase(), margin, leftY);
+    leftY += 5;
     if (addressLine) {
       doc.setFontSize(10);
-      doc.text(addressLine, margin, yPos);
-      yPos += 5;
+      doc.text(addressLine, margin, leftY);
+      leftY += 5;
     }
     if (cepLine) {
-      doc.text(cepLine, margin, yPos);
-      yPos += 5;
+      doc.text(cepLine, margin, leftY);
+      leftY += 5;
     }
-    yPos += 8;
+
+    yPos = Math.max(leftY, rightYAfter) + 8;
 
     // Reference (italic)
     doc.setFontSize(11);
