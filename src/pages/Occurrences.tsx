@@ -1113,6 +1113,24 @@ const Occurrences = () => {
                     />
                   </div>
                 </div>
+                {formData.type === "multa" && (
+                  <div className="space-y-2">
+                    <Label>Percentual da multa (% da taxa condominial) *</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step="0.01"
+                      value={formData.fine_percentage}
+                      onChange={(e) => setFormData({ ...formData, fine_percentage: e.target.value })}
+                      className="bg-secondary/50"
+                      placeholder="Ex.: 50"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Este valor será usado no texto da multa do PDF (placeholder {"{{percentual_multa}}"}).
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Título *</Label>
                   <Input
