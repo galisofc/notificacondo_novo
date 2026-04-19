@@ -176,8 +176,8 @@ export function PackagePickupDialog({
                   id="picked-up-by-name"
                   placeholder="Digite o nome completo..."
                   value={pickedUpByName}
-                  onChange={(e) => setPickedUpByName(e.target.value)}
-                  className="text-base"
+                  onChange={(e) => setPickedUpByName(e.target.value.toUpperCase())}
+                  className="text-base uppercase"
                   maxLength={100}
                 />
               </div>
