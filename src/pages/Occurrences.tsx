@@ -61,6 +61,7 @@ import { History } from "lucide-react";
 interface Condominium {
   id: string;
   name: string;
+  default_fine_percentage?: number | null;
 }
 
 interface Block {
@@ -174,11 +175,11 @@ const Occurrences = () => {
 
     try {
       // Fetch condominiums
-      const { data: condosData } = await supabase
-        .from("condominiums")
-        .select("id, name")
+      const { data: condosData } = await (supabase
+        .from("condominiums") as any)
+        .select("id, name, default_fine_percentage")
         .eq("owner_id", user.id);
-      setCondominiums(condosData || []);
+      setCondominiums((condosData as Condominium[]) || []);
 
       if (condosData && condosData.length > 0) {
         const condoIds = condosData.map((c) => c.id);
@@ -966,9 +967,21 @@ const Occurrences = () => {
                     <Label>Condomínio *</Label>
                     <Select
                       value={formData.condominium_id}
-                      onValueChange={(v) =>
-                        setFormData({ ...formData, condominium_id: v, block_id: "", apartment_id: "", resident_id: "" })
-                      }
+                      onValueChange={(v) => {
+                        const selected = condominiums.find((c) => c.id === v);
+                        const defaultPct =
+                          selected?.default_fine_percentage != null
+                            ? String(selected.default_fine_percentage)
+                            : "50";
+                        setFormData({
+                          ...formData,
+                          condominium_id: v,
+                          block_id: "",
+                          apartment_id: "",
+                          resident_id: "",
+                          fine_percentage: defaultPct,
+                        });
+                      }}
                     >
                       <SelectTrigger className="bg-secondary/50">
                         <SelectValue placeholder="Selecione" />

@@ -66,6 +66,7 @@ interface Condominium {
   defense_deadline_days: number;
   logo_url: string | null;
   sindico_name: string | null;
+  default_fine_percentage?: number | null;
   subscription?: {
     plan: string;
   } | null;
@@ -94,6 +95,7 @@ const Condominiums = () => {
     defense_deadline_days: "10",
     logo_url: "",
     sindico_name: "",
+    default_fine_percentage: "50",
   });
   const [saving, setSaving] = useState(false);
   const [fetchingCNPJ, setFetchingCNPJ] = useState(false);
@@ -297,6 +299,9 @@ const Condominiums = () => {
             defense_deadline_days: parseInt(formData.defense_deadline_days) || 10,
             logo_url: formData.logo_url || null,
             sindico_name: formData.sindico_name || null,
+            default_fine_percentage: formData.default_fine_percentage
+              ? Number(formData.default_fine_percentage)
+              : null,
           } as any)
           .eq("id", editingCondo.id);
 
@@ -337,6 +342,9 @@ const Condominiums = () => {
             defense_deadline_days: parseInt(formData.defense_deadline_days) || 10,
             logo_url: formData.logo_url || null,
             sindico_name: formData.sindico_name || null,
+            default_fine_percentage: formData.default_fine_percentage
+              ? Number(formData.default_fine_percentage)
+              : null,
           } as any)
           .select()
           .single();
@@ -375,6 +383,7 @@ const Condominiums = () => {
         city: "", 
         state: "", 
         plan_slug: "start",
+        default_fine_percentage: "50",
         defense_deadline_days: "10",
         logo_url: "",
         sindico_name: "",
@@ -408,6 +417,8 @@ const Condominiums = () => {
       defense_deadline_days: String(condo.defense_deadline_days || 10),
       logo_url: condo.logo_url || "",
       sindico_name: condo.sindico_name || "",
+      default_fine_percentage:
+        condo.default_fine_percentage != null ? String(condo.default_fine_percentage) : "50",
     });
     setIsDialogOpen(true);
   };
@@ -452,6 +463,7 @@ const Condominiums = () => {
       defense_deadline_days: "10",
       logo_url: "",
       sindico_name: "",
+      default_fine_percentage: "50",
     });
     setIsDialogOpen(true);
   };
@@ -741,6 +753,25 @@ const Condominiums = () => {
                     </p>
                   </div>
                 )}
+
+                {/* Percentual padrão de multa */}
+                <div className="space-y-2">
+                  <Label htmlFor="default_fine_percentage">Percentual padrão de multa (%)</Label>
+                  <Input
+                    id="default_fine_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.default_fine_percentage}
+                    onChange={(e) => setFormData({ ...formData, default_fine_percentage: e.target.value })}
+                    className="bg-secondary/50"
+                    placeholder="50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Valor padrão (% da taxa condominial) que será pré-preenchido ao cadastrar uma ocorrência do tipo Multa.
+                  </p>
+                </div>
 
                 {/* Prazo para defesa */}
                 <div className="space-y-2">
