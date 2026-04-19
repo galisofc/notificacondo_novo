@@ -64,6 +64,8 @@ interface Condominium {
   zip_code: string | null;
   created_at: string;
   defense_deadline_days: number;
+  logo_url: string | null;
+  sindico_name: string | null;
   subscription?: {
     plan: string;
   } | null;
@@ -90,11 +92,39 @@ const Condominiums = () => {
     state: "",
     plan_slug: "start",
     defense_deadline_days: "10",
+    logo_url: "",
+    sindico_name: "",
   });
   const [saving, setSaving] = useState(false);
   const [fetchingCNPJ, setFetchingCNPJ] = useState(false);
   const [fetchingCEP, setFetchingCEP] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "O logo deve ter no máximo 2MB.", variant: "destructive" });
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `${user?.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("condominium-logos")
+        .upload(fileName, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("condominium-logos").getPublicUrl(fileName);
+      setFormData((prev) => ({ ...prev, logo_url: pub.publicUrl }));
+      toast({ title: "Logo enviado", description: "O logo foi carregado com sucesso." });
+    } catch (err: any) {
+      console.error("Logo upload error", err);
+      toast({ title: "Erro", description: err.message || "Não foi possível enviar o logo.", variant: "destructive" });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const fetchPlans = async () => {
     try {
