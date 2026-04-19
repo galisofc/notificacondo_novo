@@ -90,6 +90,8 @@ interface Occurrence {
     state: string | null;
     zip_code: string | null;
     owner_id: string;
+    logo_url: string | null;
+    sindico_name: string | null;
   } | null;
   blocks: { name: string } | null;
   apartments: { number: string } | null;
@@ -258,7 +260,7 @@ const OccurrenceDetails = () => {
         .from("occurrences")
         .select(`
           *,
-          condominiums(name, defense_deadline_days, address, address_number, neighborhood, city, state, zip_code, owner_id),
+          condominiums(name, defense_deadline_days, address, address_number, neighborhood, city, state, zip_code, owner_id, logo_url, sindico_name),
           blocks(name),
           apartments(number),
           residents(id, full_name, email)
@@ -647,9 +649,9 @@ const OccurrenceDetails = () => {
   const generatePDF = async () => {
     if (!occurrence) return;
 
-    // Fetch sindico (owner) profile name
-    let sindicoName = "Síndico(a)";
-    if (occurrence.condominiums?.owner_id) {
+    // Determine sindico name: prefer the condominium-level sindico_name, fallback to owner profile
+    let sindicoName = occurrence.condominiums?.sindico_name || "";
+    if (!sindicoName && occurrence.condominiums?.owner_id) {
       const { data: ownerProfile } = await supabase
         .from("profiles")
         .select("full_name")
@@ -657,6 +659,7 @@ const OccurrenceDetails = () => {
         .maybeSingle();
       if (ownerProfile?.full_name) sindicoName = ownerProfile.full_name;
     }
+    if (!sindicoName) sindicoName = "Síndico(a)";
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
