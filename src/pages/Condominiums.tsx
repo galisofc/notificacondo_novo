@@ -64,6 +64,8 @@ interface Condominium {
   zip_code: string | null;
   created_at: string;
   defense_deadline_days: number;
+  logo_url: string | null;
+  sindico_name: string | null;
   subscription?: {
     plan: string;
   } | null;
@@ -90,11 +92,39 @@ const Condominiums = () => {
     state: "",
     plan_slug: "start",
     defense_deadline_days: "10",
+    logo_url: "",
+    sindico_name: "",
   });
   const [saving, setSaving] = useState(false);
   const [fetchingCNPJ, setFetchingCNPJ] = useState(false);
   const [fetchingCEP, setFetchingCEP] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "O logo deve ter no máximo 2MB.", variant: "destructive" });
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const fileName = `${user?.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("condominium-logos")
+        .upload(fileName, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("condominium-logos").getPublicUrl(fileName);
+      setFormData((prev) => ({ ...prev, logo_url: pub.publicUrl }));
+      toast({ title: "Logo enviado", description: "O logo foi carregado com sucesso." });
+    } catch (err: any) {
+      console.error("Logo upload error", err);
+      toast({ title: "Erro", description: err.message || "Não foi possível enviar o logo.", variant: "destructive" });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const fetchPlans = async () => {
     try {
@@ -125,7 +155,7 @@ const Condominiums = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setCondominiums(data || []);
+      setCondominiums((data || []) as unknown as Condominium[]);
     } catch (error) {
       console.error("Error fetching condominiums:", error);
       toast({
@@ -265,7 +295,9 @@ const Condominiums = () => {
             city: formData.city || null,
             state: formData.state || null,
             defense_deadline_days: parseInt(formData.defense_deadline_days) || 10,
-          })
+            logo_url: formData.logo_url || null,
+            sindico_name: formData.sindico_name || null,
+          } as any)
           .eq("id", editingCondo.id);
 
         if (error) throw error;
@@ -303,7 +335,9 @@ const Condominiums = () => {
             city: formData.city || null,
             state: formData.state || null,
             defense_deadline_days: parseInt(formData.defense_deadline_days) || 10,
-          })
+            logo_url: formData.logo_url || null,
+            sindico_name: formData.sindico_name || null,
+          } as any)
           .select()
           .single();
 
@@ -342,6 +376,8 @@ const Condominiums = () => {
         state: "", 
         plan_slug: "start",
         defense_deadline_days: "10",
+        logo_url: "",
+        sindico_name: "",
       });
       fetchCondominiums();
     } catch (error: any) {
@@ -370,6 +406,8 @@ const Condominiums = () => {
       state: condo.state || "",
       plan_slug: condo.subscription?.plan || "start",
       defense_deadline_days: String(condo.defense_deadline_days || 10),
+      logo_url: condo.logo_url || "",
+      sindico_name: condo.sindico_name || "",
     });
     setIsDialogOpen(true);
   };
@@ -412,6 +450,8 @@ const Condominiums = () => {
       state: "", 
       plan_slug: "start",
       defense_deadline_days: "10",
+      logo_url: "",
+      sindico_name: "",
     });
     setIsDialogOpen(true);
   };
@@ -598,6 +638,62 @@ const Condominiums = () => {
                       maxLength={2}
                     />
                   </div>
+                </div>
+
+                {/* Nome do Síndico */}
+                <div className="space-y-2">
+                  <Label htmlFor="sindico_name">Nome do Síndico</Label>
+                  <Input
+                    id="sindico_name"
+                    value={formData.sindico_name}
+                    onChange={(e) => setFormData({ ...formData, sindico_name: e.target.value })}
+                    className="bg-secondary/50"
+                    placeholder="Nome completo do síndico"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Aparecerá na assinatura do PDF de ocorrências
+                  </p>
+                </div>
+
+                {/* Logo do Condomínio */}
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Logo do Condomínio</Label>
+                  <div className="flex items-center gap-3">
+                    {formData.logo_url && (
+                      <img
+                        src={formData.logo_url}
+                        alt="Logo"
+                        className="w-16 h-16 object-contain rounded-lg border border-border bg-background"
+                      />
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingLogo}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file);
+                        }}
+                        className="bg-secondary/50"
+                      />
+                      {formData.logo_url && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, logo_url: "" })}
+                        >
+                          Remover logo
+                        </Button>
+                      )}
+                    </div>
+                    {uploadingLogo && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    PNG ou JPG, máximo 2MB. Aparecerá no topo do PDF de ocorrências.
+                  </p>
                 </div>
 
                 {/* Plano - seleção ao criar, visualização ao editar */}
