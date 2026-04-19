@@ -1,35 +1,66 @@
 
 
-# Correção: Criar migrations locais para sincronizar com o banco remoto
+## Plano: Editor de Template do PDF de Ocorrência (SuperAdmin)
 
-## Problema
+Criar uma página de configuração no SuperAdmin que permita editar os textos/parâmetros do PDF de ocorrência de forma centralizada. Qualquer alteração refletirá imediatamente em todo o sistema, pois o `OccurrenceDetails.tsx` passará a ler esses valores do banco em vez de tê-los hardcoded.
 
-O banco remoto tem 4 migrations registradas que não existem localmente:
-- `20260403203740`
-- `20260403203741`
-- `20260403204731`
-- `20260403204732`
+### 1. Banco de Dados
 
-O Supabase CLI recusa o push porque não encontra esses arquivos locais.
+Nova tabela `occurrence_pdf_template` (singleton — uma linha global):
 
-## Solução
+```text
+- id (uuid, pk)
+- intro_paragraph (text)        -- "Em [data], foi constatado..."
+- legal_basis (text)            -- bloco amarelo
+- syndic_role_paragraph (text)  -- explicação do papel do síndico
+- penalty_paragraph (text)      -- detalhes de multa/penalidade
+- defense_deadline_paragraph    -- prazo de defesa
+- closing_remarks (text)        -- encerramento
+- footer_text (text)            -- rodapé
+- signature_label (text)        -- "Atenciosamente," / cargo
+- updated_at, updated_by
+```
 
-Criar os 4 arquivos de migration localmente como **no-op** (apenas comentário), já que o schema dessas migrations já foi aplicado no banco remoto. Isso sincroniza o histórico local com o remoto.
+Suporte a **placeholders** dentro dos textos: `{{data}}`, `{{bloco}}`, `{{apartamento}}`, `{{morador}}`, `{{descricao_ocorrencia}}`, `{{condominio}}`, `{{sindico}}`, `{{prazo_defesa}}`.
 
-Também corrigir o erro de build no `export-database/index.ts` (linha 401: `error` is of type `unknown`).
+RLS: leitura pública autenticada (qualquer síndico pode gerar PDF), escrita só `super_admin`.
 
-## Arquivos a criar
+Migration popula a linha inicial com os textos atualmente hardcoded em `OccurrenceDetails.tsx`.
 
-1. **`supabase/migrations/20260403203740_20260403_checklist_entrada_digital.sql`** — conteúdo: `-- Already applied remotely, no-op`
-2. **`supabase/migrations/20260403203741_20260403_insert_checklist_entrada_template.sql`** — conteúdo: `-- Already applied remotely, no-op`
-3. **`supabase/migrations/20260403204731_20260403_checklist_entrada_digital.sql`** — conteúdo: `-- Already applied remotely, no-op`
-4. **`supabase/migrations/20260403204732_20260403_insert_checklist_entrada_template.sql`** — conteúdo: `-- Already applied remotely, no-op`
+### 2. Página SuperAdmin
 
-## Arquivo a editar
+Nova rota `/superadmin/pdf-template` → `src/pages/superadmin/OccurrencePdfTemplate.tsx`.
 
-5. **`supabase/functions/export-database/index.ts`** linha 401 — corrigir `error.message` para `(error as Error).message`
+Layout em duas colunas:
+- **Esquerda**: formulário com `Textarea`s para cada bloco do PDF, lista de placeholders disponíveis (chips clicáveis que inserem no campo focado), botão "Salvar" e "Restaurar padrão".
+- **Direita**: preview ao vivo do texto renderizado com placeholders substituídos por valores de exemplo.
 
-## Após aplicar
+Adicionar entrada no menu de configurações do SuperAdmin (`src/pages/superadmin/Settings.tsx` ou sidebar) → "Template do PDF de Ocorrência".
 
-Rodar `npx supabase db push --linked` novamente. O CLI encontrará os 4 arquivos locais, verá que já foram aplicados remotamente, e prosseguirá com as migrations restantes.
+Registrar rota em `src/App.tsx` com `ProtectedRoute requiredRole="super_admin"`.
+
+### 3. Refatorar `OccurrenceDetails.tsx`
+
+- No `generatePDF()`, buscar a linha de `occurrence_pdf_template` via supabase (com cache via React Query).
+- Função `interpolate(text, vars)` substitui `{{chave}}` pelos valores reais da ocorrência.
+- Substituir as strings hardcoded (intro, legal_basis, syndic_role, penalty, defense_deadline, closing) pelos valores vindos do template.
+- Manter toda a lógica visual existente (justificação, paginação, bloco amarelo, header com logo).
+
+### 4. Arquivos afetados
+
+```text
+NEW  supabase/migrations/<timestamp>_occurrence_pdf_template.sql
+NEW  src/pages/superadmin/OccurrencePdfTemplate.tsx
+NEW  src/hooks/useOccurrencePdfTemplate.ts
+EDIT src/App.tsx                        (rota nova)
+EDIT src/pages/superadmin/Settings.tsx  (link para a página)
+EDIT src/pages/OccurrenceDetails.tsx    (consumir template do banco)
+```
+
+### 5. Detalhes técnicos
+
+- Singleton: usar `id` fixo (ex: `00000000-0000-0000-0000-000000000001`) e `upsert` no save.
+- Cache: React Query `staleTime: 5 min` para evitar refetch a cada PDF.
+- Validação: campos obrigatórios não-vazios; aviso se um placeholder citado não existir.
+- Toast de sucesso ao salvar.
 
