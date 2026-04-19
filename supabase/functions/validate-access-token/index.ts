@@ -273,6 +273,16 @@ serve(async (req) => {
       );
     }
 
+    // Build magic link manually using Supabase verify endpoint so we control the redirect_to
+    // (Supabase's action_link uses the project's Site URL as fallback, which may be localhost).
+    const hashedToken = (linkData.properties as any)?.hashed_token;
+    const verifyType = (linkData.properties as any)?.verification_type || "magiclink";
+    const manualMagicLink = hashedToken
+      ? `${supabaseUrl}/auth/v1/verify?token=${hashedToken}&type=${verifyType}&redirect_to=${encodeURIComponent(callbackUrl)}`
+      : linkData.properties?.action_link;
+
+    console.log(`Manual magic link built. Redirect target: ${callbackUrl}`);
+
     const redirectUrl = `${appBaseUrl}/resident/occurrences/${notification.occurrence_id}`;
 
     // Log magic link access for audit
@@ -295,7 +305,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        magicLink: linkData.properties?.action_link,
+        magicLink: manualMagicLink,
         resident: {
           id: resident.id,
           full_name: resident.full_name,
