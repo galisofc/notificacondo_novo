@@ -751,6 +751,26 @@ const Condominiums = () => {
                     <p className="text-xs text-muted-foreground">
                       Para alterar o plano, acesse a página de Assinaturas
                     </p>
+                  </div>
+                )}
+
+                {/* Percentual padrão de multa */}
+                <div className="space-y-2">
+                  <Label htmlFor="default_fine_percentage">Percentual padrão de multa (%)</Label>
+                  <Input
+                    id="default_fine_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.default_fine_percentage}
+                    onChange={(e) => setFormData({ ...formData, default_fine_percentage: e.target.value })}
+                    className="bg-secondary/50"
+                    placeholder="50"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Valor padrão (% da taxa condominial) que será pré-preenchido ao cadastrar uma ocorrência do tipo Multa.
+                  </p>
                 </div>
 
                 {/* Prazo para defesa */}
