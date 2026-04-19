@@ -1132,7 +1132,6 @@ const Occurrences = () => {
                     <Input
                       type="number"
                       min={0}
-                      max={100}
                       step="0.01"
                       value={formData.fine_percentage}
                       onChange={(e) => setFormData({ ...formData, fine_percentage: e.target.value })}

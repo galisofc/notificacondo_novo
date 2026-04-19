@@ -761,7 +761,6 @@ const Condominiums = () => {
                     id="default_fine_percentage"
                     type="number"
                     min="0"
-                    max="100"
                     step="0.01"
                     value={formData.default_fine_percentage}
                     onChange={(e) => setFormData({ ...formData, default_fine_percentage: e.target.value })}
