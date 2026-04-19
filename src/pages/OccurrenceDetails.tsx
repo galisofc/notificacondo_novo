@@ -1064,7 +1064,12 @@ const OccurrenceDetails = () => {
     }
 
     // Signature block — keep together on the same page
-    await ensureSpace(35);
+    // Real height: "Atenciosamente" (yPos) + 18 + 5 (condominio) + 5 (SÍNDICO) + 0 (nome) ≈ 28
+    const signatureBlockHeight = 30;
+    if (yPos + signatureBlockHeight > bottomLimit) {
+      doc.addPage();
+      yPos = await renderTopBlock();
+    }
     doc.text(pdfTemplate.signature_label || "Atenciosamente;", margin, yPos);
     yPos += 18;
 
