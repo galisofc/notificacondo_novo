@@ -19,7 +19,14 @@ import {
   TEMPLATE_PLACEHOLDERS,
   type OccurrencePdfTemplate,
 } from "@/hooks/useOccurrencePdfTemplate";
-import { generateSampleOccurrencePdf } from "@/lib/occurrencePdfSample";
+import { generateSampleOccurrencePdf, type SamplePenaltyType } from "@/lib/occurrencePdfSample";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 const FIELDS: { key: keyof OccurrencePdfTemplate; label: string; description: string; rows: number }[] = [
   { key: "intro_paragraph", label: "Parágrafo de introdução", description: "Texto de abertura da notificação.", rows: 4 },
@@ -114,11 +121,11 @@ export default function OccurrencePdfTemplatePage() {
     }
   };
 
-  const handleGenerateSamplePdf = () => {
+  const handleGenerateSamplePdf = (penaltyType: SamplePenaltyType) => {
     if (!form) return;
     try {
-      const doc = generateSampleOccurrencePdf(form);
-      doc.save("exemplo-notificacao-ocorrencia.pdf");
+      const doc = generateSampleOccurrencePdf(form, penaltyType);
+      doc.save(`exemplo-${penaltyType}-ocorrencia.pdf`);
     } catch (e: any) {
       toast({ title: "Erro ao gerar PDF de exemplo", description: e.message, variant: "destructive" });
     }
@@ -150,10 +157,26 @@ export default function OccurrencePdfTemplatePage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleGenerateSamplePdf} disabled={saving}>
-              <FileDown className="w-4 h-4 mr-2" />
-              Gerar PDF de exemplo
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={saving}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Gerar PDF de exemplo
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleGenerateSamplePdf("notificacao")}>
+                  Notificação
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGenerateSamplePdf("advertencia")}>
+                  Advertência
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGenerateSamplePdf("multa")}>
+                  Multa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" onClick={handleRestoreDefaults} disabled={saving}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Restaurar padrão
