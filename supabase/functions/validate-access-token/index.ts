@@ -305,7 +305,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        magicLink: linkData.properties?.action_link,
+        magicLink: manualMagicLink,
         resident: {
           id: resident.id,
           full_name: resident.full_name,
