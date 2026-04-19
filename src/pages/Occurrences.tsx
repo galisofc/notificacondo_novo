@@ -967,9 +967,21 @@ const Occurrences = () => {
                     <Label>Condomínio *</Label>
                     <Select
                       value={formData.condominium_id}
-                      onValueChange={(v) =>
-                        setFormData({ ...formData, condominium_id: v, block_id: "", apartment_id: "", resident_id: "" })
-                      }
+                      onValueChange={(v) => {
+                        const selected = condominiums.find((c) => c.id === v);
+                        const defaultPct =
+                          selected?.default_fine_percentage != null
+                            ? String(selected.default_fine_percentage)
+                            : "50";
+                        setFormData({
+                          ...formData,
+                          condominium_id: v,
+                          block_id: "",
+                          apartment_id: "",
+                          resident_id: "",
+                          fine_percentage: defaultPct,
+                        });
+                      }}
                     >
                       <SelectTrigger className="bg-secondary/50">
                         <SelectValue placeholder="Selecione" />
