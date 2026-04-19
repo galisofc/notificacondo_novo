@@ -233,13 +233,24 @@ export function generateSampleOccurrencePdf(template: OccurrencePdfTemplate): js
   yPos += 5;
   doc.text(sindicoName.toUpperCase(), margin, yPos);
 
-  // Optional footer
-  if (template.footer_text?.trim()) {
-    const footerY = pageHeight - 12;
-    doc.setFont("helvetica", "italic");
+  // Footer on all pages: condominium name + address + CEP + page number
+  const addressLine = "Rua das Flores, 123 – Centro – São Paulo/SP";
+  const cepLine = "CEP: 01000-000";
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
     doc.setFontSize(9);
-    doc.setTextColor(120, 120, 120);
-    doc.text(interpolate(template.footer_text, SAMPLE), pageWidth / 2, footerY, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(33, 33, 33);
+    doc.text(condominiumName.toUpperCase(), pageWidth / 2, pageHeight - 18, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(addressLine, pageWidth / 2, pageHeight - 13, { align: "center" });
+    doc.text(cepLine, pageWidth / 2, pageHeight - 9, { align: "center" });
+    doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: "right" });
   }
 
   return doc;
