@@ -640,6 +640,62 @@ const Condominiums = () => {
                   </div>
                 </div>
 
+                {/* Nome do Síndico */}
+                <div className="space-y-2">
+                  <Label htmlFor="sindico_name">Nome do Síndico</Label>
+                  <Input
+                    id="sindico_name"
+                    value={formData.sindico_name}
+                    onChange={(e) => setFormData({ ...formData, sindico_name: e.target.value })}
+                    className="bg-secondary/50"
+                    placeholder="Nome completo do síndico"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Aparecerá na assinatura do PDF de ocorrências
+                  </p>
+                </div>
+
+                {/* Logo do Condomínio */}
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Logo do Condomínio</Label>
+                  <div className="flex items-center gap-3">
+                    {formData.logo_url && (
+                      <img
+                        src={formData.logo_url}
+                        alt="Logo"
+                        className="w-16 h-16 object-contain rounded-lg border border-border bg-background"
+                      />
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingLogo}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file);
+                        }}
+                        className="bg-secondary/50"
+                      />
+                      {formData.logo_url && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, logo_url: "" })}
+                        >
+                          Remover logo
+                        </Button>
+                      )}
+                    </div>
+                    {uploadingLogo && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    PNG ou JPG, máximo 2MB. Aparecerá no topo do PDF de ocorrências.
+                  </p>
+                </div>
+
                 {/* Plano - seleção ao criar, visualização ao editar */}
                 {!editingCondo ? (
                   <div className="space-y-2">
