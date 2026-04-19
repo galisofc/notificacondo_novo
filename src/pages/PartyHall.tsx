@@ -187,7 +187,7 @@ export default function PartyHall() {
   // Update booking status mutation
   const updateStatusMutation = useMutation({
     mutationFn: async ({ bookingId, status, checklistToken }: { bookingId: string; status: string; checklistToken?: string }) => {
-      const updateData: Record<string, string> = { status };
+      const updateData: { status: string; checklist_token?: string } = { status };
       if (checklistToken) updateData.checklist_token = checklistToken;
 
       const { error } = await supabase

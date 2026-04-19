@@ -252,7 +252,7 @@ export default function SubscriptionDetails() {
       if (!id || !updateData) throw new Error("Dados inválidos");
 
       // When setting as lifetime, also disable trial and clear trial dates
-      const updatePayload: Record<string, any> = {
+      const updatePayload: Database["public"]["Tables"]["subscriptions"]["Update"] = {
         plan: updateData.plan,
         active: updateData.active,
         notifications_limit: updateData.notifications_limit,
