@@ -981,7 +981,11 @@ const OccurrenceDetails = () => {
       condominio: occurrence.condominiums?.name || "",
       sindico: sindicoName || "",
       prazo_defesa: deadlineWritten,
-      percentual_multa: String((occurrence.condominiums as any)?.fine_percentage ?? 50),
+      percentual_multa: String(
+        (occurrence as any)?.fine_percentage ??
+          (occurrence.condominiums as any)?.fine_percentage ??
+          50,
+      ),
     };
 
     // Intro paragraph
