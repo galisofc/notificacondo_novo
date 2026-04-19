@@ -114,6 +114,16 @@ export default function OccurrencePdfTemplatePage() {
     }
   };
 
+  const handleGenerateSamplePdf = () => {
+    if (!form) return;
+    try {
+      const doc = generateSampleOccurrencePdf(form);
+      doc.save("exemplo-notificacao-ocorrencia.pdf");
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF de exemplo", description: e.message, variant: "destructive" });
+    }
+  };
+
   if (isLoading || !form) {
     return (
       <DashboardLayout>
