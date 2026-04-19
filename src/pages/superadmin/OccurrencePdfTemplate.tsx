@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Save, RotateCcw, FileText, Eye } from "lucide-react";
+import { Loader2, Save, RotateCcw, FileText, Eye, FileDown } from "lucide-react";
 import {
   useOccurrencePdfTemplate,
   getDefaultPdfTemplate,
@@ -19,6 +19,7 @@ import {
   TEMPLATE_PLACEHOLDERS,
   type OccurrencePdfTemplate,
 } from "@/hooks/useOccurrencePdfTemplate";
+import { generateSampleOccurrencePdf } from "@/lib/occurrencePdfSample";
 
 const FIELDS: { key: keyof OccurrencePdfTemplate; label: string; description: string; rows: number }[] = [
   { key: "intro_paragraph", label: "Parágrafo de introdução", description: "Texto de abertura da notificação.", rows: 4 },
