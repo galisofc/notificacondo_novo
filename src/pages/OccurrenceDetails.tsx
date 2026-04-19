@@ -668,6 +668,41 @@ const OccurrenceDetails = () => {
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
 
+    // Justify text manually so the LAST line stays left-aligned (avoids huge gaps)
+    const drawJustified = (
+      text: string,
+      x: number,
+      y: number,
+      maxWidth: number,
+      lineHeight = 5
+    ): number => {
+      const paragraphs = String(text).split(/\n/);
+      let cursorY = y;
+      paragraphs.forEach((para) => {
+        const lines: string[] = doc.splitTextToSize(para, maxWidth);
+        lines.forEach((line, idx) => {
+          const isLast = idx === lines.length - 1;
+          const words = line.split(" ").filter(Boolean);
+          const lineWidth = doc.getTextWidth(line);
+          if (isLast || words.length < 2 || lineWidth >= maxWidth - 0.5) {
+            doc.text(line, x, cursorY);
+          } else {
+            const wordsWidth = words.reduce((s, w) => s + doc.getTextWidth(w), 0);
+            const gap = (maxWidth - wordsWidth) / (words.length - 1);
+            let cx = x;
+            words.forEach((w, i) => {
+              doc.text(w, cx, cursorY);
+              cx += doc.getTextWidth(w) + gap;
+              void i;
+            });
+          }
+          cursorY += lineHeight;
+        });
+      });
+      return cursorY;
+    };
+
+
     const typeLabels: Record<string, string> = {
       advertencia: "Advertência",
       notificacao: "Notificação",
