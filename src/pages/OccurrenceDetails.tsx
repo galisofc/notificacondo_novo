@@ -850,8 +850,6 @@ const OccurrenceDetails = () => {
       doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, leftY);
       leftY += 6;
 
-      const blockName = occurrence.blocks?.name || "-";
-      const aptNumber = occurrence.apartments?.number || "-";
       doc.setFont("helvetica", "normal");
       doc.text("Bloco: ", margin, leftY);
       doc.setFont("helvetica", "bold");
