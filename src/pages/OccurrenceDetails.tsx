@@ -879,12 +879,15 @@ const OccurrenceDetails = () => {
     doc.text("Prezado Condômino,", margin, yPos);
     yPos += 8;
 
+    // Body paragraphs use a first-line indent like a Word document
+    const indent = 12;
+
     // Intro paragraph
     const introParagraph =
       "Na qualidade de síndico deste Condomínio, no uso de minhas atribuições legais e conforme determinação do corpo diretivo, sirvo-me da presente para notificá-lo(a) acerca do descumprimento das normas previstas no Regulamento Interno.";
-    yPos = drawJustified(introParagraph, margin, yPos, contentWidth) + 4;
+    yPos = drawJustified(introParagraph, margin, yPos, contentWidth, 5, indent) + 6;
 
-    // Highlighted legal basis (yellow background block)
+    // Highlighted legal basis (light yellow block) - aligned to text margins, italic
     const legalParts: string[] = [];
     if (occurrence.civil_code_article) legalParts.push(`Código Civil - Art. ${occurrence.civil_code_article}`);
     if (occurrence.convention_article) legalParts.push(`Convenção - Art. ${occurrence.convention_article}`);
@@ -893,18 +896,17 @@ const OccurrenceDetails = () => {
     if (legalParts.length > 0 || occurrence.legal_basis) {
       const prefix = legalParts.length > 0 ? `Conforme ${legalParts.join(", ")}: ` : "";
       const legalText = `${prefix}${occurrence.legal_basis || ""}`.trim();
-      const padX = 5;
-      const padY = 5;
+      const padY = 4;
       const lineH = 5;
-      doc.setFont("helvetica", "bold");
+      doc.setFont("helvetica", "bolditalic");
       doc.setFontSize(11);
-      const legalLines = doc.splitTextToSize(legalText, contentWidth - padX * 2);
+      const legalLines = doc.splitTextToSize(legalText, contentWidth);
       const blockHeight = legalLines.length * lineH + padY * 2;
       doc.setFillColor(255, 249, 196);
       doc.rect(margin, yPos, contentWidth, blockHeight, "F");
       doc.setTextColor(33, 33, 33);
-      drawJustified(legalText, margin + padX, yPos + padY + 4, contentWidth - padX * 2, lineH);
-      yPos += blockHeight + 6;
+      drawJustified(legalText, margin, yPos + padY + 4, contentWidth, lineH);
+      yPos += blockHeight + 8;
       doc.setFont("helvetica", "normal");
     }
 
@@ -914,12 +916,12 @@ const OccurrenceDetails = () => {
     let descriptionParagraph = `No dia ${occurrenceDate}, por volta das ${occurrenceTime}`;
     if (occurrence.location) descriptionParagraph += `, no local: ${occurrence.location}`;
     descriptionParagraph += `, foi constatado que: ${occurrence.description}`;
-    yPos = drawJustified(descriptionParagraph, margin, yPos, contentWidth) + 4;
+    yPos = drawJustified(descriptionParagraph, margin, yPos, contentWidth, 5, indent) + 6;
 
     // Role paragraph
     const rolePara =
       "Ressaltamos que o cargo de síndico tem por finalidade a gestão do condomínio e o fiel cumprimento do Regimento Interno, cuja versão atualizada está disponível para consulta de todos os condôminos, conforme aprovado em assembleia.";
-    yPos = drawJustified(rolePara, margin, yPos, contentWidth) + 4;
+    yPos = drawJustified(rolePara, margin, yPos, contentWidth, 5, indent) + 6;
 
     // Penalty paragraph
     let penaltyParagraph = "";
@@ -933,19 +935,19 @@ const OccurrenceDetails = () => {
       penaltyParagraph =
         "Diante do ocorrido, serve a presente como NOTIFICAÇÃO FORMAL sobre o descumprimento das normas condominiais.";
     }
-    yPos = drawJustified(penaltyParagraph, margin, yPos, contentWidth) + 4;
+    yPos = drawJustified(penaltyParagraph, margin, yPos, contentWidth, 5, indent) + 6;
 
     // Defense deadline
     const deadlineDays = occurrence.condominiums?.defense_deadline_days || 10;
     const deadlineWritten =
       deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
     const defenseParagraph = `Fica estipulado o prazo de ${deadlineWritten} dias para que V. Sa. apresente, se assim desejar, suas razões mediante defesa por escrito, a qual será submetida à análise do Conselho Consultivo.`;
-    yPos = drawJustified(defenseParagraph, margin, yPos, contentWidth) + 6;
+    yPos = drawJustified(defenseParagraph, margin, yPos, contentWidth, 5, indent) + 6;
 
     // Closing
     const closingPara =
       "Contamos com a sua compreensão e colaboração no sentido de mantermos o respeito às normas e a boa convivência entre os moradores.";
-    yPos = drawJustified(closingPara, margin, yPos, contentWidth) + 10;
+    yPos = drawJustified(closingPara, margin, yPos, contentWidth, 5, indent) + 10;
 
 
     doc.text("Atenciosamente;", margin, yPos);
