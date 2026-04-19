@@ -1076,48 +1076,17 @@ const OccurrenceDetails = () => {
     yPos += 5;
     doc.text(sindicoName.toUpperCase(), margin, yPos);
 
-    // ===== PAGE 2: AUTO DE INFRAÇÃO with photo =====
+    // ===== AUTO DE INFRAÇÃO with photos (uses standard header) =====
     const imageEvidences = evidences.filter((e) => e.file_type?.toLowerCase().startsWith("image"));
     if (imageEvidences.length > 0) {
       doc.addPage();
-      yPos = margin;
-
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(33, 33, 33);
-      doc.text(`${headerCity}, ${formatFullDate(today)}`, margin, yPos);
-      yPos += 12;
-
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text(condominiumName.toUpperCase(), margin, yPos);
-      yPos += 12;
+      yPos = await renderTopBlock();
 
       doc.setFontSize(13);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(33, 33, 33);
       doc.text("AUTO DE INFRAÇÃO:", margin, yPos);
-      yPos += 10;
-
-      // Try to embed first image evidence
-      const firstImg = imageEvidences[0];
-      const imgData = await loadImageAsDataUrl(firstImg.file_url);
-      if (imgData && imgData.width > 0) {
-        const maxW = contentWidth;
-        const maxH = pageHeight - yPos - 50;
-        const ratio = imgData.width / imgData.height;
-        let drawW = maxW;
-        let drawH = drawW / ratio;
-        if (drawH > maxH) {
-          drawH = maxH;
-          drawW = drawH * ratio;
-        }
-        const xCenter = margin + (contentWidth - drawW) / 2;
-        try {
-          doc.addImage(imgData.dataUrl, imgData.format, xCenter, yPos, drawW, drawH);
-          yPos += drawH + 8;
-        } catch (err) {
-          console.error("Erro ao embedar imagem:", err);
-        }
-      }
+      yPos += 8;
 
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
@@ -1126,6 +1095,42 @@ const OccurrenceDetails = () => {
       if (occurrence.location) {
         doc.text(`LOCAL: ${occurrence.location}`, margin, yPos);
         yPos += 6;
+      }
+      yPos += 4;
+
+      // Each image rendered smaller (≈60% of content width), centered, with caption
+      const targetW = contentWidth * 0.6;
+      for (let i = 0; i < imageEvidences.length; i++) {
+        const ev = imageEvidences[i];
+        const imgData = await loadImageAsDataUrl(ev.file_url);
+        if (!imgData || imgData.width <= 0) continue;
+        const ratio = imgData.width / imgData.height;
+        let drawW = targetW;
+        let drawH = drawW / ratio;
+        const maxH = (pageHeight - margin - 35) * 0.55;
+        if (drawH > maxH) {
+          drawH = maxH;
+          drawW = drawH * ratio;
+        }
+        const captionH = 6;
+        // New page if not enough room
+        if (yPos + drawH + captionH + 4 > pageHeight - 35) {
+          doc.addPage();
+          yPos = await renderTopBlock();
+        }
+        const xCenter = margin + (contentWidth - drawW) / 2;
+        try {
+          doc.addImage(imgData.dataUrl, imgData.format, xCenter, yPos, drawW, drawH);
+          yPos += drawH + 2;
+          doc.setFontSize(9);
+          doc.setTextColor(100, 100, 100);
+          doc.text(`Evidência ${i + 1} de ${imageEvidences.length}`, pageWidth / 2, yPos + 4, { align: "center" });
+          doc.setFontSize(11);
+          doc.setTextColor(33, 33, 33);
+          yPos += captionH + 6;
+        } catch (err) {
+          console.error("Erro ao embedar imagem:", err);
+        }
       }
     }
 
