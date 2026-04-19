@@ -19,7 +19,14 @@ import {
   TEMPLATE_PLACEHOLDERS,
   type OccurrencePdfTemplate,
 } from "@/hooks/useOccurrencePdfTemplate";
-import { generateSampleOccurrencePdf } from "@/lib/occurrencePdfSample";
+import { generateSampleOccurrencePdf, type SamplePenaltyType } from "@/lib/occurrencePdfSample";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 const FIELDS: { key: keyof OccurrencePdfTemplate; label: string; description: string; rows: number }[] = [
   { key: "intro_paragraph", label: "Parágrafo de introdução", description: "Texto de abertura da notificação.", rows: 4 },
