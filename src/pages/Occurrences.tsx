@@ -175,11 +175,11 @@ const Occurrences = () => {
 
     try {
       // Fetch condominiums
-      const { data: condosData } = await supabase
-        .from("condominiums")
+      const { data: condosData } = await (supabase
+        .from("condominiums") as any)
         .select("id, name, default_fine_percentage")
         .eq("owner_id", user.id);
-      setCondominiums(condosData || []);
+      setCondominiums((condosData as Condominium[]) || []);
 
       if (condosData && condosData.length > 0) {
         const condoIds = condosData.map((c) => c.id);
