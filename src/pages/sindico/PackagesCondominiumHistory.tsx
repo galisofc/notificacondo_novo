@@ -115,6 +115,8 @@ const PackagesCondominiumHistory = () => {
   const [dateTo, setDateTo] = useState<string>("");
   const [isExporting, setIsExporting] = useState(false);
   const [showPendingSummaryModal, setShowPendingSummaryModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
