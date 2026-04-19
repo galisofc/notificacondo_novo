@@ -668,32 +668,61 @@ const OccurrenceDetails = () => {
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
 
-    // Justify text manually so the LAST line stays left-aligned (avoids huge gaps)
+    // Justify text manually so the LAST line stays left-aligned (avoids huge gaps).
+    // Supports an optional first-line indent (like a Word paragraph indent).
     const drawJustified = (
       text: string,
       x: number,
       y: number,
       maxWidth: number,
-      lineHeight = 5
+      lineHeight = 5,
+      firstLineIndent = 0
     ): number => {
       const paragraphs = String(text).split(/\n/);
       let cursorY = y;
       paragraphs.forEach((para) => {
-        const lines: string[] = doc.splitTextToSize(para, maxWidth);
+        // Build lines respecting the first-line indent
+        const firstLineWidth = Math.max(10, maxWidth - firstLineIndent);
+        const words = para.split(/\s+/).filter(Boolean);
+        const lines: { text: string; indent: number; width: number }[] = [];
+        let current: string[] = [];
+        let isFirst = true;
+        const widthOf = (s: string) => doc.getTextWidth(s);
+        const flush = () => {
+          const lineText = current.join(" ");
+          lines.push({
+            text: lineText,
+            indent: isFirst ? firstLineIndent : 0,
+            width: isFirst ? firstLineWidth : maxWidth,
+          });
+          current = [];
+          isFirst = false;
+        };
+        words.forEach((w) => {
+          const tentative = current.length ? current.join(" ") + " " + w : w;
+          const limit = isFirst ? firstLineWidth : maxWidth;
+          if (widthOf(tentative) > limit && current.length) {
+            flush();
+            current = [w];
+          } else {
+            current.push(w);
+          }
+        });
+        if (current.length) flush();
+
         lines.forEach((line, idx) => {
           const isLast = idx === lines.length - 1;
-          const words = line.split(" ").filter(Boolean);
-          const lineWidth = doc.getTextWidth(line);
-          if (isLast || words.length < 2 || lineWidth >= maxWidth - 0.5) {
-            doc.text(line, x, cursorY);
+          const lineWords = line.text.split(" ").filter(Boolean);
+          const drawX = x + line.indent;
+          if (isLast || lineWords.length < 2) {
+            doc.text(line.text, drawX, cursorY);
           } else {
-            const wordsWidth = words.reduce((s, w) => s + doc.getTextWidth(w), 0);
-            const gap = (maxWidth - wordsWidth) / (words.length - 1);
-            let cx = x;
-            words.forEach((w, i) => {
+            const wordsWidth = lineWords.reduce((s, w) => s + widthOf(w), 0);
+            const gap = (line.width - wordsWidth) / (lineWords.length - 1);
+            let cx = drawX;
+            lineWords.forEach((w) => {
               doc.text(w, cx, cursorY);
-              cx += doc.getTextWidth(w) + gap;
-              void i;
+              cx += widthOf(w) + gap;
             });
           }
           cursorY += lineHeight;
