@@ -831,15 +831,22 @@ const OccurrenceDetails = () => {
     if (legalParts.length > 0 || occurrence.legal_basis) {
       const prefix = legalParts.length > 0 ? `Conforme ${legalParts.join(", ")}: ` : "";
       const legalText = `${prefix}${occurrence.legal_basis || ""}`.trim();
-      const legalLines = doc.splitTextToSize(legalText, contentWidth - 6);
-      const blockHeight = legalLines.length * 5 + 6;
-      // Yellow highlight background
-      doc.setFillColor(255, 242, 153);
-      doc.rect(margin, yPos - 4, contentWidth, blockHeight, "F");
+      const padX = 5;
+      const padY = 5;
+      const lineH = 5;
       doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      const legalLines = doc.splitTextToSize(legalText, contentWidth - padX * 2);
+      const blockHeight = legalLines.length * lineH + padY * 2;
+      // Light yellow highlight background
+      doc.setFillColor(255, 249, 196);
+      doc.rect(margin, yPos, contentWidth, blockHeight, "F");
       doc.setTextColor(33, 33, 33);
-      doc.text(legalLines, margin + 3, yPos);
-      yPos += blockHeight + 4;
+      doc.text(legalLines, margin + padX, yPos + padY + 4, {
+        align: "justify",
+        maxWidth: contentWidth - padX * 2,
+      });
+      yPos += blockHeight + 6;
       doc.setFont("helvetica", "normal");
     }
 
