@@ -25,6 +25,7 @@ export function generateSampleOccurrencePdf(
     condominio: "Residencial Exemplo",
     sindico: "Maria Santos",
     prazo_defesa: "10 (dez)",
+    percentual_multa: "50",
   };
   const refTypeMap: Record<SamplePenaltyType, string> = {
     notificacao: "NOTIFICAÇÃO – Infração a Convenção",

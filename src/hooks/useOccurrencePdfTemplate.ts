@@ -27,6 +27,7 @@ export const TEMPLATE_PLACEHOLDERS = [
   { key: "condominio", label: "Nome do condomínio" },
   { key: "sindico", label: "Nome do síndico" },
   { key: "prazo_defesa", label: "Prazo de defesa (dias por extenso)" },
+  { key: "percentual_multa", label: "Percentual da multa (somente Multa)" },
 ] as const;
 
 export function interpolate(template: string, vars: Record<string, string | number | null | undefined>): string {
@@ -45,7 +46,7 @@ const DEFAULT_TEMPLATE: OccurrencePdfTemplate = {
   syndic_role_paragraph:
     "Ressaltamos que o cargo de síndico tem por finalidade a gestão do condomínio e o fiel cumprimento do Regimento Interno, cuja versão atualizada está disponível para consulta de todos os condôminos, conforme aprovado em assembleia.",
   penalty_multa_paragraph:
-    "Diante do ocorrido, torna-se necessária a aplicação da multa prevista no Regimento Interno deste Condomínio, a qual será lançada juntamente com a quota condominial.",
+    "Diante do ocorrido, torna-se necessária a aplicação da penalidade prevista no Regimento Interno deste Condomínio, a qual será lançada juntamente com sua quota condominial no total de {{percentual_multa}}% da taxa condominial.",
   penalty_advertencia_paragraph:
     "Diante do ocorrido, esta notificação está sendo emitida como advertência formal, sendo o próximo passo, em caso de reincidência, a aplicação da multa prevista no Regimento Interno.",
   penalty_notificacao_paragraph:
