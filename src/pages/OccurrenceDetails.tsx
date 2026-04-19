@@ -649,6 +649,7 @@ const OccurrenceDetails = () => {
 
   const generatePDF = async () => {
     if (!occurrence) return;
+    const pdfTemplate = await fetchOccurrencePdfTemplate();
 
     // Determine sindico name: prefer the condominium-level sindico_name, fallback to owner profile
     let sindicoName = occurrence.condominiums?.sindico_name || "";
