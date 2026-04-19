@@ -150,6 +150,10 @@ export default function OccurrencePdfTemplatePage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={handleGenerateSamplePdf} disabled={saving}>
+              <FileDown className="w-4 h-4 mr-2" />
+              Gerar PDF de exemplo
+            </Button>
             <Button variant="outline" onClick={handleRestoreDefaults} disabled={saving}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Restaurar padrão
