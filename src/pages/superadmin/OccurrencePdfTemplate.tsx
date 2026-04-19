@@ -121,11 +121,11 @@ export default function OccurrencePdfTemplatePage() {
     }
   };
 
-  const handleGenerateSamplePdf = () => {
+  const handleGenerateSamplePdf = (penaltyType: SamplePenaltyType) => {
     if (!form) return;
     try {
-      const doc = generateSampleOccurrencePdf(form);
-      doc.save("exemplo-notificacao-ocorrencia.pdf");
+      const doc = generateSampleOccurrencePdf(form, penaltyType);
+      doc.save(`exemplo-${penaltyType}-ocorrencia.pdf`);
     } catch (e: any) {
       toast({ title: "Erro ao gerar PDF de exemplo", description: e.message, variant: "destructive" });
     }
