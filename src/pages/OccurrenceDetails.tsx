@@ -798,7 +798,7 @@ const OccurrenceDetails = () => {
 
     // ===== PAGE 1: FORMAL LETTER =====
     // Reserve space for the footer drawn at the end (footer starts at pageHeight - 25)
-    const footerReserve = 30;
+    const footerReserve = 27;
     const bottomLimit = pageHeight - footerReserve;
 
     const today = new Date().toISOString();
@@ -1063,11 +1063,11 @@ const OccurrenceDetails = () => {
       yPos += 4;
     }
 
-    // Signature block — keep together on the same page with tighter spacing
-    const signatureGapAfterLabel = 14;
+    // Signature block — keep together, but only break when the last line would actually hit the footer
+    const signatureGapAfterLabel = 8;
     const signatureLineHeight = 5;
-    const signatureBlockHeight = signatureGapAfterLabel + signatureLineHeight * 2 + 4;
-    const signatureBottomLimit = pageHeight - 25;
+    const signatureBlockHeight = signatureGapAfterLabel + signatureLineHeight * 2;
+    const signatureBottomLimit = pageHeight - 27;
     if (yPos + signatureBlockHeight > signatureBottomLimit) {
       doc.addPage();
       yPos = await renderTopBlock();
