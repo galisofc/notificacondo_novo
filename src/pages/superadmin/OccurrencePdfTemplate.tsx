@@ -157,10 +157,26 @@ export default function OccurrencePdfTemplatePage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleGenerateSamplePdf} disabled={saving}>
-              <FileDown className="w-4 h-4 mr-2" />
-              Gerar PDF de exemplo
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={saving}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Gerar PDF de exemplo
+                  <ChevronDown className="w-4 h-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleGenerateSamplePdf("notificacao")}>
+                  Notificação
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGenerateSamplePdf("advertencia")}>
+                  Advertência
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGenerateSamplePdf("multa")}>
+                  Multa
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" onClick={handleRestoreDefaults} disabled={saving}>
               <RotateCcw className="w-4 h-4 mr-2" />
               Restaurar padrão
