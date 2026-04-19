@@ -61,6 +61,7 @@ import { History } from "lucide-react";
 interface Condominium {
   id: string;
   name: string;
+  default_fine_percentage?: number | null;
 }
 
 interface Block {
@@ -176,7 +177,7 @@ const Occurrences = () => {
       // Fetch condominiums
       const { data: condosData } = await supabase
         .from("condominiums")
-        .select("id, name")
+        .select("id, name, default_fine_percentage")
         .eq("owner_id", user.id);
       setCondominiums(condosData || []);
 
