@@ -885,7 +885,7 @@ const OccurrenceDetails = () => {
     // Intro paragraph
     const introParagraph =
       "Na qualidade de síndico deste Condomínio, no uso de minhas atribuições legais e conforme determinação do corpo diretivo, sirvo-me da presente para notificá-lo(a) acerca do descumprimento das normas previstas no Regulamento Interno.";
-    yPos = drawJustified(introParagraph, margin, yPos, contentWidth, 5, indent) + 6;
+    yPos = drawJustified(introParagraph, margin, yPos, contentWidth, 5, indent) + 2;
 
     // Highlighted legal basis (light yellow block) - aligned to text margins, italic
     const legalParts: string[] = [];
