@@ -113,6 +113,8 @@ const PackagesHistory = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
+  const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
