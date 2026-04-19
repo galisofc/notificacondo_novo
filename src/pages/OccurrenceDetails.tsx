@@ -726,8 +726,6 @@ const OccurrenceDetails = () => {
       .join(" – ");
     const addressLine = [fullAddress, cityState].filter(Boolean).join(" – ");
     const cepLine = condo?.zip_code ? `CEP: ${condo.zip_code}` : "";
-    const today = new Date().toISOString();
-    const headerCity = city || "São Paulo";
 
     // Reference number: year/sequential placeholder using occurrence id last 4
     const refNumber = `${new Date().getFullYear()}/${occurrence.id.slice(-4).toUpperCase()}`;
