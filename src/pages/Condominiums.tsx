@@ -155,7 +155,7 @@ const Condominiums = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setCondominiums(data || []);
+      setCondominiums((data || []) as unknown as Condominium[]);
     } catch (error) {
       console.error("Error fetching condominiums:", error);
       toast({
@@ -295,7 +295,9 @@ const Condominiums = () => {
             city: formData.city || null,
             state: formData.state || null,
             defense_deadline_days: parseInt(formData.defense_deadline_days) || 10,
-          })
+            logo_url: formData.logo_url || null,
+            sindico_name: formData.sindico_name || null,
+          } as any)
           .eq("id", editingCondo.id);
 
         if (error) throw error;
