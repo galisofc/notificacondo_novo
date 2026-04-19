@@ -1060,7 +1060,7 @@ const OccurrenceDetails = () => {
     const closingPara = interpolate(pdfTemplate.closing_remarks, templateVars);
     if (closingPara.trim()) {
       await drawJustifiedPaginated(closingPara, 5, indent);
-      yPos += 4;
+      yPos += 10;
     }
 
     // Signature block — keep together, but only break when the last line would actually hit the footer
