@@ -799,14 +799,17 @@ const OccurrenceDetails = () => {
     const footerReserve = 30;
     const bottomLimit = pageHeight - footerReserve;
 
+    const today = new Date().toISOString();
+    const headerCity = city || "São Paulo";
+    const blockName = occurrence.blocks?.name || "-";
+    const aptNumber = occurrence.apartments?.number || "-";
+
     // Renders the top block (date + logo on right, recipient block on left).
     // Returns the Y position where body content can start.
     const renderTopBlock = async (): Promise<number> => {
       let topY = margin;
       const topStartY = topY;
       const rightColX = pageWidth - margin;
-      const today = new Date().toISOString();
-      const headerCity = city || "São Paulo";
 
       doc.setFontSize(11);
       doc.setTextColor(33, 33, 33);
