@@ -733,6 +733,29 @@ const OccurrenceDetails = () => {
     const refNumber = `${new Date().getFullYear()}/${occurrence.id.slice(-4).toUpperCase()}`;
 
     // ===== PAGE 1: FORMAL LETTER =====
+    // Logo (if available) - centered at the top
+    if (condo?.logo_url) {
+      const logoData = await loadImageAsDataUrl(condo.logo_url);
+      if (logoData && logoData.width > 0) {
+        const maxLogoH = 25;
+        const maxLogoW = 50;
+        const ratio = logoData.width / logoData.height;
+        let logoH = maxLogoH;
+        let logoW = logoH * ratio;
+        if (logoW > maxLogoW) {
+          logoW = maxLogoW;
+          logoH = logoW / ratio;
+        }
+        const logoX = (pageWidth - logoW) / 2;
+        try {
+          doc.addImage(logoData.dataUrl, logoData.format, logoX, yPos, logoW, logoH);
+          yPos += logoH + 6;
+        } catch (e) {
+          console.warn("Failed to add logo to PDF", e);
+        }
+      }
+    }
+
     // Header date
     doc.setFontSize(11);
     doc.setTextColor(33, 33, 33);
