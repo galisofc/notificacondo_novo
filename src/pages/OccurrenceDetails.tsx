@@ -1060,21 +1060,20 @@ const OccurrenceDetails = () => {
     const closingPara = interpolate(pdfTemplate.closing_remarks, templateVars);
     if (closingPara.trim()) {
       await drawJustifiedPaginated(closingPara, 5, indent);
-      yPos += 10;
+      yPos += 4;
     }
 
-    // Signature block — keep together on the same page
-    // Real height: "Atenciosamente" (1 line) + 18 gap + 3 lines × 5 = 28mm.
-    // We allow it to use part of the footer reserve area if needed (signature
-    // sits above the drawn footer at pageHeight - 25, so total available = pageHeight - 25).
-    const signatureBlockHeight = 28;
-    const signatureBottomLimit = pageHeight - 27; // just above the footer line
+    // Signature block — keep together on the same page with tighter spacing
+    const signatureGapAfterLabel = 14;
+    const signatureLineHeight = 5;
+    const signatureBlockHeight = signatureGapAfterLabel + signatureLineHeight * 2 + 4;
+    const signatureBottomLimit = pageHeight - 25;
     if (yPos + signatureBlockHeight > signatureBottomLimit) {
       doc.addPage();
       yPos = await renderTopBlock();
     }
     doc.text(pdfTemplate.signature_label || "Atenciosamente;", margin, yPos);
-    yPos += 18;
+    yPos += signatureGapAfterLabel;
 
     // Signature
     doc.setFont("helvetica", "bold");
