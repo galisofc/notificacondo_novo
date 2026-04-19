@@ -142,6 +142,7 @@ const Occurrences = () => {
     internal_rules_article: "",
     civil_code_article: "",
     legal_basis: "",
+    fine_percentage: "50",
   });
 
   // Filtered data based on selection
@@ -440,7 +441,11 @@ const Occurrences = () => {
           internal_rules_article: formData.internal_rules_article || null,
           civil_code_article: formData.civil_code_article || null,
           legal_basis: formData.legal_basis || null,
-        })
+          fine_percentage:
+            formData.type === "multa" && formData.fine_percentage
+              ? Number(formData.fine_percentage)
+              : null,
+        } as any)
         .select()
         .single();
 
@@ -482,6 +487,7 @@ const Occurrences = () => {
         internal_rules_article: "",
         civil_code_article: "",
         legal_basis: "",
+        fine_percentage: "50",
       });
 
       fetchData();
