@@ -795,86 +795,167 @@ const OccurrenceDetails = () => {
     const refNumber = `${new Date().getFullYear()}/${occurrence.id.slice(-4).toUpperCase()}`;
 
     // ===== PAGE 1: FORMAL LETTER =====
-    // Top section: recipient block on the LEFT, date + logo stacked on the RIGHT
-    const topStartY = yPos;
-    const rightColX = pageWidth - margin;
+    // Reserve space for the footer drawn at the end (footer starts at pageHeight - 25)
+    const footerReserve = 30;
+    const bottomLimit = pageHeight - footerReserve;
+
     const today = new Date().toISOString();
     const headerCity = city || "São Paulo";
-
-    // Right column: date (top) and logo (below date), right-aligned
-    doc.setFontSize(11);
-    doc.setTextColor(33, 33, 33);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${headerCity}, ${formatFullDate(today)}`, rightColX, topStartY, { align: "right" });
-
-    let rightYAfter = topStartY;
-    if (condo?.logo_url) {
-      const logoData = await loadImageAsDataUrl(condo.logo_url);
-      if (logoData && logoData.width > 0) {
-        const maxLogoH = 22;
-        const maxLogoW = 55;
-        const ratio = logoData.width / logoData.height;
-        let logoH = maxLogoH;
-        let logoW = logoH * ratio;
-        if (logoW > maxLogoW) {
-          logoW = maxLogoW;
-          logoH = logoW / ratio;
-        }
-        const logoX = rightColX - logoW;
-        const logoY = topStartY + 6;
-        try {
-          doc.addImage(logoData.dataUrl, logoData.format, logoX, logoY, logoW, logoH);
-          rightYAfter = logoY + logoH;
-        } catch (e) {
-          console.warn("Failed to add logo to PDF", e);
-        }
-      }
-    }
-
-    // Left column: recipient block
-    let leftY = topStartY + 12;
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text("Ao Senhor(a):", margin, leftY);
-    leftY += 6;
-    doc.setFont("helvetica", "bold");
-    doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, leftY);
-    leftY += 6;
-
     const blockName = occurrence.blocks?.name || "-";
     const aptNumber = occurrence.apartments?.number || "-";
-    doc.setFont("helvetica", "normal");
-    doc.text("Bloco: ", margin, leftY);
-    doc.setFont("helvetica", "bold");
-    doc.text(blockName, margin + 14, leftY);
-    doc.setFont("helvetica", "normal");
-    doc.text("APTO: ", margin + 35, leftY);
-    doc.setFont("helvetica", "bold");
-    doc.text(aptNumber, margin + 49, leftY);
-    leftY += 6;
 
-    doc.setFont("helvetica", "normal");
-    doc.text(condominiumName.toUpperCase(), margin, leftY);
-    leftY += 5;
-    if (addressLine) {
-      doc.setFontSize(10);
-      doc.text(addressLine, margin, leftY);
-      leftY += 5;
-    }
-    if (cepLine) {
-      doc.text(cepLine, margin, leftY);
-      leftY += 5;
-    }
+    // Renders the top block (date + logo on right, recipient block on left).
+    // Returns the Y position where body content can start.
+    const renderTopBlock = async (): Promise<number> => {
+      let topY = margin;
+      const topStartY = topY;
+      const rightColX = pageWidth - margin;
 
-    yPos = Math.max(leftY, rightYAfter) + 8;
+      doc.setFontSize(11);
+      doc.setTextColor(33, 33, 33);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${headerCity}, ${formatFullDate(today)}`, rightColX, topStartY, { align: "right" });
+
+      let rightYAfter = topStartY;
+      if (condo?.logo_url) {
+        const logoData = await loadImageAsDataUrl(condo.logo_url);
+        if (logoData && logoData.width > 0) {
+          const maxLogoH = 22;
+          const maxLogoW = 55;
+          const ratio = logoData.width / logoData.height;
+          let logoH = maxLogoH;
+          let logoW = logoH * ratio;
+          if (logoW > maxLogoW) {
+            logoW = maxLogoW;
+            logoH = logoW / ratio;
+          }
+          const logoX = rightColX - logoW;
+          const logoY = topStartY + 6;
+          try {
+            doc.addImage(logoData.dataUrl, logoData.format, logoX, logoY, logoW, logoH);
+            rightYAfter = logoY + logoH;
+          } catch (e) {
+            console.warn("Failed to add logo to PDF", e);
+          }
+        }
+      }
+
+      // Left column: recipient block
+      let leftY = topStartY + 12;
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      doc.text("Ao Senhor(a):", margin, leftY);
+      leftY += 6;
+      doc.setFont("helvetica", "bold");
+      doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, leftY);
+      leftY += 6;
+
+      doc.setFont("helvetica", "normal");
+      doc.text("Bloco: ", margin, leftY);
+      doc.setFont("helvetica", "bold");
+      doc.text(blockName, margin + 14, leftY);
+      doc.setFont("helvetica", "normal");
+      doc.text("APTO: ", margin + 35, leftY);
+      doc.setFont("helvetica", "bold");
+      doc.text(aptNumber, margin + 49, leftY);
+      leftY += 6;
+
+      doc.setFont("helvetica", "normal");
+      doc.text(condominiumName.toUpperCase(), margin, leftY);
+      leftY += 5;
+      if (addressLine) {
+        doc.setFontSize(10);
+        doc.text(addressLine, margin, leftY);
+        leftY += 5;
+      }
+      if (cepLine) {
+        doc.text(cepLine, margin, leftY);
+        leftY += 5;
+      }
+
+      return Math.max(leftY, rightYAfter) + 8;
+    };
+
+    yPos = await renderTopBlock();
+
+    // Helper: ensure there is enough vertical room for the next chunk; otherwise
+    // jump to a new page repeating the top block.
+    const ensureSpace = async (needed: number) => {
+      if (yPos + needed > bottomLimit) {
+        doc.addPage();
+        yPos = await renderTopBlock();
+      }
+    };
+
+    // Wrapper around drawJustified that paginates if needed (line by line).
+    const drawJustifiedPaginated = async (
+      text: string,
+      lineHeight = 5,
+      firstLineIndent = 0
+    ): Promise<void> => {
+      const paragraphs = String(text).split(/\n/);
+      for (const para of paragraphs) {
+        await ensureSpace(lineHeight);
+        // Use measured text to break by available width; if a single paragraph
+        // would overflow the page, split it across pages preserving justification.
+        const words = para.split(/\s+/).filter(Boolean);
+        let current: string[] = [];
+        let isFirst = true;
+        const firstLineWidth = Math.max(10, contentWidth - firstLineIndent);
+        const widthOf = (s: string) => doc.getTextWidth(s);
+        const lines: { text: string; indent: number; width: number }[] = [];
+        const flush = () => {
+          lines.push({
+            text: current.join(" "),
+            indent: isFirst ? firstLineIndent : 0,
+            width: isFirst ? firstLineWidth : contentWidth,
+          });
+          current = [];
+          isFirst = false;
+        };
+        words.forEach((w) => {
+          const tentative = current.length ? current.join(" ") + " " + w : w;
+          const limit = isFirst ? firstLineWidth : contentWidth;
+          if (widthOf(tentative) > limit && current.length) {
+            flush();
+            current = [w];
+          } else {
+            current.push(w);
+          }
+        });
+        if (current.length) flush();
+
+        for (let idx = 0; idx < lines.length; idx++) {
+          await ensureSpace(lineHeight);
+          const line = lines[idx];
+          const isLast = idx === lines.length - 1;
+          const lineWords = line.text.split(" ").filter(Boolean);
+          const drawX = margin + line.indent;
+          if (isLast || lineWords.length < 2) {
+            doc.text(line.text, drawX, yPos);
+          } else {
+            const wordsWidth = lineWords.reduce((s, w) => s + widthOf(w), 0);
+            const gap = (line.width - wordsWidth) / (lineWords.length - 1);
+            let cx = drawX;
+            lineWords.forEach((w) => {
+              doc.text(w, cx, yPos);
+              cx += widthOf(w) + gap;
+            });
+          }
+          yPos += lineHeight;
+        }
+      }
+    };
 
     // Reference (italic)
+    await ensureSpace(10);
     doc.setFontSize(11);
     doc.setFont("helvetica", "bolditalic");
     doc.text(`Ref.: ${refNumber} - ${refLabels[occurrence.type] || "Ocorrência"}`, margin, yPos);
     yPos += 10;
 
     // Greeting
+    await ensureSpace(8);
     doc.setFont("helvetica", "normal");
     doc.text("Prezado Condômino,", margin, yPos);
     yPos += 8;
@@ -885,7 +966,8 @@ const OccurrenceDetails = () => {
     // Intro paragraph
     const introParagraph =
       "Na qualidade de síndico deste Condomínio, no uso de minhas atribuições legais e conforme determinação do corpo diretivo, sirvo-me da presente para notificá-lo(a) acerca do descumprimento das normas previstas no Regulamento Interno.";
-    yPos = drawJustified(introParagraph, margin, yPos, contentWidth, 5, indent) + 2;
+    await drawJustifiedPaginated(introParagraph, 5, indent);
+    yPos += 2;
 
     // Highlighted legal basis (light yellow block) - aligned to text margins, italic
     const legalParts: string[] = [];
@@ -902,10 +984,17 @@ const OccurrenceDetails = () => {
       doc.setFontSize(11);
       const legalLines = doc.splitTextToSize(legalText, contentWidth);
       const blockHeight = legalLines.length * lineH + padY * 2;
+      // If the whole highlighted block doesn't fit, push to a new page (keep together).
+      await ensureSpace(blockHeight + 2);
       doc.setFillColor(255, 249, 196);
       doc.rect(margin, yPos, contentWidth, blockHeight, "F");
       doc.setTextColor(33, 33, 33);
-      drawJustified(legalText, margin, yPos + padY + 4, contentWidth, lineH);
+      // Draw text directly (already known to fit in current page)
+      let ty = yPos + padY + 4;
+      legalLines.forEach((ln: string) => {
+        doc.text(ln, margin + 2, ty);
+        ty += lineH;
+      });
       yPos += blockHeight + 8;
       doc.setFont("helvetica", "normal");
     }
@@ -916,12 +1005,14 @@ const OccurrenceDetails = () => {
     let descriptionParagraph = `No dia ${occurrenceDate}, por volta das ${occurrenceTime}`;
     if (occurrence.location) descriptionParagraph += `, no local: ${occurrence.location}`;
     descriptionParagraph += `, foi constatado que: ${occurrence.description}`;
-    yPos = drawJustified(descriptionParagraph, margin, yPos, contentWidth, 5, indent) + 6;
+    await drawJustifiedPaginated(descriptionParagraph, 5, indent);
+    yPos += 6;
 
     // Role paragraph
     const rolePara =
       "Ressaltamos que o cargo de síndico tem por finalidade a gestão do condomínio e o fiel cumprimento do Regimento Interno, cuja versão atualizada está disponível para consulta de todos os condôminos, conforme aprovado em assembleia.";
-    yPos = drawJustified(rolePara, margin, yPos, contentWidth, 5, indent) + 6;
+    await drawJustifiedPaginated(rolePara, 5, indent);
+    yPos += 6;
 
     // Penalty paragraph
     let penaltyParagraph = "";
@@ -935,21 +1026,25 @@ const OccurrenceDetails = () => {
       penaltyParagraph =
         "Diante do ocorrido, serve a presente como NOTIFICAÇÃO FORMAL sobre o descumprimento das normas condominiais.";
     }
-    yPos = drawJustified(penaltyParagraph, margin, yPos, contentWidth, 5, indent) + 6;
+    await drawJustifiedPaginated(penaltyParagraph, 5, indent);
+    yPos += 6;
 
     // Defense deadline
     const deadlineDays = occurrence.condominiums?.defense_deadline_days || 10;
     const deadlineWritten =
       deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
     const defenseParagraph = `Fica estipulado o prazo de ${deadlineWritten} dias para que V. Sa. apresente, se assim desejar, suas razões mediante defesa por escrito, a qual será submetida à análise do Conselho Consultivo.`;
-    yPos = drawJustified(defenseParagraph, margin, yPos, contentWidth, 5, indent) + 6;
+    await drawJustifiedPaginated(defenseParagraph, 5, indent);
+    yPos += 6;
 
     // Closing
     const closingPara =
       "Contamos com a sua compreensão e colaboração no sentido de mantermos o respeito às normas e a boa convivência entre os moradores.";
-    yPos = drawJustified(closingPara, margin, yPos, contentWidth, 5, indent) + 10;
+    await drawJustifiedPaginated(closingPara, 5, indent);
+    yPos += 10;
 
-
+    // Signature block — keep together on the same page
+    await ensureSpace(35);
     doc.text("Atenciosamente;", margin, yPos);
     yPos += 18;
 
