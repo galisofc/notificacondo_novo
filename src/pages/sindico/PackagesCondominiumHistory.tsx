@@ -46,7 +46,10 @@ import {
   Layers,
   TrendingUp,
   Copy,
+  Eye,
 } from "lucide-react";
+import { PackageDetailsDialog } from "@/components/packages/PackageDetailsDialog";
+import type { Package as PackageType } from "@/hooks/usePackages";
 import { format, parseISO, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
