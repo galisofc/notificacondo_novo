@@ -1196,6 +1196,12 @@ const PackagesCondominiumHistory = () => {
             </div>
           </DialogContent>
         </Dialog>
+
+        <PackageDetailsDialog
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+          package_={selectedPackage}
+        />
       </div>
     </DashboardLayout>
   );
