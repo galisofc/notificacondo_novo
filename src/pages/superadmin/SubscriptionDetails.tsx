@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { isPast, format, parseISO, startOfDay } from "date-fns";
 import { calculateRemainingTime } from "@/hooks/useRemainingTime";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
