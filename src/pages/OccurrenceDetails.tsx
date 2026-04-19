@@ -80,7 +80,17 @@ interface Occurrence {
   apartment_id: string | null;
   resident_id: string | null;
   condominium_id: string;
-  condominiums: { name: string; defense_deadline_days: number } | null;
+  condominiums: {
+    name: string;
+    defense_deadline_days: number;
+    address: string | null;
+    address_number: string | null;
+    neighborhood: string | null;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+    owner_id: string;
+  } | null;
   blocks: { name: string } | null;
   apartments: { number: string } | null;
   residents: { id: string; full_name: string; email: string } | null;
@@ -248,7 +258,7 @@ const OccurrenceDetails = () => {
         .from("occurrences")
         .select(`
           *,
-          condominiums(name, defense_deadline_days),
+          condominiums(name, defense_deadline_days, address, address_number, neighborhood, city, state, zip_code, owner_id),
           blocks(name),
           apartments(number),
           residents(id, full_name, email)
@@ -262,7 +272,7 @@ const OccurrenceDetails = () => {
         navigate("/occurrences");
         return;
       }
-      setOccurrence(occurrenceData);
+      setOccurrence(occurrenceData as unknown as Occurrence);
 
       // Fetch evidences
       const { data: evidencesData } = await supabase
@@ -607,8 +617,46 @@ const OccurrenceDetails = () => {
     }
   };
 
-  const generatePDF = () => {
+  // Helper: load image URL into base64 data URL for jsPDF
+  const loadImageAsDataUrl = async (
+    url: string
+  ): Promise<{ dataUrl: string; format: "JPEG" | "PNG"; width: number; height: number } | null> => {
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const dims: { width: number; height: number } = await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve({ width: 0, height: 0 });
+        img.src = dataUrl;
+      });
+      const isPng = blob.type.includes("png");
+      return { dataUrl, format: isPng ? "PNG" : "JPEG", width: dims.width, height: dims.height };
+    } catch {
+      return null;
+    }
+  };
+
+  const generatePDF = async () => {
     if (!occurrence) return;
+
+    // Fetch sindico (owner) profile name
+    let sindicoName = "Síndico(a)";
+    if (occurrence.condominiums?.owner_id) {
+      const { data: ownerProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", occurrence.condominiums.owner_id)
+        .maybeSingle();
+      if (ownerProfile?.full_name) sindicoName = ownerProfile.full_name;
+    }
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -617,7 +665,6 @@ const OccurrenceDetails = () => {
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
 
-    // Type labels
     const typeLabels: Record<string, string> = {
       advertencia: "Advertência",
       notificacao: "Notificação",
@@ -625,29 +672,24 @@ const OccurrenceDetails = () => {
     };
 
     const refLabels: Record<string, string> = {
-      advertencia: "Aplicação de Advertência",
-      notificacao: "Notificação",
-      multa: "Aplicação de Multa",
+      advertencia: "ADVERTÊNCIA – Infração a Convenção",
+      notificacao: "NOTIFICAÇÃO – Infração a Convenção",
+      multa: "MULTA – Infração a Convenção",
     };
 
-    // Format date for header (e.g., "Guarulhos, 04 de dezembro de 2025")
     const formatFullDate = (dateStr: string) => {
       const date = new Date(dateStr);
       const months = [
         "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
       ];
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = months[date.getMonth()];
-      const year = date.getFullYear();
-      return `${day} de ${month} de ${year}`;
+      return `${date.getDate().toString().padStart(2, "0")} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
     };
 
     const numberToPortugueseWords = (num: number): string => {
       const units = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
       const teens = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
       const tens = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
-      
       if (num < 10) return units[num];
       if (num < 20) return teens[num - 10];
       if (num < 100) {
@@ -660,10 +702,7 @@ const OccurrenceDetails = () => {
 
     const formatShortDate = (dateStr: string) => {
       const date = new Date(dateStr);
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
+      return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`;
     };
 
     const formatTime = (dateStr: string) => {
@@ -671,246 +710,263 @@ const OccurrenceDetails = () => {
       return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     };
 
-    // Get condominium city (if available from address) or default
-    const condominiumName = occurrence.condominiums?.name || "Condomínio";
+    const condo = occurrence.condominiums;
+    const condominiumName = condo?.name || "Condomínio";
+    const city = condo?.city || "";
+    const stateUf = condo?.state || "";
+    const cityState = [city, stateUf].filter(Boolean).join("/");
+    const fullAddress = [
+      [condo?.address, condo?.address_number].filter(Boolean).join(", "),
+      condo?.neighborhood,
+    ]
+      .filter(Boolean)
+      .join(" – ");
+    const addressLine = [fullAddress, cityState].filter(Boolean).join(" – ");
+    const cepLine = condo?.zip_code ? `CEP: ${condo.zip_code}` : "";
     const today = new Date().toISOString();
+    const headerCity = city || "São Paulo";
+
+    // Reference number: year/sequential placeholder using occurrence id last 4
+    const refNumber = `${new Date().getFullYear()}/${occurrence.id.slice(-4).toUpperCase()}`;
 
     // ===== PAGE 1: FORMAL LETTER =====
-
-    // Header - Date aligned right
+    // Header date
     doc.setFontSize(11);
     doc.setTextColor(33, 33, 33);
-    doc.text(`São Paulo, ${formatFullDate(today)}`, pageWidth - margin, yPos, { align: "right" });
-    yPos += 15;
-
-    // Condominium Name - Centered, bold
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text(condominiumName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-    yPos += 15;
-
-    // Recipient info
-    doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`Ao Senhor(a): ${occurrence.residents?.full_name || "Não identificado"}`, margin, yPos);
-    yPos += 8;
-
-    // Block and Apartment
-    const blockName = occurrence.blocks?.name || "-";
-    const aptNumber = occurrence.apartments?.number || "-";
-    doc.text(`BLOCO: ${blockName}       APTO: ${aptNumber}`, margin, yPos);
-    yPos += 8;
-
-    // Condominium address (full name again)
-    doc.setFontSize(10);
-    doc.setTextColor(80, 80, 80);
-    doc.text(condominiumName.toUpperCase(), margin, yPos);
-    yPos += 20;
-
-    // Reference line
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(33, 33, 33);
-    doc.text(`REF: ${refLabels[occurrence.type] || "Ocorrência"}`, margin, yPos);
+    doc.text(`${headerCity}, ${formatFullDate(today)}`, margin, yPos);
     yPos += 12;
 
-    // Greeting
-    doc.setFontSize(11);
+    // Recipient
+    doc.text("Ao Senhor(a):", margin, yPos);
+    yPos += 6;
+    doc.setFont("helvetica", "bold");
+    doc.text((occurrence.residents?.full_name || "Não identificado").toUpperCase(), margin, yPos);
+    yPos += 6;
+
+    const blockName = occurrence.blocks?.name || "-";
+    const aptNumber = occurrence.apartments?.number || "-";
     doc.setFont("helvetica", "normal");
-    doc.text("Prezado(a) Condômino(a),", margin, yPos);
-    yPos += 10;
+    doc.text("Bloco: ", margin, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text(blockName, margin + 14, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text("APTO: ", margin + 35, yPos);
+    doc.setFont("helvetica", "bold");
+    doc.text(aptNumber, margin + 49, yPos);
+    yPos += 6;
 
-    // Intro paragraph
-    const introParagraph = "Na qualidade de síndico(a) deste Condomínio, no uso de minhas atribuições legais e atendendo a determinação do corpo diretivo, utilizo-me da presente para notificá-lo(a) por desrespeito às normas do Regimento Interno.";
-    const introLines = doc.splitTextToSize(introParagraph, contentWidth);
-    doc.text(introLines, margin, yPos);
-    yPos += introLines.length * 5 + 8;
-
-    // Legal basis section (FUNDAMENTAÇÃO LEGAL)
-    const hasLegalBasis = occurrence.internal_rules_article || occurrence.convention_article || occurrence.civil_code_article || occurrence.legal_basis;
-    
-    if (hasLegalBasis) {
-      // Section header
-      doc.setFont("helvetica", "bold");
-      doc.text("FUNDAMENTAÇÃO LEGAL:", margin, yPos);
-      yPos += 8;
-      doc.setFont("helvetica", "normal");
-
-      // List each legal reference with its description
-      if (occurrence.civil_code_article) {
-        const civilCodeText = `• Código Civil - Art. ${occurrence.civil_code_article}`;
-        const civilLines = doc.splitTextToSize(civilCodeText, contentWidth);
-        doc.text(civilLines, margin, yPos);
-        yPos += civilLines.length * 5 + 3;
-      }
-
-      if (occurrence.convention_article) {
-        const conventionText = `• Convenção do Condomínio - Art. ${occurrence.convention_article}`;
-        const conventionLines = doc.splitTextToSize(conventionText, contentWidth);
-        doc.text(conventionLines, margin, yPos);
-        yPos += conventionLines.length * 5 + 3;
-      }
-
-      if (occurrence.internal_rules_article) {
-        const rulesText = `• Regimento Interno - Art. ${occurrence.internal_rules_article}`;
-        const rulesLines = doc.splitTextToSize(rulesText, contentWidth);
-        doc.text(rulesLines, margin, yPos);
-        yPos += rulesLines.length * 5 + 3;
-      }
-
-      // Additional legal basis description
-      if (occurrence.legal_basis) {
-        yPos += 3;
-        const legalBasisLines = doc.splitTextToSize(occurrence.legal_basis, contentWidth);
-        doc.text(legalBasisLines, margin, yPos);
-        yPos += legalBasisLines.length * 5 + 5;
-      }
-
+    doc.setFont("helvetica", "normal");
+    doc.text(condominiumName.toUpperCase(), margin, yPos);
+    yPos += 5;
+    if (addressLine) {
+      doc.setFontSize(10);
+      doc.text(addressLine, margin, yPos);
       yPos += 5;
     }
+    if (cepLine) {
+      doc.text(cepLine, margin, yPos);
+      yPos += 5;
+    }
+    yPos += 8;
 
-    // Occurrence description paragraph
+    // Reference (italic)
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bolditalic");
+    doc.text(`Ref.: ${refNumber} - ${refLabels[occurrence.type] || "Ocorrência"}`, margin, yPos);
+    yPos += 10;
+
+    // Greeting
+    doc.setFont("helvetica", "normal");
+    doc.text("Prezado Condômino,", margin, yPos);
+    yPos += 8;
+
+    // Intro paragraph
+    const introParagraph =
+      "Na qualidade de síndico deste Condomínio, no uso de minhas atribuições legais e conforme determinação do corpo diretivo, sirvo-me da presente para notificá-lo(a) acerca do descumprimento das normas previstas no Regulamento Interno.";
+    const introLines = doc.splitTextToSize(introParagraph, contentWidth);
+    doc.text(introLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
+    yPos += introLines.length * 5 + 6;
+
+    // Highlighted legal basis (yellow background block)
+    const legalParts: string[] = [];
+    if (occurrence.civil_code_article) legalParts.push(`Código Civil - Art. ${occurrence.civil_code_article}`);
+    if (occurrence.convention_article) legalParts.push(`Convenção - Art. ${occurrence.convention_article}`);
+    if (occurrence.internal_rules_article) legalParts.push(`Art. ${occurrence.internal_rules_article} do Regimento Interno`);
+
+    if (legalParts.length > 0 || occurrence.legal_basis) {
+      const prefix = legalParts.length > 0 ? `Conforme ${legalParts.join(", ")}: ` : "";
+      const legalText = `${prefix}${occurrence.legal_basis || ""}`.trim();
+      const legalLines = doc.splitTextToSize(legalText, contentWidth - 6);
+      const blockHeight = legalLines.length * 5 + 6;
+      // Yellow highlight background
+      doc.setFillColor(255, 242, 153);
+      doc.rect(margin, yPos - 4, contentWidth, blockHeight, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(33, 33, 33);
+      doc.text(legalLines, margin + 3, yPos);
+      yPos += blockHeight + 4;
+      doc.setFont("helvetica", "normal");
+    }
+
+    // Description paragraph
     const occurrenceDate = formatShortDate(occurrence.occurred_at);
     const occurrenceTime = formatTime(occurrence.occurred_at);
-    
     let descriptionParagraph = `No dia ${occurrenceDate}, por volta das ${occurrenceTime}`;
-    if (occurrence.location) {
-      descriptionParagraph += `, no local: ${occurrence.location}`;
-    }
-    descriptionParagraph += `, foi verificado que: ${occurrence.description}`;
-    descriptionParagraph += " Informamos que tal conduta caracteriza descumprimento do Regimento Interno, estando sujeita à aplicação das penalidades previstas nas normas condominiais.";
-
+    if (occurrence.location) descriptionParagraph += `, no local: ${occurrence.location}`;
+    descriptionParagraph += `, foi constatado que: ${occurrence.description}`;
     const descLines = doc.splitTextToSize(descriptionParagraph, contentWidth);
-    doc.text(descLines, margin, yPos);
-    yPos += descLines.length * 5 + 8;
+    doc.text(descLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
+    yPos += descLines.length * 5 + 6;
 
-    // Penalty paragraph (based on type)
+    // Role paragraph
+    const rolePara =
+      "Ressaltamos que o cargo de síndico tem por finalidade a gestão do condomínio e o fiel cumprimento do Regimento Interno, cuja versão atualizada está disponível para consulta de todos os condôminos, conforme aprovado em assembleia.";
+    const roleLines = doc.splitTextToSize(rolePara, contentWidth);
+    doc.text(roleLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
+    yPos += roleLines.length * 5 + 6;
+
+    // Penalty paragraph
     let penaltyParagraph = "";
     if (occurrence.type === "multa") {
-      penaltyParagraph = "Diante do ocorrido, torna-se necessária a aplicação da penalidade prevista no Regimento Interno deste Condomínio, a qual será lançada juntamente com sua quota condominial.";
+      penaltyParagraph =
+        "Diante do ocorrido, torna-se necessária a aplicação da multa prevista no Regimento Interno deste Condomínio, a qual será lançada juntamente com a quota condominial.";
     } else if (occurrence.type === "advertencia") {
-      penaltyParagraph = "Diante do ocorrido, esta serve como ADVERTÊNCIA FORMAL, ficando registrado o descumprimento das normas condominiais. Reincidências poderão acarretar penalidades mais severas, incluindo aplicação de multa.";
+      penaltyParagraph =
+        "Diante do ocorrido, esta notificação está sendo emitida como advertência formal, sendo o próximo passo, em caso de reincidência, a aplicação da multa prevista no Regimento Interno.";
     } else {
-      penaltyParagraph = "Diante do ocorrido, serve a presente como NOTIFICAÇÃO FORMAL sobre o descumprimento das normas condominiais.";
+      penaltyParagraph =
+        "Diante do ocorrido, serve a presente como NOTIFICAÇÃO FORMAL sobre o descumprimento das normas condominiais.";
     }
     const penaltyLines = doc.splitTextToSize(penaltyParagraph, contentWidth);
-    doc.text(penaltyLines, margin, yPos);
-    yPos += penaltyLines.length * 5 + 8;
+    doc.text(penaltyLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
+    yPos += penaltyLines.length * 5 + 6;
 
-    // Defense deadline paragraph
+    // Defense deadline
     const deadlineDays = occurrence.condominiums?.defense_deadline_days || 10;
-    const deadlineWritten = deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
-    const defenseParagraph = `Outrossim, a partir desta data, fica estipulado o prazo de ${deadlineWritten} dias para que V. Sa. apresente, se assim desejar, suas razões mediante defesa por escrito, a qual será submetida à análise perante o Conselho Consultivo.`;
+    const deadlineWritten =
+      deadlineDays === 10 ? "10 (dez)" : `${deadlineDays} (${numberToPortugueseWords(deadlineDays)})`;
+    const defenseParagraph = `Fica estipulado o prazo de ${deadlineWritten} dias para que V. Sa. apresente, se assim desejar, suas razões mediante defesa por escrito, a qual será submetida à análise do Conselho Consultivo.`;
     const defenseLines = doc.splitTextToSize(defenseParagraph, contentWidth);
-    doc.text(defenseLines, margin, yPos);
-    yPos += defenseLines.length * 5 + 20;
+    doc.text(defenseLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
+    yPos += defenseLines.length * 5 + 8;
 
     // Closing
-    doc.text("Atenciosamente,", margin, yPos);
-    yPos += 25;
+    const closingPara =
+      "Contamos com a sua compreensão e colaboração no sentido de mantermos o respeito às normas e a boa convivência entre os moradores.";
+    const closingLines = doc.splitTextToSize(closingPara, contentWidth);
+    doc.text(closingLines, margin, yPos, { align: "justify", maxWidth: contentWidth });
+    yPos += closingLines.length * 5 + 12;
 
-    // Signature area
+    doc.text("Atenciosamente;", margin, yPos);
+    yPos += 18;
+
+    // Signature
     doc.setFont("helvetica", "bold");
-    doc.text(condominiumName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-    yPos += 8;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("Síndico(a)", pageWidth / 2, yPos, { align: "center" });
+    doc.text(condominiumName.toUpperCase(), margin, yPos);
+    yPos += 5;
+    doc.text("SÍNDICO", margin, yPos);
+    yPos += 5;
+    doc.text(sindicoName.toUpperCase(), margin, yPos);
 
-    // ===== PAGE 2: AUTO DE INFRAÇÃO (Evidence) =====
-    if (evidences.length > 0) {
+    // ===== PAGE 2: AUTO DE INFRAÇÃO with photo =====
+    const imageEvidences = evidences.filter((e) => e.file_type?.toLowerCase().startsWith("image"));
+    if (imageEvidences.length > 0) {
       doc.addPage();
       yPos = margin;
 
-      // Header
       doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
       doc.setTextColor(33, 33, 33);
-      doc.text(`São Paulo, ${formatFullDate(today)}`, pageWidth - margin, yPos, { align: "right" });
-      yPos += 15;
+      doc.text(`${headerCity}, ${formatFullDate(today)}`, margin, yPos);
+      yPos += 12;
 
-      // Condominium Name
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text(condominiumName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-      yPos += 15;
-
-      // Section title
       doc.setFontSize(14);
-      doc.text("AUTO DE INFRAÇÃO:", margin, yPos);
-      yPos += 15;
+      doc.setFont("helvetica", "bold");
+      doc.text(condominiumName.toUpperCase(), margin, yPos);
+      yPos += 12;
 
-      // Evidence info box
+      doc.setFontSize(13);
+      doc.text("AUTO DE INFRAÇÃO:", margin, yPos);
+      yPos += 10;
+
+      // Try to embed first image evidence
+      const firstImg = imageEvidences[0];
+      const imgData = await loadImageAsDataUrl(firstImg.file_url);
+      if (imgData && imgData.width > 0) {
+        const maxW = contentWidth;
+        const maxH = pageHeight - yPos - 50;
+        const ratio = imgData.width / imgData.height;
+        let drawW = maxW;
+        let drawH = drawW / ratio;
+        if (drawH > maxH) {
+          drawH = maxH;
+          drawW = drawH * ratio;
+        }
+        const xCenter = margin + (contentWidth - drawW) / 2;
+        try {
+          doc.addImage(imgData.dataUrl, imgData.format, xCenter, yPos, drawW, drawH);
+          yPos += drawH + 8;
+        } catch (err) {
+          console.error("Erro ao embedar imagem:", err);
+        }
+      }
+
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
       doc.text(`DATA: ${occurrenceDate}`, margin, yPos);
-      yPos += 8;
-      doc.text(`HORÁRIO: ${occurrenceTime}`, margin, yPos);
-      yPos += 8;
+      yPos += 6;
       if (occurrence.location) {
         doc.text(`LOCAL: ${occurrence.location}`, margin, yPos);
-        yPos += 8;
+        yPos += 6;
       }
-      yPos += 10;
-
-      // List evidences
-      doc.setFontSize(10);
-      doc.text("Provas anexadas:", margin, yPos);
-      yPos += 8;
-
-      evidences.forEach((evidence, index) => {
-        const evidenceText = `${index + 1}. ${evidence.file_type.toUpperCase()}${evidence.description ? ` - ${evidence.description}` : ""} (${formatShortDate(evidence.created_at)})`;
-        const evidenceLines = doc.splitTextToSize(evidenceText, contentWidth);
-        doc.text(evidenceLines, margin + 5, yPos);
-        yPos += evidenceLines.length * 5 + 3;
-      });
     }
 
-    // ===== PAGE 3: DEFENSES (if any) =====
+    // ===== Defenses page (if any) =====
     if (defenses.length > 0) {
       doc.addPage();
       yPos = margin;
-
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(33, 33, 33);
       doc.text("DEFESA(S) APRESENTADA(S)", pageWidth / 2, yPos, { align: "center" });
-      yPos += 15;
+      yPos += 12;
 
       defenses.forEach((defense, index) => {
         if (yPos > pageHeight - 50) {
           doc.addPage();
           yPos = margin;
         }
-
         doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         doc.text(`Defesa ${index + 1} - ${defense.residents?.full_name || "Morador"}`, margin, yPos);
         yPos += 6;
-        
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100, 100, 100);
-        doc.text(`Prazo: ${formatShortDate(defense.deadline)} | Enviada em: ${formatShortDate(defense.submitted_at)}`, margin, yPos);
+        doc.text(
+          `Prazo: ${formatShortDate(defense.deadline)} | Enviada em: ${formatShortDate(defense.submitted_at)}`,
+          margin,
+          yPos
+        );
         yPos += 8;
-
         doc.setFontSize(10);
         doc.setTextColor(33, 33, 33);
-        const defenseLines = doc.splitTextToSize(defense.content, contentWidth);
-        doc.text(defenseLines, margin, yPos);
-        yPos += defenseLines.length * 5 + 15;
+        const dl = doc.splitTextToSize(defense.content, contentWidth);
+        doc.text(dl, margin, yPos);
+        yPos += dl.length * 5 + 12;
       });
     }
 
-    // ===== PAGE 4: DECISIONS (if any) =====
+    // ===== Decisions page (if any) =====
     if (decisions.length > 0) {
       doc.addPage();
       yPos = margin;
-
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(33, 33, 33);
       doc.text("DECISÃO", pageWidth / 2, yPos, { align: "center" });
-      yPos += 15;
+      yPos += 12;
 
       const statusLabels: Record<string, string> = {
         arquivada: "ARQUIVADA",
@@ -918,57 +974,54 @@ const OccurrenceDetails = () => {
         multado: "MULTA APLICADA",
       };
 
-      decisions.forEach((decision, index) => {
+      decisions.forEach((decision) => {
         if (yPos > pageHeight - 50) {
           doc.addPage();
           yPos = margin;
         }
-
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text(`Resultado: ${statusLabels[decision.decision] || decision.decision}`, margin, yPos);
         yPos += 8;
-
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100, 100, 100);
         doc.text(`Data da decisão: ${formatShortDate(decision.decided_at)}`, margin, yPos);
-        yPos += 10;
-
+        yPos += 8;
         doc.setFontSize(10);
         doc.setTextColor(33, 33, 33);
         doc.text("Justificativa:", margin, yPos);
         yPos += 6;
-
-        const justificationLines = doc.splitTextToSize(decision.justification, contentWidth);
-        doc.text(justificationLines, margin, yPos);
-        yPos += justificationLines.length * 5 + 15;
+        const jl = doc.splitTextToSize(decision.justification, contentWidth);
+        doc.text(jl, margin, yPos);
+        yPos += jl.length * 5 + 12;
       });
     }
 
-    // Footer on all pages
+    // Footer on all pages: condominium name + address + page number
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
-      
-      // Bottom line
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
-      
-      // Condominium info footer
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(33, 33, 33);
-      doc.text(condominiumName.toUpperCase(), pageWidth / 2, pageHeight - 18, { align: "center" });
-      
-      doc.setFontSize(8);
+      doc.text(condominiumName, pageWidth / 2, pageHeight - 18, { align: "center" });
       doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
-      doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+      if (addressLine) {
+        doc.text(addressLine, pageWidth / 2, pageHeight - 13, { align: "center" });
+      }
+      if (cepLine) {
+        doc.text(cepLine, pageWidth / 2, pageHeight - 9, { align: "center" });
+      }
+      doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: "right" });
     }
 
-    // Generate filename
-    const residentName = occurrence.residents?.full_name?.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 20) || "morador";
+    const residentName =
+      occurrence.residents?.full_name?.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 20) || "morador";
     const blockApt = `BL_${blockName}_APTO_${aptNumber}`;
     const typeLabel = typeLabels[occurrence.type]?.toUpperCase() || "OCORRENCIA";
     const fileName = `${typeLabel}_-_${blockApt}_-_${residentName}.pdf`;
