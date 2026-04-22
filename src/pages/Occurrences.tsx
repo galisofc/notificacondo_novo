@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
-import { nowInSaoPauloForInput } from "@/lib/dateUtils";
+import { nowInSaoPauloForInput, saoPauloInputToISO } from "@/lib/dateUtils";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
