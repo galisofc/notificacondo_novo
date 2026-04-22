@@ -70,6 +70,21 @@ export function nowInSaoPauloForInput(): string {
   return format(zonedDate, "yyyy-MM-dd'T'HH:mm");
 }
 
+/**
+ * Converts a `datetime-local` input value (treated as São Paulo local time)
+ * into a UTC ISO string suitable for storing in a `timestamptz` column.
+ *
+ * @example saoPauloInputToISO("2026-04-21T21:39") // "2026-04-22T00:39:00.000Z"
+ */
+export function saoPauloInputToISO(value: string): string {
+  if (!value) return value;
+  try {
+    return fromZonedTime(value, DATE_TIME_CONFIG.timezone).toISOString();
+  } catch {
+    return value;
+  }
+}
+
 export function formatMonthYear(date: Date | string): string {
   try {
     const zonedDate = toSaoPauloTime(date);
