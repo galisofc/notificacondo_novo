@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
-import { nowInSaoPauloForInput } from "@/lib/dateUtils";
+import { nowInSaoPauloForInput, saoPauloInputToISO } from "@/lib/dateUtils";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
@@ -437,7 +437,7 @@ const Occurrences = () => {
           title: formData.title,
           description: formData.description,
           location: formData.location || null,
-          occurred_at: formData.occurred_at,
+          occurred_at: saoPauloInputToISO(formData.occurred_at),
           convention_article: formData.convention_article || null,
           internal_rules_article: formData.internal_rules_article || null,
           civil_code_article: formData.civil_code_article || null,
