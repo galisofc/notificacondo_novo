@@ -1,66 +1,26 @@
 
 
-## Plano: Editor de Template do PDF de Ocorrência (SuperAdmin)
+## Corrigir fuso horário ao salvar a Data da Ocorrência
 
-Criar uma página de configuração no SuperAdmin que permita editar os textos/parâmetros do PDF de ocorrência de forma centralizada. Qualquer alteração refletirá imediatamente em todo o sistema, pois o `OccurrenceDetails.tsx` passará a ler esses valores do banco em vez de tê-los hardcoded.
+### Problema
+Ao registrar uma ocorrência informando "21:39", o sistema exibe "18:39". Causa: o input `datetime-local` retorna uma string sem fuso (`2026-04-21T21:39`). Esse valor é enviado direto ao Supabase (campo `timestamptz`), que o interpreta como UTC. Na exibição, o helper `toSaoPauloTime` converte UTC para Brasília (UTC-3), subtraindo 3 horas e mostrando 18:39.
 
-### 1. Banco de Dados
+### Solução
+Tratar o valor do input como horário local de São Paulo e convertê-lo para UTC ISO antes de salvar no banco. A exibição não precisa mudar — ela já faz a conversão correta de UTC para Brasília.
 
-Nova tabela `occurrence_pdf_template` (singleton — uma linha global):
+### Mudanças
 
-```text
-- id (uuid, pk)
-- intro_paragraph (text)        -- "Em [data], foi constatado..."
-- legal_basis (text)            -- bloco amarelo
-- syndic_role_paragraph (text)  -- explicação do papel do síndico
-- penalty_paragraph (text)      -- detalhes de multa/penalidade
-- defense_deadline_paragraph    -- prazo de defesa
-- closing_remarks (text)        -- encerramento
-- footer_text (text)            -- rodapé
-- signature_label (text)        -- "Atenciosamente," / cargo
-- updated_at, updated_by
-```
+**1. `src/lib/dateUtils.ts`** — Adicionar helper de conversão:
+- `saoPauloInputToISO(value: string): string` — recebe `"2026-04-21T21:39"` (horário de Brasília vindo do `datetime-local`) e retorna o ISO UTC equivalente (ex.: `"2026-04-22T00:39:00.000Z"`), usando `fromZonedTime` de `date-fns-tz` com a timezone `America/Sao_Paulo`.
 
-Suporte a **placeholders** dentro dos textos: `{{data}}`, `{{bloco}}`, `{{apartamento}}`, `{{morador}}`, `{{descricao_ocorrencia}}`, `{{condominio}}`, `{{sindico}}`, `{{prazo_defesa}}`.
+**2. `src/pages/Occurrences.tsx`** — Aplicar a conversão ao salvar:
+- No insert (linha ~440) e em qualquer update da ocorrência: trocar `occurred_at: formData.occurred_at` por `occurred_at: saoPauloInputToISO(formData.occurred_at)`.
+- Ao carregar uma ocorrência existente para edição, converter o ISO UTC do banco de volta para o formato `yyyy-MM-dd'T'HH:mm` em horário de Brasília (usando o `formatCustom` existente) ao popular `formData.occurred_at`, para que o input mostre o horário correto.
 
-RLS: leitura pública autenticada (qualquer síndico pode gerar PDF), escrita só `super_admin`.
+**3. Verificar outros formulários que gravam `occurred_at`**:
+- Buscar nos formulários de portaria (`porteiro/PortariaOccurrences.tsx`, `sindico/PortariaOccurrences.tsx`) e aplicar a mesma conversão se houver input `datetime-local` salvando o campo.
 
-Migration popula a linha inicial com os textos atualmente hardcoded em `OccurrenceDetails.tsx`.
-
-### 2. Página SuperAdmin
-
-Nova rota `/superadmin/pdf-template` → `src/pages/superadmin/OccurrencePdfTemplate.tsx`.
-
-Layout em duas colunas:
-- **Esquerda**: formulário com `Textarea`s para cada bloco do PDF, lista de placeholders disponíveis (chips clicáveis que inserem no campo focado), botão "Salvar" e "Restaurar padrão".
-- **Direita**: preview ao vivo do texto renderizado com placeholders substituídos por valores de exemplo.
-
-Adicionar entrada no menu de configurações do SuperAdmin (`src/pages/superadmin/Settings.tsx` ou sidebar) → "Template do PDF de Ocorrência".
-
-Registrar rota em `src/App.tsx` com `ProtectedRoute requiredRole="super_admin"`.
-
-### 3. Refatorar `OccurrenceDetails.tsx`
-
-- No `generatePDF()`, buscar a linha de `occurrence_pdf_template` via supabase (com cache via React Query).
-- Função `interpolate(text, vars)` substitui `{{chave}}` pelos valores reais da ocorrência.
-- Substituir as strings hardcoded (intro, legal_basis, syndic_role, penalty, defense_deadline, closing) pelos valores vindos do template.
-- Manter toda a lógica visual existente (justificação, paginação, bloco amarelo, header com logo).
-
-### 4. Arquivos afetados
-
-```text
-NEW  supabase/migrations/<timestamp>_occurrence_pdf_template.sql
-NEW  src/pages/superadmin/OccurrencePdfTemplate.tsx
-NEW  src/hooks/useOccurrencePdfTemplate.ts
-EDIT src/App.tsx                        (rota nova)
-EDIT src/pages/superadmin/Settings.tsx  (link para a página)
-EDIT src/pages/OccurrenceDetails.tsx    (consumir template do banco)
-```
-
-### 5. Detalhes técnicos
-
-- Singleton: usar `id` fixo (ex: `00000000-0000-0000-0000-000000000001`) e `upsert` no save.
-- Cache: React Query `staleTime: 5 min` para evitar refetch a cada PDF.
-- Validação: campos obrigatórios não-vazios; aviso se um placeholder citado não existir.
-- Toast de sucesso ao salvar.
+### Observações
+- Registros antigos salvos incorretamente (já com o "horário local" gravado como se fosse UTC) continuarão exibindo 3h a menos. Não faremos correção retroativa em massa — apenas novos registros e edições passarão a ficar corretos. Se desejar, posso preparar um script de migração separado para ajustar o histórico.
+- A exibição (`formatDateTimeLong`, `formatDate`, `formatTime`, etc.) já está correta e não precisa de alterações.
 
