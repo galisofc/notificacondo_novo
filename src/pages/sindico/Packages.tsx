@@ -66,12 +66,34 @@ import {
   Home,
   MessageSquare,
   X,
+  CheckCircle2,
+  XCircle,
+  Clock as ClockIcon,
+  User,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApartmentSearch";
+import { DeliveryStatusTracker } from "@/components/packages/DeliveryStatusTracker";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+
+interface NotificationLog {
+  id: string;
+  created_at: string;
+  success: boolean;
+  error_message: string | null;
+  template_name: string | null;
+  status: string | null;
+  debug_info: { sent_by_name?: string } | null;
+  accepted_at: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
+}
 
 interface PackageWithRelations {
   id: string;
