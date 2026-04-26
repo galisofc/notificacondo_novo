@@ -66,12 +66,34 @@ import {
   Home,
   MessageSquare,
   X,
+  CheckCircle2,
+  XCircle,
+  Clock as ClockIcon,
+  User,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { format, parseISO, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApartmentSearch";
+import { DeliveryStatusTracker } from "@/components/packages/DeliveryStatusTracker";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+
+interface NotificationLog {
+  id: string;
+  created_at: string;
+  success: boolean;
+  error_message: string | null;
+  template_name: string | null;
+  status: string | null;
+  debug_info: { sent_by_name?: string } | null;
+  accepted_at: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  read_at: string | null;
+}
 
 interface PackageWithRelations {
   id: string;
@@ -156,6 +178,94 @@ const SindicoPackages = () => {
       setIsLoadingPhoto(false);
     }
   }, [selectedPackage?.photo_url]);
+
+  // Notification logs for selected package
+  const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
+  useEffect(() => {
+    if (!selectedPackage?.id) {
+      setNotificationLogs([]);
+      return;
+    }
+    let cancelled = false;
+    const fetchLogs = async () => {
+      setIsLoadingLogs(true);
+      try {
+        let { data, error } = await supabase
+          .from("whatsapp_notification_logs")
+          .select("id, created_at, success, error_message, template_name, status, debug_info, accepted_at, sent_at, delivered_at, read_at")
+          .eq("package_id", selectedPackage.id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          const fallback = await supabase
+            .from("whatsapp_notification_logs")
+            .select("id, created_at, success, error_message, template_name, status, debug_info")
+            .eq("package_id", selectedPackage.id)
+            .order("created_at", { ascending: false });
+          data = fallback.data as any;
+        }
+
+        if (cancelled) return;
+        setNotificationLogs((data || []).map((d: any) => ({
+          id: d.id,
+          created_at: d.created_at,
+          success: d.success,
+          error_message: d.error_message,
+          template_name: d.template_name,
+          status: d.status,
+          debug_info: d.debug_info,
+          accepted_at: d.accepted_at ?? null,
+          sent_at: d.sent_at ?? null,
+          delivered_at: d.delivered_at ?? null,
+          read_at: d.read_at ?? null,
+        })));
+      } catch (err) {
+        console.error("Error fetching notification logs:", err);
+      } finally {
+        if (!cancelled) setIsLoadingLogs(false);
+      }
+    };
+    fetchLogs();
+
+    const channel = supabase
+      .channel(`sindico-pkg-notif-${selectedPackage.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "whatsapp_notification_logs",
+          filter: `package_id=eq.${selectedPackage.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          setNotificationLogs((prev) =>
+            prev.map((log) =>
+              log.id === updated.id
+                ? {
+                    ...log,
+                    status: updated.status,
+                    success: updated.success,
+                    error_message: updated.error_message,
+                    accepted_at: updated.accepted_at ?? log.accepted_at,
+                    sent_at: updated.sent_at ?? log.sent_at,
+                    delivered_at: updated.delivered_at ?? log.delivered_at,
+                    read_at: updated.read_at ?? log.read_at,
+                  }
+                : log
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [selectedPackage?.id]);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
@@ -1048,31 +1158,91 @@ const SindicoPackages = () => {
               </div>
 
               {/* Notificação WhatsApp */}
-              <div className={`space-y-3 p-3 rounded-lg ${selectedPackage.notification_sent ? 'bg-green-500/10 border border-green-500/20' : 'bg-amber-500/10 border border-amber-500/20'}`}>
-                <h4 className={`text-sm font-semibold uppercase tracking-wide flex items-center gap-2 ${selectedPackage.notification_sent ? 'text-green-600' : 'text-amber-600'}`}>
-                  <MessageSquare className="w-4 h-4" />
-                  Notificação WhatsApp
-                </h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <Badge variant="outline" className={selectedPackage.notification_sent ? 'bg-green-100 text-green-700 border-green-300' : 'bg-amber-100 text-amber-700 border-amber-300'}>
-                      {selectedPackage.notification_sent ? 'Enviada' : 'Não Enviada'}
+              <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide flex items-center gap-2 text-muted-foreground">
+                    <MessageSquare className="w-4 h-4" />
+                    Notificação WhatsApp
+                  </h4>
+                  {notificationLogs.length > 0 && (
+                    <Badge variant="outline" className="text-xs">
+                      {notificationLogs.length} {notificationLogs.length === 1 ? "envio" : "envios"}
                     </Badge>
-                  </div>
-                  {selectedPackage.notification_sent_at && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Enviada em</p>
-                      <p className="font-medium">{formatDateTime(selectedPackage.notification_sent_at)}</p>
-                    </div>
-                  )}
-                  {selectedPackage.notification_count !== null && selectedPackage.notification_count > 0 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Tentativas</p>
-                      <p className="font-medium">{selectedPackage.notification_count}</p>
-                    </div>
                   )}
                 </div>
+
+                {isLoadingLogs ? (
+                  <div className="flex items-center justify-center py-4 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <span className="text-sm">Carregando histórico...</span>
+                  </div>
+                ) : notificationLogs.length > 0 ? (
+                  <div className="space-y-2">
+                    {notificationLogs.map((log, index) => (
+                      <div
+                        key={log.id}
+                        className={cn(
+                          "p-3 rounded-lg border text-sm",
+                          log.success
+                            ? "bg-[hsl(142,76%,97%)] border-[hsl(142,76%,80%)] dark:bg-[hsl(142,30%,12%)] dark:border-[hsl(142,30%,25%)]"
+                            : "bg-destructive/5 border-destructive/20"
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 shrink-0">
+                            {log.success ? (
+                              <CheckCircle2 className="w-4 h-4 text-[hsl(142,72%,29%)] dark:text-[hsl(142,60%,50%)]" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-destructive" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className={cn("font-medium text-xs", log.success ? "text-[hsl(142,72%,25%)] dark:text-[hsl(142,60%,55%)]" : "")}>
+                                {log.success ? "Enviada com sucesso" : "Falha no envio"}
+                              </span>
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                #{notificationLogs.length - index}º envio
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <ClockIcon className="w-3 h-3 shrink-0" />
+                              {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                            {log.debug_info?.sent_by_name && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <User className="w-3 h-3 shrink-0" />
+                                Enviado por: <span className="font-medium">{log.debug_info.sent_by_name}</span>
+                              </p>
+                            )}
+                            {!log.success && log.error_message && (
+                              <p className="text-xs text-destructive mt-1 truncate">
+                                {log.error_message}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {log.success && (
+                          <DeliveryStatusTracker
+                            status={log.status}
+                            timestamps={{
+                              accepted_at: log.accepted_at,
+                              sent_at: log.sent_at,
+                              delivered_at: log.delivered_at,
+                              read_at: log.read_at,
+                            }}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-muted/50 rounded-lg border border-dashed text-center">
+                    <AlertCircle className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Nenhuma notificação enviada ainda</p>
+                  </div>
+                )}
               </div>
 
               {/* Retirada - só mostra se foi retirada */}
