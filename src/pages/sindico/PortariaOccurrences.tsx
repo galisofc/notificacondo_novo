@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon } from "lucide-react";
+import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2 } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -47,10 +47,15 @@ interface Occurrence {
   resolved_by_name: string | null;
   resolution_notes: string | null;
   created_at: string;
+  reporter_block_id?: string | null;
+  reporter_apartment_id?: string | null;
+  target_block_id?: string | null;
+  target_apartment_id?: string | null;
   reporter_block_name?: string | null;
   reporter_apartment_number?: string | null;
   target_block_name?: string | null;
   target_apartment_number?: string | null;
+  photos?: string[] | null;
 }
 
 interface Category {
@@ -82,6 +87,8 @@ export default function SindicoPortariaOccurrences() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [filterBlockId, setFilterBlockId] = useState<string>("all");
+  const [filterApartmentId, setFilterApartmentId] = useState<string>("all");
 
   // New occurrence form
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -93,6 +100,44 @@ export default function SindicoPortariaOccurrences() {
   const [reporterApartmentId, setReporterApartmentId] = useState<string>("");
   const [targetBlockId, setTargetBlockId] = useState<string>("");
   const [targetApartmentId, setTargetApartmentId] = useState<string>("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !user) return;
+    setUploadingPhotos(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 10 * 1024 * 1024) {
+          toast({ title: `Arquivo muito grande: ${file.name}`, description: "Máximo 10MB por foto.", variant: "destructive" });
+          continue;
+        }
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("porter-occurrence-photos")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from("porter-occurrence-photos").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+      setPhotos((prev) => [...prev, ...uploaded]);
+      if (uploaded.length > 0) toast({ title: `${uploaded.length} foto(s) anexada(s)` });
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar foto", description: err?.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setUploadingPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const removePhoto = (url: string) => {
+    setPhotos((prev) => prev.filter((p) => p !== url));
+  };
 
   // Resolve dialog
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
