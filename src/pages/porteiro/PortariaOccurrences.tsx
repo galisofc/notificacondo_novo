@@ -653,6 +653,33 @@ export default function PortariaOccurrences() {
                   {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <Select
+                value={filterBlockId}
+                onValueChange={(v) => { setFilterBlockId(v); setFilterApartmentId("all"); }}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <Building2 className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="Bloco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos blocos</SelectItem>
+                  {blocks.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filterApartmentId}
+                onValueChange={setFilterApartmentId}
+                disabled={filterBlockId === "all"}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <Home className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="Apartamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos apartamentos</SelectItem>
+                  {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
+                </SelectContent>
+              </Select>
               <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
                 {[
                   { value: "all", label: "Todas" },
