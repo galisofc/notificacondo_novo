@@ -836,6 +836,18 @@ export default function PortariaOccurrences() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Photo Preview Dialog */}
+        <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+          <DialogContent className="max-w-3xl p-2 bg-background">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Visualizar foto</DialogTitle>
+            </DialogHeader>
+            {previewPhoto && (
+              <img src={previewPhoto} alt="Visualização" className="w-full max-h-[80vh] object-contain rounded-lg" />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
       </SubscriptionGate>
     </DashboardLayout>
