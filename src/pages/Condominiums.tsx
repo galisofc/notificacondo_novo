@@ -575,6 +575,22 @@ const Condominiums = () => {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="gatehouse_phone">WhatsApp da Portaria</Label>
+                  <MaskedInput
+                    id="gatehouse_phone"
+                    mask="phone"
+                    value={formData.gatehouse_phone}
+                    onChange={(value) => setFormData({ ...formData, gatehouse_phone: value })}
+                    className="bg-secondary/50"
+                    placeholder="(00) 00000-0000"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Número que receberá os avisos do salão de festas no dia da reserva.
+                  </p>
+                </div>
+
+
                 {/* CEP com busca automática */}
                 <div className="space-y-2">
                   <Label htmlFor="zip_code">CEP (busca automática)</Label>
