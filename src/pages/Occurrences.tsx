@@ -216,7 +216,7 @@ const Occurrences = () => {
           .from("occurrences")
           .select(`
             *,
-            condominiums(name),
+            condominiums(name, defense_deadline_days),
             blocks(name),
             apartments(number),
             residents(full_name)
