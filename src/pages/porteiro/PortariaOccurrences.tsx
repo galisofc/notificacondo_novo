@@ -514,6 +514,60 @@ export default function PortariaOccurrences() {
                   setTargetApartmentId,
                   targetApartments
                 )}
+
+                {/* Photo upload */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Fotos (provas)
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {photos.map((url) => (
+                      <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
+                        <img
+                          src={url}
+                          alt="Foto da ocorrência"
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={() => setPreviewPhoto(url)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(url)}
+                          className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Remover foto"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <label
+                      className={cn(
+                        "w-20 h-20 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary hover:bg-secondary/50 transition-colors text-muted-foreground",
+                        uploadingPhotos && "pointer-events-none opacity-50"
+                      )}
+                    >
+                      {uploadingPhotos ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <ImagePlus className="w-5 h-5" />
+                          <span className="text-[10px]">Adicionar</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        capture="environment"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={uploadingPhotos}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG ou HEIC. Máx. 10MB por foto. Toque para tirar foto ou escolher da galeria.
+                  </p>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
