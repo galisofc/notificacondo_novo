@@ -633,6 +633,33 @@ export default function SindicoPortariaOccurrences() {
                   {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <Select
+                value={filterBlockId}
+                onValueChange={(v) => { setFilterBlockId(v); setFilterApartmentId("all"); }}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <Building2 className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="Bloco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos blocos</SelectItem>
+                  {blocks.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filterApartmentId}
+                onValueChange={setFilterApartmentId}
+                disabled={filterBlockId === "all"}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <Home className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="Apartamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos apartamentos</SelectItem>
+                  {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
+                </SelectContent>
+              </Select>
               <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
                 {[
                   { value: "all", label: "Todas" },
@@ -734,6 +761,22 @@ export default function SindicoPortariaOccurrences() {
                           <Badge variant="outline">{occ.category}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{occ.description}</p>
+
+                        {/* Photos */}
+                        {occ.photos && occ.photos.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {occ.photos.map((url) => (
+                              <button
+                                key={url}
+                                type="button"
+                                onClick={() => setPreviewPhoto(url)}
+                                className="w-16 h-16 rounded-lg overflow-hidden border border-border hover:ring-2 hover:ring-primary transition-all"
+                              >
+                                <img src={url} alt="Foto" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Block/Apartment info */}
                         {(occ.reporter_block_name || occ.target_block_name) && (
@@ -873,6 +916,60 @@ export default function SindicoPortariaOccurrences() {
                 setTargetApartmentId,
                 targetApartments
               )}
+
+              {/* Photo upload */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Fotos (provas)
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {photos.map((url) => (
+                    <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
+                      <img
+                        src={url}
+                        alt="Foto da ocorrência"
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setPreviewPhoto(url)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(url)}
+                        className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remover foto"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label
+                    className={cn(
+                      "w-20 h-20 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary hover:bg-secondary/50 transition-colors text-muted-foreground",
+                      uploadingPhotos && "pointer-events-none opacity-50"
+                    )}
+                  >
+                    {uploadingPhotos ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <ImagePlus className="w-5 h-5" />
+                        <span className="text-[10px]">Adicionar</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      capture="environment"
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                      disabled={uploadingPhotos}
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG ou HEIC. Máx. 10MB por foto. Toque para tirar foto ou escolher da galeria.
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
@@ -880,6 +977,18 @@ export default function SindicoPortariaOccurrences() {
                 {createMutation.isPending ? "Registrando..." : "Registrar"}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Photo Preview Dialog */}
+        <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+          <DialogContent className="max-w-3xl p-2">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Visualização de foto</DialogTitle>
+            </DialogHeader>
+            {previewPhoto && (
+              <img src={previewPhoto} alt="Foto da ocorrência" className="w-full h-auto max-h-[80vh] object-contain rounded-md" />
+            )}
           </DialogContent>
         </Dialog>
 
