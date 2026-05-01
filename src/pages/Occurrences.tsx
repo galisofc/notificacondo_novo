@@ -621,7 +621,7 @@ const Occurrences = () => {
     if (occurrence.type !== "multa") return null;
     if (!["notificado", "em_defesa"].includes(occurrence.status)) return null;
     const deadlineDays = occurrence.condominiums?.defense_deadline_days;
-    const startDate = occurrence.notified_at;
+    const startDate = occurrence.notified_at || occurrence.created_at;
     if (!deadlineDays || !startDate) return null;
 
     const start = new Date(startDate).getTime();
