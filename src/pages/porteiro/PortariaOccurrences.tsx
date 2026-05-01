@@ -97,6 +97,44 @@ export default function PortariaOccurrences() {
   const [reporterApartmentId, setReporterApartmentId] = useState<string>("");
   const [targetBlockId, setTargetBlockId] = useState<string>("");
   const [targetApartmentId, setTargetApartmentId] = useState<string>("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !user) return;
+    setUploadingPhotos(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 10 * 1024 * 1024) {
+          toast({ title: `Arquivo muito grande: ${file.name}`, description: "Máximo 10MB por foto.", variant: "destructive" });
+          continue;
+        }
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("porter-occurrence-photos")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from("porter-occurrence-photos").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+      setPhotos((prev) => [...prev, ...uploaded]);
+      if (uploaded.length > 0) toast({ title: `${uploaded.length} foto(s) anexada(s)` });
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar foto", description: err?.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setUploadingPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const removePhoto = (url: string) => {
+    setPhotos((prev) => prev.filter((p) => p !== url));
+  };
 
   // Resolve dialog
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
