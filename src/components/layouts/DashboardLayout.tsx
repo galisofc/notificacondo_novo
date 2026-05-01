@@ -483,7 +483,7 @@ function SidebarNavigation() {
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
-        { title: "Ocorrências", url: "/occurrences", icon: FileText, badge: openOccurrences },
+        { title: "Ocorrências", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Salão de Festas", url: "/party-hall", icon: PartyPopper },
       ],
