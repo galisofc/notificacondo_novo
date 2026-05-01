@@ -380,6 +380,7 @@ const Condominiums = () => {
         name: "", 
         cnpj: "", 
         phone: "",
+        gatehouse_phone: "",
         zip_code: "",
         address: "", 
         address_number: "",
