@@ -617,7 +617,8 @@ const Occurrences = () => {
   };
 
   const getDefenseDeadlineBadge = (occurrence: any) => {
-    // Só mostra para ocorrências notificadas ou em defesa
+    // Apenas para multas notificadas ou em defesa
+    if (occurrence.type !== "multa") return null;
     if (!["notificado", "em_defesa"].includes(occurrence.status)) return null;
     const deadlineDays = occurrence.condominiums?.defense_deadline_days;
     const startDate = occurrence.notified_at;
