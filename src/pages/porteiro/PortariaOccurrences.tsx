@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, CheckCircle2, Clock, Search, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, X, Building2, Home } from "lucide-react";
+import { Plus, CheckCircle2, Clock, Search, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, X, Building2, Home, Camera, ImagePlus, Loader2 } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -54,6 +54,7 @@ interface Occurrence {
   reporter_apartment_number?: string | null;
   target_block_name?: string | null;
   target_apartment_number?: string | null;
+  photos?: string[] | null;
 }
 
 interface Category {
@@ -96,6 +97,44 @@ export default function PortariaOccurrences() {
   const [reporterApartmentId, setReporterApartmentId] = useState<string>("");
   const [targetBlockId, setTargetBlockId] = useState<string>("");
   const [targetApartmentId, setTargetApartmentId] = useState<string>("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0 || !user) return;
+    setUploadingPhotos(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) continue;
+        if (file.size > 10 * 1024 * 1024) {
+          toast({ title: `Arquivo muito grande: ${file.name}`, description: "Máximo 10MB por foto.", variant: "destructive" });
+          continue;
+        }
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("porter-occurrence-photos")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from("porter-occurrence-photos").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+      setPhotos((prev) => [...prev, ...uploaded]);
+      if (uploaded.length > 0) toast({ title: `${uploaded.length} foto(s) anexada(s)` });
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar foto", description: err?.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setUploadingPhotos(false);
+      e.target.value = "";
+    }
+  };
+
+  const removePhoto = (url: string) => {
+    setPhotos((prev) => prev.filter((p) => p !== url));
+  };
 
   // Resolve dialog
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
@@ -302,7 +341,8 @@ export default function PortariaOccurrences() {
         reporter_apartment_id: reporterApartmentId || null,
         target_block_id: targetBlockId || null,
         target_apartment_id: targetApartmentId || null,
-      });
+        photos: photos,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -317,6 +357,7 @@ export default function PortariaOccurrences() {
       setReporterApartmentId("");
       setTargetBlockId("");
       setTargetApartmentId("");
+      setPhotos([]);
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
@@ -473,6 +514,60 @@ export default function PortariaOccurrences() {
                   setTargetApartmentId,
                   targetApartments
                 )}
+
+                {/* Photo upload */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Fotos (provas)
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {photos.map((url) => (
+                      <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
+                        <img
+                          src={url}
+                          alt="Foto da ocorrência"
+                          className="w-full h-full object-cover cursor-pointer"
+                          onClick={() => setPreviewPhoto(url)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(url)}
+                          className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Remover foto"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <label
+                      className={cn(
+                        "w-20 h-20 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary hover:bg-secondary/50 transition-colors text-muted-foreground",
+                        uploadingPhotos && "pointer-events-none opacity-50"
+                      )}
+                    >
+                      {uploadingPhotos ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <ImagePlus className="w-5 h-5" />
+                          <span className="text-[10px]">Adicionar</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        capture="environment"
+                        className="hidden"
+                        onChange={handlePhotoUpload}
+                        disabled={uploadingPhotos}
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG ou HEIC. Máx. 10MB por foto. Toque para tirar foto ou escolher da galeria.
+                  </p>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
@@ -635,6 +730,22 @@ export default function PortariaOccurrences() {
                         </div>
                         <p className="text-sm text-muted-foreground">{occ.description}</p>
 
+                        {/* Photos */}
+                        {occ.photos && occ.photos.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {occ.photos.map((url) => (
+                              <button
+                                key={url}
+                                type="button"
+                                onClick={() => setPreviewPhoto(url)}
+                                className="w-16 h-16 rounded-lg overflow-hidden border border-border hover:ring-2 hover:ring-primary transition-all"
+                              >
+                                <img src={url} alt="Foto" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
                         {/* Block/Apartment info */}
                         {(occ.reporter_block_name || occ.target_block_name) && (
                           <div className="flex flex-wrap gap-4 mt-2 text-xs">
@@ -723,6 +834,18 @@ export default function PortariaOccurrences() {
                 {resolveMutation.isPending ? "Resolvendo..." : "Marcar como Resolvida"}
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Photo Preview Dialog */}
+        <Dialog open={!!previewPhoto} onOpenChange={(open) => !open && setPreviewPhoto(null)}>
+          <DialogContent className="max-w-3xl p-2 bg-background">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Visualizar foto</DialogTitle>
+            </DialogHeader>
+            {previewPhoto && (
+              <img src={previewPhoto} alt="Visualização" className="w-full max-h-[80vh] object-contain rounded-lg" />
+            )}
           </DialogContent>
         </Dialog>
       </div>
