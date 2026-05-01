@@ -341,7 +341,8 @@ export default function PortariaOccurrences() {
         reporter_apartment_id: reporterApartmentId || null,
         target_block_id: targetBlockId || null,
         target_apartment_id: targetApartmentId || null,
-      });
+        photos: photos,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -356,6 +357,7 @@ export default function PortariaOccurrences() {
       setReporterApartmentId("");
       setTargetBlockId("");
       setTargetApartmentId("");
+      setPhotos([]);
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
