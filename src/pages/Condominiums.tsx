@@ -57,6 +57,7 @@ interface Condominium {
   name: string;
   cnpj: string | null;
   phone: string | null;
+  gatehouse_phone: string | null;
   address: string | null;
   address_number: string | null;
   city: string | null;
@@ -85,6 +86,7 @@ const Condominiums = () => {
     name: "",
     cnpj: "",
     phone: "",
+    gatehouse_phone: "",
     zip_code: "",
     address: "",
     address_number: "",
@@ -290,6 +292,7 @@ const Condominiums = () => {
             name: formData.name,
             cnpj: formData.cnpj.replace(/\D/g, "") || null,
             phone: formData.phone.replace(/\D/g, "") || null,
+            gatehouse_phone: formData.gatehouse_phone.replace(/\D/g, "") || null,
             zip_code: formData.zip_code.replace(/\D/g, "") || null,
             address: formData.address || null,
             address_number: formData.address_number || null,
@@ -333,6 +336,7 @@ const Condominiums = () => {
             name: formData.name,
             cnpj: formData.cnpj.replace(/\D/g, "") || null,
             phone: formData.phone.replace(/\D/g, "") || null,
+            gatehouse_phone: formData.gatehouse_phone.replace(/\D/g, "") || null,
             zip_code: formData.zip_code.replace(/\D/g, "") || null,
             address: formData.address || null,
             address_number: formData.address_number || null,
@@ -376,6 +380,7 @@ const Condominiums = () => {
         name: "", 
         cnpj: "", 
         phone: "",
+        gatehouse_phone: "",
         zip_code: "",
         address: "", 
         address_number: "",
@@ -407,6 +412,7 @@ const Condominiums = () => {
       name: condo.name,
       cnpj: condo.cnpj ? formatCNPJ(condo.cnpj) : "",
       phone: condo.phone ? formatPhone(condo.phone) : "",
+      gatehouse_phone: condo.gatehouse_phone ? formatPhone(condo.gatehouse_phone) : "",
       zip_code: condo.zip_code ? formatCEP(condo.zip_code) : "",
       address: condo.address || "",
       address_number: condo.address_number || "",
@@ -453,6 +459,7 @@ const Condominiums = () => {
       name: "", 
       cnpj: "", 
       phone: "",
+      gatehouse_phone: "",
       zip_code: "",
       address: "", 
       address_number: "",
@@ -567,6 +574,22 @@ const Condominiums = () => {
                     placeholder="(00) 00000-0000"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gatehouse_phone">WhatsApp da Portaria</Label>
+                  <MaskedInput
+                    id="gatehouse_phone"
+                    mask="phone"
+                    value={formData.gatehouse_phone}
+                    onChange={(value) => setFormData({ ...formData, gatehouse_phone: value })}
+                    className="bg-secondary/50"
+                    placeholder="(00) 00000-0000"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Número que receberá os avisos do salão de festas no dia da reserva.
+                  </p>
+                </div>
+
 
                 {/* CEP com busca automática */}
                 <div className="space-y-2">
