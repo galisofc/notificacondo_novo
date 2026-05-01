@@ -318,6 +318,23 @@ export default function PortariaOccurrences() {
     enabled: !!selectedCondominium,
   });
 
+  // Apartments for filter (depends on filterBlockId)
+  const { data: filterApartments = [] } = useQuery({
+    queryKey: ["apartments-filter", filterBlockId],
+    queryFn: async () => {
+      if (!filterBlockId || filterBlockId === "all") return [];
+      const { data, error } = await supabase
+        .from("apartments")
+        .select("id, number, block_id")
+        .eq("block_id", filterBlockId)
+        .order("number");
+      if (error) throw error;
+      return data as Apartment[];
+    },
+    enabled: !!filterBlockId && filterBlockId !== "all",
+    staleTime: 1000 * 60 * 5,
+  });
+
   const filteredOccurrences = occurrences.filter((o) => {
     if (searchTerm && !o.title.toLowerCase().includes(searchTerm.toLowerCase()) && !o.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (dateRange?.from) {
@@ -325,6 +342,12 @@ export default function PortariaOccurrences() {
       const from = startOfDay(dateRange.from);
       const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
       if (!isWithinInterval(date, { start: from, end: to })) return false;
+    }
+    if (filterBlockId && filterBlockId !== "all") {
+      if (o.reporter_block_id !== filterBlockId && o.target_block_id !== filterBlockId) return false;
+    }
+    if (filterApartmentId && filterApartmentId !== "all") {
+      if (o.reporter_apartment_id !== filterApartmentId && o.target_apartment_id !== filterApartmentId) return false;
     }
     return true;
   });
