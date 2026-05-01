@@ -86,6 +86,8 @@ export default function PortariaOccurrences() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [filterBlockId, setFilterBlockId] = useState<string>("all");
+  const [filterApartmentId, setFilterApartmentId] = useState<string>("all");
 
   // New occurrence form
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -316,6 +318,23 @@ export default function PortariaOccurrences() {
     enabled: !!selectedCondominium,
   });
 
+  // Apartments for filter (depends on filterBlockId)
+  const { data: filterApartments = [] } = useQuery({
+    queryKey: ["apartments-filter", filterBlockId],
+    queryFn: async () => {
+      if (!filterBlockId || filterBlockId === "all") return [];
+      const { data, error } = await supabase
+        .from("apartments")
+        .select("id, number, block_id")
+        .eq("block_id", filterBlockId)
+        .order("number");
+      if (error) throw error;
+      return data as Apartment[];
+    },
+    enabled: !!filterBlockId && filterBlockId !== "all",
+    staleTime: 1000 * 60 * 5,
+  });
+
   const filteredOccurrences = occurrences.filter((o) => {
     if (searchTerm && !o.title.toLowerCase().includes(searchTerm.toLowerCase()) && !o.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (dateRange?.from) {
@@ -323,6 +342,12 @@ export default function PortariaOccurrences() {
       const from = startOfDay(dateRange.from);
       const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
       if (!isWithinInterval(date, { start: from, end: to })) return false;
+    }
+    if (filterBlockId && filterBlockId !== "all") {
+      if (o.reporter_block_id !== filterBlockId && o.target_block_id !== filterBlockId) return false;
+    }
+    if (filterApartmentId && filterApartmentId !== "all") {
+      if (o.reporter_apartment_id !== filterApartmentId && o.target_apartment_id !== filterApartmentId) return false;
     }
     return true;
   });
@@ -626,6 +651,33 @@ export default function PortariaOccurrences() {
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
                   {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filterBlockId}
+                onValueChange={(v) => { setFilterBlockId(v); setFilterApartmentId("all"); }}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <Building2 className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="Bloco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos blocos</SelectItem>
+                  {blocks.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select
+                value={filterApartmentId}
+                onValueChange={setFilterApartmentId}
+                disabled={filterBlockId === "all"}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <Home className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
+                  <SelectValue placeholder="Apartamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos apartamentos</SelectItem>
+                  {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
               <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
