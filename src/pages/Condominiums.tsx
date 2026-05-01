@@ -292,6 +292,7 @@ const Condominiums = () => {
             name: formData.name,
             cnpj: formData.cnpj.replace(/\D/g, "") || null,
             phone: formData.phone.replace(/\D/g, "") || null,
+            gatehouse_phone: formData.gatehouse_phone.replace(/\D/g, "") || null,
             zip_code: formData.zip_code.replace(/\D/g, "") || null,
             address: formData.address || null,
             address_number: formData.address_number || null,
