@@ -57,6 +57,7 @@ interface Condominium {
   name: string;
   cnpj: string | null;
   phone: string | null;
+  gatehouse_phone: string | null;
   address: string | null;
   address_number: string | null;
   city: string | null;
