@@ -524,295 +524,321 @@ const Condominiums = () => {
                   {editingCondo ? "Editar Condomínio" : "Novo Condomínio"}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 max-h-[60vh] overflow-y-auto py-2">
-                <div className="space-y-2">
-                  <Label htmlFor="gatehouse_phone">WhatsApp da Portaria</Label>
-                  <MaskedInput
-                    id="gatehouse_phone"
-                    mask="phone"
-                    value={formData.gatehouse_phone}
-                    onChange={(value) => setFormData({ ...formData, gatehouse_phone: value })}
-                    className="bg-secondary/50"
-                    placeholder="(00) 00000-0000"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Número que receberá os avisos do salão de festas no dia da reserva.
-                  </p>
-                </div>
+              <form onSubmit={handleSubmit} className="space-y-6 max-h-[60vh] overflow-y-auto py-2">
+                {/* ============ IDENTIFICAÇÃO ============ */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2">
+                    Identificação
+                  </h3>
 
-                {/* CNPJ com busca automática */}
-                <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ (busca automática)</Label>
-                  <div className="relative">
-                    <MaskedInput
-                      id="cnpj"
-                      mask="cnpj"
-                      value={formData.cnpj}
-                      onChange={(value) => {
-                        setFormData({ ...formData, cnpj: value });
-                        const cleanCnpj = value.replace(/\D/g, "");
-                        if (cleanCnpj.length === 14) {
-                          fetchCNPJData(value);
-                        }
-                      }}
-                      className="bg-secondary/50"
-                      placeholder="00.000.000/0000-00"
-                    />
-                    {fetchingCNPJ && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome do Condomínio *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    className="bg-secondary/50"
-                    placeholder="Nome do condomínio"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <MaskedInput
-                    id="phone"
-                    mask="phone"
-                    value={formData.phone}
-                    onChange={(value) => setFormData({ ...formData, phone: value })}
-                    className="bg-secondary/50"
-                    placeholder="(00) 00000-0000"
-                  />
-                </div>
-
-
-
-                {/* CEP com busca automática */}
-                <div className="space-y-2">
-                  <Label htmlFor="zip_code">CEP (busca automática)</Label>
-                  <div className="relative">
-                    <MaskedInput
-                      id="zip_code"
-                      mask="cep"
-                      value={formData.zip_code}
-                      onChange={(value) => {
-                        setFormData({ ...formData, zip_code: value });
-                        const cleanCep = value.replace(/\D/g, "");
-                        if (cleanCep.length === 8) {
-                          fetchCEPData(value);
-                        }
-                      }}
-                      className="bg-secondary/50"
-                      placeholder="00000-000"
-                    />
-                    {fetchingCEP && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                  {/* CNPJ com busca automática */}
                   <div className="space-y-2">
-                    <Label htmlFor="address">Logradouro</Label>
-                    <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="bg-secondary/50"
-                      placeholder="Rua, Avenida, etc."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address_number">Número</Label>
-                    <Input
-                      id="address_number"
-                      value={formData.address_number}
-                      onChange={(e) => setFormData({ ...formData, address_number: e.target.value })}
-                      className="bg-secondary/50"
-                      placeholder="Nº"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input
-                    id="neighborhood"
-                    value={formData.neighborhood}
-                    onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
-                    className="bg-secondary/50"
-                    placeholder="Bairro"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Cidade</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="bg-secondary/50"
-                      placeholder="Cidade"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state">UF</Label>
-                    <Input
-                      id="state"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) })}
-                      className="bg-secondary/50"
-                      placeholder="UF"
-                      maxLength={2}
-                    />
-                  </div>
-                </div>
-
-                {/* Nome do Síndico */}
-                <div className="space-y-2">
-                  <Label htmlFor="sindico_name">Nome do Síndico</Label>
-                  <Input
-                    id="sindico_name"
-                    value={formData.sindico_name}
-                    onChange={(e) => setFormData({ ...formData, sindico_name: e.target.value })}
-                    className="bg-secondary/50"
-                    placeholder="Nome completo do síndico"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Aparecerá na assinatura do PDF de ocorrências
-                  </p>
-                </div>
-
-                {/* Logo do Condomínio */}
-                <div className="space-y-2">
-                  <Label htmlFor="logo">Logo do Condomínio</Label>
-                  <div className="flex items-center gap-3">
-                    {formData.logo_url && (
-                      <img
-                        src={formData.logo_url}
-                        alt="Logo"
-                        className="w-16 h-16 object-contain rounded-lg border border-border bg-background"
-                      />
-                    )}
-                    <div className="flex-1 space-y-2">
-                      <Input
-                        id="logo"
-                        type="file"
-                        accept="image/*"
-                        disabled={uploadingLogo}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleLogoUpload(file);
+                    <Label htmlFor="cnpj">CNPJ (busca automática)</Label>
+                    <div className="relative">
+                      <MaskedInput
+                        id="cnpj"
+                        mask="cnpj"
+                        value={formData.cnpj}
+                        onChange={(value) => {
+                          setFormData({ ...formData, cnpj: value });
+                          const cleanCnpj = value.replace(/\D/g, "");
+                          if (cleanCnpj.length === 14) {
+                            fetchCNPJData(value);
+                          }
                         }}
                         className="bg-secondary/50"
+                        placeholder="00.000.000/0000-00"
                       />
-                      {formData.logo_url && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setFormData({ ...formData, logo_url: "" })}
-                        >
-                          Remover logo
-                        </Button>
+                      {fetchingCNPJ && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        </div>
                       )}
                     </div>
-                    {uploadingLogo && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    PNG ou JPG, máximo 2MB. Aparecerá no topo do PDF de ocorrências.
-                  </p>
-                </div>
 
-                {/* Plano - seleção ao criar, visualização ao editar */}
-                {!editingCondo ? (
                   <div className="space-y-2">
-                    <Label htmlFor="plan">Plano *</Label>
-                    <Select
-                      value={formData.plan_slug}
-                      onValueChange={(value) => setFormData({ ...formData, plan_slug: value })}
-                    >
-                      <SelectTrigger className="bg-secondary/50">
-                        <SelectValue placeholder="Selecione um plano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {plans.map((plan) => (
-                          <SelectItem key={plan.id} value={plan.slug}>
-                            <div className="flex items-center gap-2">
-                              <Crown className="w-4 h-4" />
-                              <span>{plan.name}</span>
-                              <span className="text-muted-foreground">
-                                - R$ {plan.price.toFixed(2)}/mês
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="name">Nome do Condomínio *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="bg-secondary/50"
+                      placeholder="Nome do condomínio"
+                    />
+                  </div>
+
+                  {/* Nome do Síndico */}
+                  <div className="space-y-2">
+                    <Label htmlFor="sindico_name">Nome do Síndico</Label>
+                    <Input
+                      id="sindico_name"
+                      value={formData.sindico_name}
+                      onChange={(e) => setFormData({ ...formData, sindico_name: e.target.value })}
+                      className="bg-secondary/50"
+                      placeholder="Nome completo do síndico"
+                    />
                     <p className="text-xs text-muted-foreground">
-                      O plano define os limites de notificações, advertências e multas
+                      Aparecerá na assinatura do PDF de ocorrências
                     </p>
                   </div>
-                ) : (
+
+                  {/* Logo do Condomínio */}
                   <div className="space-y-2">
-                    <Label>Plano Atual</Label>
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
-                      <Crown className="w-4 h-4 text-primary" />
-                      <span className="font-medium">
-                        {editingCondo.subscription?.plan 
-                          ? editingCondo.subscription.plan.charAt(0).toUpperCase() + editingCondo.subscription.plan.slice(1)
-                          : "Sem plano"}
-                      </span>
+                    <Label htmlFor="logo">Logo do Condomínio</Label>
+                    <div className="flex items-center gap-3">
+                      {formData.logo_url && (
+                        <img
+                          src={formData.logo_url}
+                          alt="Logo"
+                          className="w-16 h-16 object-contain rounded-lg border border-border bg-background"
+                        />
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          id="logo"
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleLogoUpload(file);
+                          }}
+                          className="bg-secondary/50"
+                        />
+                        {formData.logo_url && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFormData({ ...formData, logo_url: "" })}
+                          >
+                            Remover logo
+                          </Button>
+                        )}
+                      </div>
+                      {uploadingLogo && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Para alterar o plano, acesse a página de Assinaturas
+                      PNG ou JPG, máximo 2MB. Aparecerá no topo do PDF de ocorrências.
                     </p>
                   </div>
-                )}
-
-                {/* Percentual padrão de multa */}
-                <div className="space-y-2">
-                  <Label htmlFor="default_fine_percentage">Percentual padrão de multa (%)</Label>
-                  <Input
-                    id="default_fine_percentage"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.default_fine_percentage}
-                    onChange={(e) => setFormData({ ...formData, default_fine_percentage: e.target.value })}
-                    className="bg-secondary/50"
-                    placeholder="50"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Valor padrão (% da taxa condominial) que será pré-preenchido ao cadastrar uma ocorrência do tipo Multa.
-                  </p>
                 </div>
 
-                {/* Prazo para defesa */}
-                <div className="space-y-2">
-                  <Label htmlFor="defense_deadline_days">Prazo para Defesa (dias) *</Label>
-                  <Input
-                    id="defense_deadline_days"
-                    type="number"
-                    min="1"
-                    max="90"
-                    value={formData.defense_deadline_days}
-                    onChange={(e) => setFormData({ ...formData, defense_deadline_days: e.target.value })}
-                    className="bg-secondary/50"
-                    placeholder="10"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Prazo em dias para o morador apresentar defesa após receber uma notificação
-                  </p>
+                {/* ============ CONTATO ============ */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2">
+                    Contato
+                  </h3>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <MaskedInput
+                      id="phone"
+                      mask="phone"
+                      value={formData.phone}
+                      onChange={(value) => setFormData({ ...formData, phone: value })}
+                      className="bg-secondary/50"
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gatehouse_phone">WhatsApp da Portaria</Label>
+                    <MaskedInput
+                      id="gatehouse_phone"
+                      mask="phone"
+                      value={formData.gatehouse_phone}
+                      onChange={(value) => setFormData({ ...formData, gatehouse_phone: value })}
+                      className="bg-secondary/50"
+                      placeholder="(00) 00000-0000"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Número que receberá os avisos do salão de festas no dia da reserva.
+                    </p>
+                  </div>
+                </div>
+
+                {/* ============ ENDEREÇO ============ */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2">
+                    Endereço
+                  </h3>
+
+                  {/* CEP com busca automática */}
+                  <div className="space-y-2">
+                    <Label htmlFor="zip_code">CEP (busca automática)</Label>
+                    <div className="relative">
+                      <MaskedInput
+                        id="zip_code"
+                        mask="cep"
+                        value={formData.zip_code}
+                        onChange={(value) => {
+                          setFormData({ ...formData, zip_code: value });
+                          const cleanCep = value.replace(/\D/g, "");
+                          if (cleanCep.length === 8) {
+                            fetchCEPData(value);
+                          }
+                        }}
+                        className="bg-secondary/50"
+                        placeholder="00000-000"
+                      />
+                      {fetchingCEP && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Logradouro</Label>
+                      <Input
+                        id="address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        className="bg-secondary/50"
+                        placeholder="Rua, Avenida, etc."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address_number">Número</Label>
+                      <Input
+                        id="address_number"
+                        value={formData.address_number}
+                        onChange={(e) => setFormData({ ...formData, address_number: e.target.value })}
+                        className="bg-secondary/50"
+                        placeholder="Nº"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood">Bairro</Label>
+                    <Input
+                      id="neighborhood"
+                      value={formData.neighborhood}
+                      onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                      className="bg-secondary/50"
+                      placeholder="Bairro"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="bg-secondary/50"
+                        placeholder="Cidade"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">UF</Label>
+                      <Input
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value.toUpperCase().slice(0, 2) })}
+                        className="bg-secondary/50"
+                        placeholder="UF"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ============ CONFIGURAÇÕES ============ */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-foreground border-b border-border pb-2">
+                    Configurações
+                  </h3>
+
+                  {/* Plano - seleção ao criar, visualização ao editar */}
+                  {!editingCondo ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="plan">Plano *</Label>
+                      <Select
+                        value={formData.plan_slug}
+                        onValueChange={(value) => setFormData({ ...formData, plan_slug: value })}
+                      >
+                        <SelectTrigger className="bg-secondary/50">
+                          <SelectValue placeholder="Selecione um plano" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {plans.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.slug}>
+                              <div className="flex items-center gap-2">
+                                <Crown className="w-4 h-4" />
+                                <span>{plan.name}</span>
+                                <span className="text-muted-foreground">
+                                  - R$ {plan.price.toFixed(2)}/mês
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">
+                        O plano define os limites de notificações, advertências e multas
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Plano Atual</Label>
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
+                        <Crown className="w-4 h-4 text-primary" />
+                        <span className="font-medium">
+                          {editingCondo.subscription?.plan 
+                            ? editingCondo.subscription.plan.charAt(0).toUpperCase() + editingCondo.subscription.plan.slice(1)
+                            : "Sem plano"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Para alterar o plano, acesse a página de Assinaturas
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Percentual padrão de multa */}
+                  <div className="space-y-2">
+                    <Label htmlFor="default_fine_percentage">Percentual padrão de multa (%)</Label>
+                    <Input
+                      id="default_fine_percentage"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.default_fine_percentage}
+                      onChange={(e) => setFormData({ ...formData, default_fine_percentage: e.target.value })}
+                      className="bg-secondary/50"
+                      placeholder="50"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Valor padrão (% da taxa condominial) que será pré-preenchido ao cadastrar uma ocorrência do tipo Multa.
+                    </p>
+                  </div>
+
+                  {/* Prazo para defesa */}
+                  <div className="space-y-2">
+                    <Label htmlFor="defense_deadline_days">Prazo para Defesa (dias) *</Label>
+                    <Input
+                      id="defense_deadline_days"
+                      type="number"
+                      min="1"
+                      max="90"
+                      value={formData.defense_deadline_days}
+                      onChange={(e) => setFormData({ ...formData, defense_deadline_days: e.target.value })}
+                      className="bg-secondary/50"
+                      placeholder="10"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Prazo em dias para o morador apresentar defesa após receber uma notificação
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-border">
