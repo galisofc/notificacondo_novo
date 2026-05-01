@@ -256,12 +256,42 @@ export function WabaTemplateSubmitDialog({
         components.push({ type: "HEADER", format: "TEXT", text: headerText });
       }
       
-      const bodyVariables = bodyText.match(/\{\{(\d+)\}\}/g) || [];
+      // Detect ALL placeholders {{N}} in body and find max N
+      const bodyVarMatches = Array.from(bodyText.matchAll(/\{\{(\d+)\}\}/g));
+      const bodyVarNumbers = bodyVarMatches.map((m) => parseInt(m[1], 10));
+      const maxVarNumber = bodyVarNumbers.length > 0 ? Math.max(...bodyVarNumbers) : 0;
+
+      // Validate sequence: must be {{1}}, {{2}}, ... {{N}} without gaps
+      if (maxVarNumber > 0) {
+        const uniqueNums = Array.from(new Set(bodyVarNumbers)).sort((a, b) => a - b);
+        for (let i = 0; i < maxVarNumber; i++) {
+          if (uniqueNums[i] !== i + 1) {
+            toast({
+              title: "Variáveis fora de sequência",
+              description: `As variáveis devem ser numeradas em sequência {{1}}, {{2}}, ...{{N}} sem pular números. Encontrado: ${uniqueNums.join(", ")}`,
+              variant: "destructive",
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
       const bodyComponent: any = { type: "BODY", text: bodyText };
-      
-      if (bodyVariables.length > 0) {
+
+      if (maxVarNumber > 0) {
+        // Build one example per placeholder, using paramsList name when available
+        const examples: string[] = [];
+        for (let i = 0; i < maxVarNumber; i++) {
+          const paramName = paramsList[i];
+          if (paramName) {
+            examples.push(VARIABLE_EXAMPLES[paramName] || `exemplo_${paramName}`);
+          } else {
+            examples.push(`exemplo_${i + 1}`);
+          }
+        }
         bodyComponent.example = {
-          body_text: [paramsList.map((param) => VARIABLE_EXAMPLES[param] || `exemplo_${param}`)],
+          body_text: [examples],
         };
       }
       components.push(bodyComponent);
