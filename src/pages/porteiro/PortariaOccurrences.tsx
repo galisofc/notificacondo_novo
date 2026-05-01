@@ -54,6 +54,7 @@ interface Occurrence {
   reporter_apartment_number?: string | null;
   target_block_name?: string | null;
   target_apartment_number?: string | null;
+  photos?: string[] | null;
 }
 
 interface Category {
