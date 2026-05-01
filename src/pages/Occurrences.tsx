@@ -216,7 +216,7 @@ const Occurrences = () => {
           .from("occurrences")
           .select(`
             *,
-            condominiums(name),
+            condominiums(name, defense_deadline_days),
             blocks(name),
             apartments(number),
             residents(full_name)
@@ -616,6 +616,36 @@ const Occurrences = () => {
     );
   };
 
+  const getDefenseDeadlineBadge = (occurrence: any) => {
+    // Só mostra para ocorrências notificadas ou em defesa
+    if (!["notificado", "em_defesa"].includes(occurrence.status)) return null;
+    const deadlineDays = occurrence.condominiums?.defense_deadline_days;
+    const startDate = occurrence.notified_at;
+    if (!deadlineDays || !startDate) return null;
+
+    const start = new Date(startDate).getTime();
+    const deadline = start + deadlineDays * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const msLeft = deadline - now;
+    const daysLeft = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+
+    let style = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+    let label = `Defesa: ${daysLeft} ${daysLeft === 1 ? "dia restante" : "dias restantes"}`;
+
+    if (msLeft <= 0) {
+      style = "bg-red-500/10 text-red-600 dark:text-red-400";
+      label = "Defesa: prazo expirado";
+    } else if (daysLeft <= 2) {
+      style = "bg-amber-500/10 text-amber-600 dark:text-amber-400";
+    }
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${style}`}>
+        {label}
+      </span>
+    );
+  };
+
   const getTypeBadge = (type: string) => {
     const styles: Record<string, string> = {
       advertencia: "bg-amber-500/10 text-amber-500",
@@ -799,6 +829,7 @@ const Occurrences = () => {
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {getTypeBadge(occurrence.type)}
                       {getStatusBadge(occurrence.status)}
+                      {getDefenseDeadlineBadge(occurrence)}
                       {occurrence.apartment_id && apartmentWarningsCount[occurrence.apartment_id] > 0 && (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-600 dark:text-orange-400">
                           {apartmentWarningsCount[occurrence.apartment_id]}ª Adv.
