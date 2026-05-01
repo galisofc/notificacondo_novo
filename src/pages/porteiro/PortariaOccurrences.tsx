@@ -86,6 +86,8 @@ export default function PortariaOccurrences() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [filterBlockId, setFilterBlockId] = useState<string>("all");
+  const [filterApartmentId, setFilterApartmentId] = useState<string>("all");
 
   // New occurrence form
   const [dialogOpen, setDialogOpen] = useState(false);
