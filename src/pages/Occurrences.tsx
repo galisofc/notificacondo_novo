@@ -644,6 +644,7 @@ const Occurrences = () => {
         {label}
       </span>
     );
+  };
 
   const getTypeBadge = (type: string) => {
     const styles: Record<string, string> = {
