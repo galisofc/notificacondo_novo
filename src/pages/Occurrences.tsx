@@ -829,6 +829,7 @@ const Occurrences = () => {
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
                       {getTypeBadge(occurrence.type)}
                       {getStatusBadge(occurrence.status)}
+                      {getDefenseDeadlineBadge(occurrence)}
                       {occurrence.apartment_id && apartmentWarningsCount[occurrence.apartment_id] > 0 && (
                         <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-600 dark:text-orange-400">
                           {apartmentWarningsCount[occurrence.apartment_id]}ª Adv.
