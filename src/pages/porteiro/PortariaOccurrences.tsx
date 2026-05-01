@@ -730,6 +730,22 @@ export default function PortariaOccurrences() {
                         </div>
                         <p className="text-sm text-muted-foreground">{occ.description}</p>
 
+                        {/* Photos */}
+                        {occ.photos && occ.photos.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {occ.photos.map((url) => (
+                              <button
+                                key={url}
+                                type="button"
+                                onClick={() => setPreviewPhoto(url)}
+                                className="w-16 h-16 rounded-lg overflow-hidden border border-border hover:ring-2 hover:ring-primary transition-all"
+                              >
+                                <img src={url} alt="Foto" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
                         {/* Block/Apartment info */}
                         {(occ.reporter_block_name || occ.target_block_name) && (
                           <div className="flex flex-wrap gap-4 mt-2 text-xs">
