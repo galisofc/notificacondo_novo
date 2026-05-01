@@ -565,8 +565,8 @@ export function WabaTemplateSubmitDialog({
           </TabsContent>
 
           {/* Create Tab */}
-          <TabsContent value="create" className="mt-4">
-            <div className="overflow-y-auto max-h-[calc(90vh-220px)] -mx-6 px-6">
+          <TabsContent value="create" className="flex-1 overflow-hidden flex flex-col mt-4 data-[state=inactive]:hidden">
+            <div className="flex-1 overflow-y-auto -mx-6 px-6 min-h-0">
               <div className="space-y-4">
                 {/* Tip */}
                 <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
