@@ -136,9 +136,8 @@ serve(async (req) => {
         .maybeSingle();
 
       const apartment = (residentRow as any)?.apartment;
-      const blockName = apartment?.block?.name ?? "";
-      const aptNumber = apartment?.number ?? "";
-      const unit = sanitizeForWaba([blockName, aptNumber].filter(Boolean).join(" - "));
+      const blockName = sanitizeForWaba(apartment?.block?.name ?? "") || "—";
+      const aptNumber = sanitizeForWaba(apartment?.number ?? "") || "—";
 
       const bookingDate = new Date(booking.booking_date + "T00:00:00");
       const formattedDate = bookingDate.toLocaleDateString("pt-BR", {
@@ -148,7 +147,8 @@ serve(async (req) => {
       const paramsMap: Record<string, string> = {
         condominio: sanitizeForWaba(condo.name),
         morador: sanitizeForWaba(resident.full_name),
-        apartamento: unit || "—",
+        bloco: blockName,
+        apartamento: aptNumber,
         espaco: sanitizeForWaba(hallSetting.name),
         data: sanitizeForWaba(formattedDate),
         horario_inicio: booking.start_time.slice(0, 5),
