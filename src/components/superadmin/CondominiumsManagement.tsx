@@ -473,7 +473,7 @@ export function CondominiumsManagement() {
     setEditForm({
       name: condominium.name || "",
       cnpj: condominium.cnpj || "",
-      phone: condominium.phone || "",
+      phone: formatPhoneForEdit(condominium.phone),
       zip_code: condominium.zip_code || "",
       address: condominium.address || "",
       address_number: (condominium as any).address_number || "",
