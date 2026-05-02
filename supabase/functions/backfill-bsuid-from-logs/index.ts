@@ -144,33 +144,53 @@ Deno.serve(async (req) => {
     let notFoundCount = 0;
     const samples: Array<{ phone: string; bsuid: string; resident_id?: string; matched: boolean }> = [];
 
+    // Load ALL residents missing bsuid once and build a digits-only index
+    // (DB phones are formatted like "(11) 98273-1247" so SQL LIKE on raw digits won't match)
+    const residentsByDigits = new Map<string, string>(); // digitsKey -> residentId
+    let resFrom = 0;
+    while (true) {
+      const { data: rs, error } = await supabase
+        .from("residents")
+        .select("id, phone")
+        .is("bsuid", null)
+        .not("phone", "is", null)
+        .range(resFrom, resFrom + PAGE - 1);
+      if (error || !rs || rs.length === 0) break;
+      for (const r of rs) {
+        const d = String(r.phone || "").replace(/\D/g, "");
+        if (!d) continue;
+        // Index by full digits and by last 10/11 digits (to match with/without country code "55")
+        residentsByDigits.set(d, r.id);
+        if (d.length >= 11) residentsByDigits.set(d.slice(-11), r.id);
+        if (d.length >= 10) residentsByDigits.set(d.slice(-10), r.id);
+      }
+      if (rs.length < PAGE) break;
+      resFrom += PAGE;
+      if (resFrom > 100000) break;
+    }
+
     for (const [phone, bsuid] of phoneToBsuid.entries()) {
-      const variants = [phone];
-      if (phone.startsWith("55") && phone.length > 11) variants.push(phone.substring(2));
+      const candidates = [phone];
+      if (phone.length >= 11) candidates.push(phone.slice(-11));
+      if (phone.length >= 10) candidates.push(phone.slice(-10));
+
+      let residentId: string | undefined;
+      for (const c of candidates) {
+        if (residentsByDigits.has(c)) {
+          residentId = residentsByDigits.get(c);
+          break;
+        }
+      }
 
       let matched = false;
-      let residentId: string | undefined;
-      for (const pv of variants) {
-        const { data: residents } = await supabase
+      if (residentId) {
+        const { error: upErr } = await supabase
           .from("residents")
-          .select("id, bsuid")
-          .or(`phone.like.%${pv}`)
-          .is("bsuid", null)
-          .limit(5);
-
-        if (residents && residents.length > 0) {
-          for (const r of residents) {
-            const { error: upErr } = await supabase
-              .from("residents")
-              .update({ bsuid })
-              .eq("id", r.id);
-            if (!upErr) {
-              updatedCount++;
-              residentId = r.id;
-              matched = true;
-            }
-          }
-          break;
+          .update({ bsuid })
+          .eq("id", residentId);
+        if (!upErr) {
+          updatedCount++;
+          matched = true;
         }
       }
       if (!matched) notFoundCount++;
