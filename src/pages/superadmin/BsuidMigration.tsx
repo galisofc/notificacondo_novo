@@ -12,9 +12,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, CheckCircle2, Clock, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, Webhook } from "lucide-react";
+import { Users, CheckCircle2, Clock, Search, ChevronLeft, ChevronRight, RefreshCw, Eye, Webhook, Wand2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 const PAGE_SIZE = 20;
 
@@ -24,7 +26,27 @@ const BsuidMigration = () => {
   const [page, setPage] = useState(0);
   const [selectedPayload, setSelectedPayload] = useState<any>(null);
   const [logsPage, setLogsPage] = useState(0);
+  const [backfilling, setBackfilling] = useState(false);
   const LOGS_PAGE_SIZE = 10;
+  const queryClient = useQueryClient();
+
+  const handleBackfill = async () => {
+    setBackfilling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("backfill-bsuid-from-logs");
+      if (error) throw error;
+      toast({
+        title: "Backfill concluído",
+        description: `${data.residents_updated} morador(es) atualizado(s). ${data.unique_phones_with_bsuid} telefone(s) com BSUID encontrados nos payloads. ${data.phones_without_resident} sem morador correspondente.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["bsuid-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["bsuid-residents"] });
+    } catch (err: any) {
+      toast({ title: "Erro no backfill", description: err.message, variant: "destructive" });
+    } finally {
+      setBackfilling(false);
+    }
+  };
 
   // Stats query
   const { data: stats } = useQuery({
@@ -101,11 +123,17 @@ const BsuidMigration = () => {
           ]}
         />
 
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Migração BSUID</h1>
-          <p className="text-muted-foreground text-sm">
-            Acompanhe a captura dos Business-Scoped User IDs (BSUIDs) dos moradores via WhatsApp.
-          </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Migração BSUID</h1>
+            <p className="text-muted-foreground text-sm">
+              Acompanhe a captura dos Business-Scoped User IDs (BSUIDs) dos moradores via WhatsApp.
+            </p>
+          </div>
+          <Button onClick={handleBackfill} disabled={backfilling} variant="outline">
+            <Wand2 className={`h-4 w-4 mr-2 ${backfilling ? "animate-spin" : ""}`} />
+            {backfilling ? "Processando..." : "Capturar BSUID dos payloads salvos"}
+          </Button>
         </div>
 
         {/* Stats Cards */}

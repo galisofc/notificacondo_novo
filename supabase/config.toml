@@ -189,3 +189,7 @@ verify_jwt = false
 # Checklist de entrada - página pública acessada via link/token sem login
 [functions.submit-checklist-entrada]
 verify_jwt = false
+
+# Backfill retroativo de BSUID a partir dos webhook_raw_logs
+[functions.backfill-bsuid-from-logs]
+verify_jwt = false
