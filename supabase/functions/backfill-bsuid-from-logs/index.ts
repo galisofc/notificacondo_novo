@@ -148,57 +148,69 @@ Deno.serve(async (req) => {
     let notFoundCount = 0;
     const samples: Array<{ phone: string; bsuid: string; resident_id?: string; matched: boolean }> = [];
 
-    // Load ALL residents missing bsuid once and build a digits-only index
-    // (DB phones are formatted like "(11) 98273-1247" so SQL LIKE on raw digits won't match)
-    const residentsByDigits = new Map<string, string>(); // digitsKey -> residentId
+    // Load ALL residents (regardless of bsuid status) once and build a digits-only index.
+    // We will only update those whose bsuid is missing, but we want to count matches even for
+    // residents that already have a bsuid (so the diagnostics make sense).
+    const residentsByDigits = new Map<string, { id: string; missing: boolean; rawPhone: string }>(); // digitsKey -> info
+    let totalResidentsLoaded = 0;
+    let residentsWithDigits = 0;
     let resFrom = 0;
     while (true) {
       const { data: rs, error } = await supabase
         .from("residents")
         .select("id, phone, bsuid")
-        .not("phone", "is", null)
         .range(resFrom, resFrom + PAGE - 1);
       if (error || !rs || rs.length === 0) break;
+      totalResidentsLoaded += rs.length;
       for (const r of rs) {
-        if (!isMissingBsuid(r.bsuid)) continue;
         const d = String(r.phone || "").replace(/\D/g, "");
         if (!d) continue;
+        residentsWithDigits++;
+        const info = { id: r.id, missing: isMissingBsuid(r.bsuid), rawPhone: String(r.phone || "") };
         // Index by full digits and by last 10/11 digits (to match with/without country code "55")
-        residentsByDigits.set(d, r.id);
-        if (d.length >= 11) residentsByDigits.set(d.slice(-11), r.id);
-        if (d.length >= 10) residentsByDigits.set(d.slice(-10), r.id);
+        if (!residentsByDigits.has(d)) residentsByDigits.set(d, info);
+        if (d.length >= 11 && !residentsByDigits.has(d.slice(-11))) residentsByDigits.set(d.slice(-11), info);
+        if (d.length >= 10 && !residentsByDigits.has(d.slice(-10))) residentsByDigits.set(d.slice(-10), info);
       }
       if (rs.length < PAGE) break;
       resFrom += PAGE;
       if (resFrom > 100000) break;
     }
+    console.log(`[BACKFILL-BSUID] Residents loaded: ${totalResidentsLoaded}, with digits: ${residentsWithDigits}, index keys: ${residentsByDigits.size}`);
 
+    let alreadyHadBsuidCount = 0;
     for (const [phone, bsuid] of phoneToBsuid.entries()) {
       const candidates = [phone];
       if (phone.length >= 11) candidates.push(phone.slice(-11));
       if (phone.length >= 10) candidates.push(phone.slice(-10));
 
-      let residentId: string | undefined;
+      let info: { id: string; missing: boolean; rawPhone: string } | undefined;
       for (const c of candidates) {
         if (residentsByDigits.has(c)) {
-          residentId = residentsByDigits.get(c);
+          info = residentsByDigits.get(c);
           break;
         }
       }
 
       let matched = false;
-      if (residentId) {
-        const { error: upErr } = await supabase
-          .from("residents")
-          .update({ bsuid })
-          .eq("id", residentId);
-        if (!upErr) {
-          updatedCount++;
+      let residentId: string | undefined = info?.id;
+      if (info) {
+        if (info.missing) {
+          const { error: upErr } = await supabase
+            .from("residents")
+            .update({ bsuid })
+            .eq("id", info.id);
+          if (!upErr) {
+            updatedCount++;
+            matched = true;
+          }
+        } else {
+          alreadyHadBsuidCount++;
           matched = true;
         }
       }
-      if (!matched) notFoundCount++;
-      if (samples.length < 20) samples.push({ phone, bsuid, resident_id: residentId, matched });
+      if (!info) notFoundCount++;
+      if (samples.length < 30) samples.push({ phone, bsuid, resident_id: residentId, matched });
     }
 
     return new Response(JSON.stringify({
@@ -206,7 +218,11 @@ Deno.serve(async (req) => {
       payloads_scanned: payloadsScanned,
       payloads_with_bsuid: payloadsWithBsuid,
       unique_phones_with_bsuid: phoneToBsuid.size,
+      residents_loaded: totalResidentsLoaded,
+      residents_with_digits: residentsWithDigits,
+      residents_index_keys: residentsByDigits.size,
       residents_updated: updatedCount,
+      residents_already_had_bsuid: alreadyHadBsuidCount,
       phones_without_resident: notFoundCount,
       samples,
     }), {

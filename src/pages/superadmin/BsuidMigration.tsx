@@ -27,6 +27,7 @@ const BsuidMigration = () => {
   const [selectedPayload, setSelectedPayload] = useState<any>(null);
   const [logsPage, setLogsPage] = useState(0);
   const [backfilling, setBackfilling] = useState(false);
+  const [backfillReport, setBackfillReport] = useState<any>(null);
   const LOGS_PAGE_SIZE = 10;
   const queryClient = useQueryClient();
 
@@ -35,9 +36,10 @@ const BsuidMigration = () => {
     try {
       const { data, error } = await supabase.functions.invoke("backfill-bsuid-from-logs");
       if (error) throw error;
+      setBackfillReport(data);
       toast({
         title: "Backfill concluído",
-        description: `${data.residents_updated} morador(es) atualizado(s). ${data.unique_phones_with_bsuid} telefone(s) com BSUID encontrados nos payloads. ${data.phones_without_resident} sem morador correspondente.`,
+        description: `${data.residents_updated} atualizado(s) · ${data.residents_already_had_bsuid ?? 0} já tinham · ${data.phones_without_resident} sem morador · índice: ${data.residents_index_keys ?? "?"} chaves de ${data.residents_loaded ?? "?"} moradores.`,
       });
       queryClient.invalidateQueries({ queryKey: ["bsuid-stats"] });
       queryClient.invalidateQueries({ queryKey: ["bsuid-residents"] });
@@ -371,6 +373,59 @@ const BsuidMigration = () => {
               <pre className="bg-muted p-4 rounded-lg text-xs font-mono whitespace-pre-wrap break-all">
                 {selectedPayload ? JSON.stringify(selectedPayload, null, 2) : ""}
               </pre>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Backfill report dialog */}
+        <Dialog open={!!backfillReport} onOpenChange={(open) => !open && setBackfillReport(null)}>
+          <DialogContent className="max-w-3xl max-h-[85vh]">
+            <DialogHeader>
+              <DialogTitle>Diagnóstico do Backfill BSUID</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[70vh]">
+              {backfillReport && (
+                <div className="space-y-4 text-sm">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>Payloads escaneados: <b>{backfillReport.payloads_scanned}</b></div>
+                    <div>Payloads com BSUID: <b>{backfillReport.payloads_with_bsuid}</b></div>
+                    <div>Telefones únicos c/ BSUID: <b>{backfillReport.unique_phones_with_bsuid}</b></div>
+                    <div>Moradores carregados: <b>{backfillReport.residents_loaded}</b></div>
+                    <div>Moradores c/ dígitos: <b>{backfillReport.residents_with_digits}</b></div>
+                    <div>Chaves no índice: <b>{backfillReport.residents_index_keys}</b></div>
+                    <div className="text-green-600">Atualizados: <b>{backfillReport.residents_updated}</b></div>
+                    <div className="text-blue-600">Já tinham BSUID: <b>{backfillReport.residents_already_had_bsuid}</b></div>
+                    <div className="text-orange-600">Sem morador: <b>{backfillReport.phones_without_resident}</b></div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">Amostras (primeiros 30):</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Telefone (payload)</TableHead>
+                          <TableHead>BSUID</TableHead>
+                          <TableHead>Match</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(backfillReport.samples || []).map((s: any, i: number) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-mono text-xs">{s.phone}</TableCell>
+                            <TableCell className="font-mono text-xs">{s.bsuid}</TableCell>
+                            <TableCell>
+                              {s.matched ? (
+                                <Badge className="bg-green-600">OK</Badge>
+                              ) : (
+                                <Badge variant="secondary">não casou</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
             </ScrollArea>
           </DialogContent>
         </Dialog>
