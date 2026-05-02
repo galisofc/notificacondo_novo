@@ -86,14 +86,38 @@ function digitsOnly(value: unknown): string {
   return String(value ?? "").replace(/\D/g, "");
 }
 
-function phoneKeys(value: unknown): Set<string> {
-  const digits = digitsOnly(value);
-  const keys = new Set<string>();
-  if (!digits) return keys;
+function addPhoneKeysFromDigits(digits: string, keys: Set<string>) {
+  if (!digits) return;
   keys.add(digits);
-  if (digits.startsWith("55") && digits.length > 11) keys.add(digits.slice(2));
+  let local = digits;
+  if (digits.startsWith("55") && digits.length >= 12) {
+    local = digits.slice(2);
+    keys.add(local);
+  }
+  if (local.length >= 10 && !local.startsWith("55")) keys.add(`55${local}`);
   if (digits.length >= 11) keys.add(digits.slice(-11));
   if (digits.length >= 10) keys.add(digits.slice(-10));
+  if (digits.length >= 9) keys.add(digits.slice(-9));
+  if (digits.length >= 8) keys.add(digits.slice(-8));
+  if (local.length === 11 && local[2] === "9") {
+    const withoutNine = local.slice(0, 2) + local.slice(3);
+    keys.add(withoutNine);
+    keys.add(`55${withoutNine}`);
+  } else if (local.length === 10) {
+    const withNine = local.slice(0, 2) + "9" + local.slice(2);
+    keys.add(withNine);
+    keys.add(`55${withNine}`);
+  }
+}
+
+function phoneKeys(value: unknown): Set<string> {
+  const keys = new Set<string>();
+  const raw = String(value ?? "");
+  const matches = raw.match(/\+?\d[\d\s().-]{6,}\d/g) || [];
+  const sequences = matches.map(digitsOnly).filter(Boolean);
+  const allDigits = digitsOnly(raw);
+  if (allDigits && (sequences.length === 0 || allDigits.length <= 13)) sequences.push(allDigits);
+  for (const digits of sequences) addPhoneKeysFromDigits(digits, keys);
   return keys;
 }
 
