@@ -123,11 +123,17 @@ const BsuidMigration = () => {
           ]}
         />
 
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Migração BSUID</h1>
-          <p className="text-muted-foreground text-sm">
-            Acompanhe a captura dos Business-Scoped User IDs (BSUIDs) dos moradores via WhatsApp.
-          </p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Migração BSUID</h1>
+            <p className="text-muted-foreground text-sm">
+              Acompanhe a captura dos Business-Scoped User IDs (BSUIDs) dos moradores via WhatsApp.
+            </p>
+          </div>
+          <Button onClick={handleBackfill} disabled={backfilling} variant="outline">
+            <Wand2 className={`h-4 w-4 mr-2 ${backfilling ? "animate-spin" : ""}`} />
+            {backfilling ? "Processando..." : "Capturar BSUID dos payloads salvos"}
+          </Button>
         </div>
 
         {/* Stats Cards */}
