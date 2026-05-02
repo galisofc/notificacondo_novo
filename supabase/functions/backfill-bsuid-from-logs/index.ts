@@ -192,10 +192,10 @@ Deno.serve(async (req) => {
         if (!d) continue;
         residentsWithDigits++;
         const info = { id: r.id, missing: isMissingBsuid(r.bsuid), rawPhone: String(r.phone || "") };
-        // Index by full digits and by last 10/11 digits (to match with/without country code "55")
-        if (!residentsByDigits.has(d)) residentsByDigits.set(d, info);
-        if (d.length >= 11 && !residentsByDigits.has(d.slice(-11))) residentsByDigits.set(d.slice(-11), info);
-        if (d.length >= 10 && !residentsByDigits.has(d.slice(-10))) residentsByDigits.set(d.slice(-10), info);
+        // Index by ALL variants (with/without 55, last 10/11, with/without leading 9)
+        for (const v of phoneVariants(r.phone)) {
+          if (!residentsByDigits.has(v)) residentsByDigits.set(v, info);
+        }
       }
       if (rs.length < PAGE) break;
       resFrom += PAGE;
