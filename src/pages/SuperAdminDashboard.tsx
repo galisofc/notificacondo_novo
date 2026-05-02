@@ -243,7 +243,6 @@ export default function SuperAdminDashboard() {
         totalCondominiums: condominiums.count || 0,
         activeSubscriptions: activeSubscriptions.length,
         paidSubscriptions: paidPlans.length,
-        totalNotifications: notifications.count || 0,
         planDistribution,
         planCounts,
       };
