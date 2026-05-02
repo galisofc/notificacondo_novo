@@ -5,6 +5,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function isMissingBsuid(bsuid: unknown): boolean {
+  return String(bsuid ?? "").trim() === "";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -151,12 +155,12 @@ Deno.serve(async (req) => {
     while (true) {
       const { data: rs, error } = await supabase
         .from("residents")
-        .select("id, phone")
-        .is("bsuid", null)
+        .select("id, phone, bsuid")
         .not("phone", "is", null)
         .range(resFrom, resFrom + PAGE - 1);
       if (error || !rs || rs.length === 0) break;
       for (const r of rs) {
+        if (!isMissingBsuid(r.bsuid)) continue;
         const d = String(r.phone || "").replace(/\D/g, "");
         if (!d) continue;
         // Index by full digits and by last 10/11 digits (to match with/without country code "55")
