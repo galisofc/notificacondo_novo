@@ -9,6 +9,31 @@ function isMissingBsuid(bsuid: unknown): boolean {
   return String(bsuid ?? "").trim() === "";
 }
 
+// Generate all digit-only variants of a phone number to maximize matching across formats
+// (with/without country code 55, with/without leading 9 in mobile, last 10/11 digits)
+function phoneVariants(value: unknown): string[] {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return [];
+  const set = new Set<string>();
+  set.add(digits);
+  let local = digits;
+  if (digits.startsWith("55") && digits.length >= 12) {
+    local = digits.slice(2);
+    set.add(local);
+  }
+  if (digits.length >= 11) set.add(digits.slice(-11));
+  if (digits.length >= 10) set.add(digits.slice(-10));
+  if (digits.length >= 9) set.add(digits.slice(-9));
+  if (digits.length >= 8) set.add(digits.slice(-8));
+  // mobile with/without leading 9 (BR): DDD + 8 or 9 digits
+  if (local.length === 11 && local[2] === "9") {
+    set.add(local.slice(0, 2) + local.slice(3));
+  } else if (local.length === 10) {
+    set.add(local.slice(0, 2) + "9" + local.slice(2));
+  }
+  return Array.from(set).filter((v) => v.length >= 8);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -167,10 +192,10 @@ Deno.serve(async (req) => {
         if (!d) continue;
         residentsWithDigits++;
         const info = { id: r.id, missing: isMissingBsuid(r.bsuid), rawPhone: String(r.phone || "") };
-        // Index by full digits and by last 10/11 digits (to match with/without country code "55")
-        if (!residentsByDigits.has(d)) residentsByDigits.set(d, info);
-        if (d.length >= 11 && !residentsByDigits.has(d.slice(-11))) residentsByDigits.set(d.slice(-11), info);
-        if (d.length >= 10 && !residentsByDigits.has(d.slice(-10))) residentsByDigits.set(d.slice(-10), info);
+        // Index by ALL variants (with/without 55, last 10/11, with/without leading 9)
+        for (const v of phoneVariants(r.phone)) {
+          if (!residentsByDigits.has(v)) residentsByDigits.set(v, info);
+        }
       }
       if (rs.length < PAGE) break;
       resFrom += PAGE;
@@ -180,9 +205,7 @@ Deno.serve(async (req) => {
 
     let alreadyHadBsuidCount = 0;
     for (const [phone, bsuid] of phoneToBsuid.entries()) {
-      const candidates = [phone];
-      if (phone.length >= 11) candidates.push(phone.slice(-11));
-      if (phone.length >= 10) candidates.push(phone.slice(-10));
+      const candidates = phoneVariants(phone);
 
       let info: { id: string; missing: boolean; rawPhone: string } | undefined;
       for (const c of candidates) {
