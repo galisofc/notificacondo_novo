@@ -96,7 +96,6 @@ const getBaseSuperAdminNavItems = (): NavStructure => [
       { title: "Transferências", url: "/superadmin/transfers", icon: Scale },
     ],
   },
-  { title: "Mensagens", url: "/superadmin/contact-messages", icon: Mail },
   {
     title: "Assinaturas",
     icon: CreditCard,
@@ -114,6 +113,7 @@ const getBaseSuperAdminNavItems = (): NavStructure => [
       { title: "Configurações", url: "/superadmin/whatsapp/config", icon: Cog },
     ],
   },
+  { title: "Mensagens", url: "/superadmin/contact-messages", icon: Mail },
   {
     title: "Configurações",
     icon: Settings,
