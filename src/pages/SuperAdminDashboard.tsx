@@ -427,7 +427,7 @@ export default function SuperAdminDashboard() {
                     <SelectContent align="end">
                       <SelectItem value="day">Dia</SelectItem>
                       <SelectItem value="week">Semana</SelectItem>
-                      <SelectItem value="month">Mês</SelectItem>
+                      <SelectItem value="month">Mês atual</SelectItem>
                       <SelectItem value="all">Total</SelectItem>
                     </SelectContent>
                   </Select>
