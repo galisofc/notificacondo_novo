@@ -7,6 +7,7 @@ import {
   Clock, 
   ArrowRightLeft,
   Package,
+  Key,
   type LucideIcon 
 } from "lucide-react";
 
@@ -41,6 +42,16 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     bgColor: "bg-violet-500/10",
     borderColor: "border-violet-500/20",
     slugs: ["decision_archived", "decision_warning", "decision_fine"],
+  },
+  {
+    id: "passwords",
+    name: "Senhas",
+    description: "Recuperação de acesso e credenciais",
+    icon: Key,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500/20",
+    slugs: ["resend_porter_credentials"],
   },
   {
     id: "party_hall",

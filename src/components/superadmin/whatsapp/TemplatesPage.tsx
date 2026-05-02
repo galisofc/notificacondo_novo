@@ -17,6 +17,7 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Key,
 } from "lucide-react";
 import { TEMPLATE_CATEGORIES, getCategoryForSlug } from "./TemplateCategories";
 import { CategorySection } from "./CategorySection";
@@ -427,12 +428,12 @@ export function TemplatesPage() {
             />
           ))}
           
-          {/* Uncategorized templates */}
+          {/* Password/Credentials templates (moved to its own category or fallback) */}
           {templatesByCategory["other"]?.length > 0 && (
             <div className="rounded-xl border p-4">
               <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Outros Templates
+                <Key className="h-4 w-4" />
+                Senhas
                 <Badge variant="secondary" className="text-xs ml-2">
                   {templatesByCategory["other"].length}
                 </Badge>
