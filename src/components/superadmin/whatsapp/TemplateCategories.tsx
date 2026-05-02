@@ -44,16 +44,6 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     slugs: ["decision_archived", "decision_warning", "decision_fine"],
   },
   {
-    id: "passwords",
-    name: "Senhas",
-    description: "Recuperação de acesso e credenciais",
-    icon: Key,
-    color: "text-orange-500",
-    bgColor: "bg-orange-500/10",
-    borderColor: "border-orange-500/20",
-    slugs: ["resend_porter_credentials"],
-  },
-  {
     id: "party_hall",
     name: "Reserva de Espaços",
     description: "Lembretes e cancelamentos de reservas",
@@ -102,6 +92,16 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/20",
     slugs: ["package_arrival"],
+  },
+  {
+    id: "passwords",
+    name: "Senhas",
+    description: "Recuperação de acesso e credenciais",
+    icon: Key,
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500/20",
+    slugs: ["resend_porter_credentials"],
   },
 ];
 
