@@ -517,7 +517,7 @@ export default function Porteiros() {
           porter_user_id: editingPorter.user_id,
           full_name: editForm.full_name.trim(),
           email: editForm.email.trim().toLowerCase(),
-          phone: editForm.phone.trim() || null,
+          phone: editForm.phone.replace(/\D/g, "") || null,
         },
       });
 
