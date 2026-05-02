@@ -89,7 +89,8 @@ const BsuidMigration = () => {
       for (const log of logs) {
         payloadsScanned++;
         let found = false;
-        for (const entry of log.payload?.entry || []) {
+        const payload = log.payload as any;
+        for (const entry of payload?.entry || []) {
           for (const change of entry.changes || []) {
             const value = change.value || {};
             const contacts = value.contacts || [];
