@@ -142,7 +142,7 @@ async function findResidentsByPhone(supabase: any, phone: unknown, onlyMissingBs
   while (matches.length < limit) {
     const { data, error } = await supabase
       .from("residents")
-      .select("id, phone, bsuid, condominium_id")
+      .select("id, phone, bsuid, apartments(blocks(condominium_id))")
       .not("phone", "is", null)
       .range(from, from + PAGE - 1);
 
@@ -151,7 +151,12 @@ async function findResidentsByPhone(supabase: any, phone: unknown, onlyMissingBs
     for (const resident of data) {
       if (onlyMissingBsuid && !isMissingBsuid(resident.bsuid)) continue;
       if (phonesMatch(phone, resident.phone)) {
-        matches.push(resident);
+        matches.push({
+          id: resident.id,
+          phone: resident.phone,
+          bsuid: resident.bsuid,
+          condominium_id: resident.apartments?.blocks?.condominium_id ?? null,
+        });
         if (matches.length >= limit) break;
       }
     }
