@@ -9,6 +9,31 @@ function isMissingBsuid(bsuid: unknown): boolean {
   return String(bsuid ?? "").trim() === "";
 }
 
+// Generate all digit-only variants of a phone number to maximize matching across formats
+// (with/without country code 55, with/without leading 9 in mobile, last 10/11 digits)
+function phoneVariants(value: unknown): string[] {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return [];
+  const set = new Set<string>();
+  set.add(digits);
+  let local = digits;
+  if (digits.startsWith("55") && digits.length >= 12) {
+    local = digits.slice(2);
+    set.add(local);
+  }
+  if (digits.length >= 11) set.add(digits.slice(-11));
+  if (digits.length >= 10) set.add(digits.slice(-10));
+  if (digits.length >= 9) set.add(digits.slice(-9));
+  if (digits.length >= 8) set.add(digits.slice(-8));
+  // mobile with/without leading 9 (BR): DDD + 8 or 9 digits
+  if (local.length === 11 && local[2] === "9") {
+    set.add(local.slice(0, 2) + local.slice(3));
+  } else if (local.length === 10) {
+    set.add(local.slice(0, 2) + "9" + local.slice(2));
+  }
+  return Array.from(set).filter((v) => v.length >= 8);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
