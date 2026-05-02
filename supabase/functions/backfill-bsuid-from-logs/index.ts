@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
             // From inbound messages
             for (const m of messages) {
               const phone = String(m?.from || "").replace(/\D/g, "");
-              const bsuid = m?.user_id || (contacts[0]?.user_id ?? null);
+              const bsuid = m?.from_user_id || m?.user_id || (contacts[0]?.user_id ?? null);
               if (phone && bsuid) {
                 phoneToBsuid.set(phone, String(bsuid));
                 foundInThis = true;
