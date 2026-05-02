@@ -75,12 +75,23 @@ export function formatCNPJ(cnpj: string): string {
 
 export function formatPhone(phone: string): string {
   const cleanPhone = phone.replace(/\D/g, "");
-  if (cleanPhone.length === 11) {
-    return cleanPhone.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-  } else if (cleanPhone.length === 10) {
-    return cleanPhone.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+  // Strip Brazilian country code (55) when present on 12/13-digit numbers
+  const local = cleanPhone.replace(/^55(?=\d{10,11}$)/, "");
+  if (local.length === 11) {
+    return local.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+  } else if (local.length === 10) {
+    return local.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
   }
   return phone;
+}
+
+/**
+ * Prepara um telefone vindo do banco (só dígitos, possivelmente com 55) para
+ * exibição em um input com máscara. Sempre retorna no formato (XX) XXXXX-XXXX.
+ */
+export function formatPhoneForEdit(phone: string | null | undefined): string {
+  if (!phone) return "";
+  return formatPhone(phone);
 }
 
 export function formatCEP(cep: string): string {
