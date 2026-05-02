@@ -504,6 +504,33 @@ export function InvoicesManagement({
     },
   });
 
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const { error } = await supabase
+        .from("invoices")
+        .delete()
+        .eq("id", invoiceId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["superadmin-invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["superadmin-invoice-stats"] });
+      toast({
+        title: "Fatura excluída",
+        description: "A fatura foi removida com sucesso.",
+      });
+      setShowDeleteDialog(false);
+      setInvoiceToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao excluir",
+        description: error?.message || "Não foi possível excluir a fatura.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Mutation para criar fatura avulsa
   const createInvoiceMutation = useMutation({
     mutationFn: async (data: typeof newInvoiceData) => {
