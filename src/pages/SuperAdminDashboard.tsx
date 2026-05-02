@@ -196,10 +196,16 @@ export default function SuperAdminDashboard() {
 
       if (notificationsPeriod !== "all") {
         const now = new Date();
-        const since = new Date(now);
-        if (notificationsPeriod === "day") since.setDate(now.getDate() - 1);
-        if (notificationsPeriod === "week") since.setDate(now.getDate() - 7);
-        if (notificationsPeriod === "month") since.setMonth(now.getMonth() - 1);
+        let since: Date;
+        if (notificationsPeriod === "day") {
+          since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        } else if (notificationsPeriod === "week") {
+          since = new Date(now);
+          since.setDate(now.getDate() - 7);
+        } else {
+          // month: início do mês calendário atual
+          since = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        }
         query = query.gte("created_at", since.toISOString());
       }
 
