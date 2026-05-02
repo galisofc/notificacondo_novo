@@ -1186,11 +1186,12 @@ const CondominiumDetails = () => {
                                               <DropdownMenuItem
                                                 onClick={() => {
                                                   setEditingResident(resident);
+                                                  const residentPhone = resident.phone?.replace(/^55(?=\d{10,11}$)/, "") || "";
                                                   setResidentForm({
                                                     apartment_id: resident.apartment_id,
                                                     full_name: resident.full_name,
                                                     email: resident.email,
-                                                    phone: resident.phone || "",
+                                                    phone: formatPhone(residentPhone),
                                                     cpf: resident.cpf || "",
                                                     is_owner: resident.is_owner,
                                                     is_responsible: resident.is_responsible,
