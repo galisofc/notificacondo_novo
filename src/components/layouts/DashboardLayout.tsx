@@ -121,7 +121,6 @@ const getBaseSuperAdminNavItems = (): NavStructure => [
       { title: "Geral", url: "/superadmin/settings", icon: Cog },
       { title: "Template PDF Ocorrência", url: "/superadmin/pdf-template", icon: FileText },
       { title: "Tipos de Encomenda", url: "/superadmin/package-types", icon: Package },
-      { title: "Exportar Banco", url: "/superadmin/export-database", icon: Building2 },
       { title: "Logs", url: "/superadmin/logs", icon: FileText },
       { title: "Cron Jobs", url: "/superadmin/cron-jobs", icon: Clock },
     ],
