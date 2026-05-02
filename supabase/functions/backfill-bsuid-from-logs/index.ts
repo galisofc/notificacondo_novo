@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const BACKFILL_VERSION = "phone-normalizer-v3-2026-05-02";
+
 function isMissingBsuid(bsuid: unknown): boolean {
   return String(bsuid ?? "").trim() === "";
 }
@@ -188,7 +190,7 @@ Deno.serve(async (req) => {
     // Update residents
     let updatedCount = 0;
     let notFoundCount = 0;
-    const samples: Array<{ phone: string; bsuid: string; resident_id?: string; matched: boolean }> = [];
+    const samples: Array<{ phone: string; bsuid: string; resident_id?: string; raw_phone?: string; matched: boolean; updated?: boolean; already_had_bsuid?: boolean; update_error?: string; matched_variant?: string; payload_variants?: string[] }> = [];
 
     // Load ALL residents (regardless of bsuid status) once and build a digits-only index.
     // We will only update those whose bsuid is missing, but we want to count matches even for
@@ -225,16 +227,22 @@ Deno.serve(async (req) => {
       const candidates = phoneVariants(phone);
 
       let info: { id: string; missing: boolean; rawPhone: string } | undefined;
+      let matchedVariant: string | undefined;
       for (const c of candidates) {
         if (residentsByDigits.has(c)) {
           info = residentsByDigits.get(c);
+          matchedVariant = c;
           break;
         }
       }
 
       let matched = false;
+      let updated = false;
+      let alreadyHadBsuid = false;
+      let updateError: string | undefined;
       let residentId: string | undefined = info?.id;
       if (info) {
+        matched = true;
         if (info.missing) {
           const { error: upErr } = await supabase
             .from("residents")
@@ -242,19 +250,35 @@ Deno.serve(async (req) => {
             .eq("id", info.id);
           if (!upErr) {
             updatedCount++;
-            matched = true;
+            updated = true;
+          } else {
+            updateError = upErr.message;
           }
         } else {
           alreadyHadBsuidCount++;
-          matched = true;
+          alreadyHadBsuid = true;
         }
       }
       if (!info) notFoundCount++;
-      if (samples.length < 30) samples.push({ phone, bsuid, resident_id: residentId, matched });
+      if (samples.length < 30) {
+        samples.push({
+          phone,
+          bsuid,
+          resident_id: residentId,
+          raw_phone: info?.rawPhone,
+          matched,
+          updated,
+          already_had_bsuid: alreadyHadBsuid,
+          update_error: updateError,
+          matched_variant: matchedVariant,
+          payload_variants: candidates.slice(0, 8),
+        });
+      }
     }
 
     return new Response(JSON.stringify({
       success: true,
+      version: BACKFILL_VERSION,
       payloads_scanned: payloadsScanned,
       payloads_with_bsuid: payloadsWithBsuid,
       unique_phones_with_bsuid: phoneToBsuid.size,

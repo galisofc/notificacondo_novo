@@ -20,6 +20,45 @@ import { toast } from "@/hooks/use-toast";
 
 const PAGE_SIZE = 20;
 
+const digitsOnly = (value: unknown) => String(value ?? "").replace(/\D/g, "");
+
+const addPhoneVariantsFromDigits = (digits: string, set: Set<string>) => {
+  if (!digits) return;
+  set.add(digits);
+  let local = digits;
+  if (digits.startsWith("55") && digits.length >= 12) {
+    local = digits.slice(2);
+    set.add(local);
+  }
+  if (local.length >= 10 && !local.startsWith("55")) set.add(`55${local}`);
+  if (digits.length >= 11) set.add(digits.slice(-11));
+  if (digits.length >= 10) set.add(digits.slice(-10));
+  if (digits.length >= 9) set.add(digits.slice(-9));
+  if (digits.length >= 8) set.add(digits.slice(-8));
+  if (local.length === 11 && local[2] === "9") {
+    const withoutNine = local.slice(0, 2) + local.slice(3);
+    set.add(withoutNine);
+    set.add(`55${withoutNine}`);
+  } else if (local.length === 10) {
+    const withNine = local.slice(0, 2) + "9" + local.slice(2);
+    set.add(withNine);
+    set.add(`55${withNine}`);
+  }
+};
+
+const phoneVariants = (value: unknown) => {
+  const set = new Set<string>();
+  const raw = String(value ?? "");
+  const matches = raw.match(/\+?\d[\d\s().-]{6,}\d/g) || [];
+  const sequences = matches.map(digitsOnly).filter(Boolean);
+  const allDigits = digitsOnly(raw);
+  if (allDigits && (sequences.length === 0 || allDigits.length <= 13)) sequences.push(allDigits);
+  sequences.forEach((digits) => addPhoneVariantsFromDigits(digits, set));
+  return Array.from(set).filter((v) => v.length >= 8);
+};
+
+const isMissingBsuid = (bsuid: unknown) => String(bsuid ?? "").trim() === "";
+
 const BsuidMigration = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "with" | "without">("all");
@@ -31,11 +70,152 @@ const BsuidMigration = () => {
   const LOGS_PAGE_SIZE = 10;
   const queryClient = useQueryClient();
 
+  const runClientSideBackfill = async () => {
+    const PAGE = 1000;
+    const phoneToBsuid = new Map<string, string>();
+    let payloadsScanned = 0;
+    let payloadsWithBsuid = 0;
+
+    for (let from = 0; from <= 50000; from += PAGE) {
+      const { data: logs, error } = await supabase
+        .from("webhook_raw_logs")
+        .select("payload")
+        .eq("source", "meta")
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!logs?.length) break;
+
+      for (const log of logs) {
+        payloadsScanned++;
+        let found = false;
+        const payload = log.payload as any;
+        for (const entry of payload?.entry || []) {
+          for (const change of entry.changes || []) {
+            const value = change.value || {};
+            const contacts = value.contacts || [];
+
+            for (const c of contacts) {
+              const phone = digitsOnly(c?.wa_id);
+              if (phone && c?.user_id) {
+                phoneToBsuid.set(phone, String(c.user_id));
+                found = true;
+              }
+            }
+            for (const m of value.messages || []) {
+              const phone = digitsOnly(m?.from || contacts[0]?.wa_id);
+              const bsuid = m?.from_user_id || m?.user_id || contacts[0]?.user_id;
+              if (phone && bsuid) {
+                phoneToBsuid.set(phone, String(bsuid));
+                found = true;
+              }
+            }
+            for (const s of value.statuses || []) {
+              const phone = digitsOnly(s?.recipient_id || contacts[0]?.wa_id);
+              const bsuid = s?.user_id || s?.recipient_user_id || contacts[0]?.user_id;
+              if (phone && bsuid) {
+                phoneToBsuid.set(phone, String(bsuid));
+                found = true;
+              }
+            }
+          }
+        }
+        if (found) payloadsWithBsuid++;
+      }
+      if (logs.length < PAGE) break;
+    }
+
+    const residentsByDigits = new Map<string, { id: string; missing: boolean; rawPhone: string }>();
+    let residentsLoaded = 0;
+    let residentsWithDigits = 0;
+    for (let from = 0; from <= 100000; from += PAGE) {
+      const { data: rs, error } = await supabase
+        .from("residents")
+        .select("id, phone, bsuid")
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!rs?.length) break;
+      residentsLoaded += rs.length;
+      for (const r of rs) {
+        if (!digitsOnly(r.phone)) continue;
+        residentsWithDigits++;
+        const info = { id: r.id, missing: isMissingBsuid(r.bsuid), rawPhone: r.phone || "" };
+        phoneVariants(r.phone).forEach((variant) => {
+          if (!residentsByDigits.has(variant)) residentsByDigits.set(variant, info);
+        });
+      }
+      if (rs.length < PAGE) break;
+    }
+
+    let residentsUpdated = 0;
+    let alreadyHadBsuid = 0;
+    let withoutResident = 0;
+    const samples: any[] = [];
+
+    for (const [phone, bsuid] of phoneToBsuid.entries()) {
+      const candidates = phoneVariants(phone);
+      let info: { id: string; missing: boolean; rawPhone: string } | undefined;
+      let matchedVariant: string | undefined;
+      for (const candidate of candidates) {
+        info = residentsByDigits.get(candidate);
+        if (info) {
+          matchedVariant = candidate;
+          break;
+        }
+      }
+
+      let matched = false;
+      let updated = false;
+      let alreadyHadResidentBsuid = false;
+      let updateError: string | undefined;
+      if (info) {
+        matched = true;
+        if (info.missing) {
+          const { error } = await supabase.from("residents").update({ bsuid }).eq("id", info.id);
+          if (!error) {
+            residentsUpdated++;
+            updated = true;
+          } else {
+            updateError = error.message;
+          }
+        } else {
+          alreadyHadBsuid++;
+          alreadyHadResidentBsuid = true;
+          matched = true;
+        }
+      } else {
+        withoutResident++;
+      }
+
+      if (samples.length < 30) {
+        samples.push({ phone, bsuid, resident_id: info?.id, raw_phone: info?.rawPhone, matched, updated, already_had_bsuid: alreadyHadResidentBsuid, update_error: updateError, matched_variant: matchedVariant, payload_variants: candidates.slice(0, 8) });
+      }
+    }
+
+    return {
+      success: true,
+      version: "client-fallback-phone-normalizer-v1",
+      payloads_scanned: payloadsScanned,
+      payloads_with_bsuid: payloadsWithBsuid,
+      unique_phones_with_bsuid: phoneToBsuid.size,
+      residents_loaded: residentsLoaded,
+      residents_with_digits: residentsWithDigits,
+      residents_index_keys: residentsByDigits.size,
+      residents_updated: residentsUpdated,
+      residents_already_had_bsuid: alreadyHadBsuid,
+      phones_without_resident: withoutResident,
+      samples,
+    };
+  };
+
   const handleBackfill = async () => {
     setBackfilling(true);
     try {
-      const { data, error } = await supabase.functions.invoke("backfill-bsuid-from-logs");
+      let { data, error } = await supabase.functions.invoke("backfill-bsuid-from-logs");
       if (error) throw error;
+      if (!data?.residents_loaded) {
+        data = await runClientSideBackfill();
+      }
       setBackfillReport(data);
       toast({
         title: "Backfill concluído",
@@ -387,6 +567,7 @@ const BsuidMigration = () => {
               {backfillReport && (
                 <div className="space-y-4 text-sm">
                   <div className="grid grid-cols-2 gap-2">
+                    <div>Versão: <b>{backfillReport.version || "edge-antiga"}</b></div>
                     <div>Payloads escaneados: <b>{backfillReport.payloads_scanned}</b></div>
                     <div>Payloads com BSUID: <b>{backfillReport.payloads_with_bsuid}</b></div>
                     <div>Telefones únicos c/ BSUID: <b>{backfillReport.unique_phones_with_bsuid}</b></div>
@@ -403,6 +584,8 @@ const BsuidMigration = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Telefone (payload)</TableHead>
+                          <TableHead>Telefone (morador)</TableHead>
+                          <TableHead>Variante</TableHead>
                           <TableHead>BSUID</TableHead>
                           <TableHead>Match</TableHead>
                         </TableRow>
@@ -411,13 +594,20 @@ const BsuidMigration = () => {
                         {(backfillReport.samples || []).map((s: any, i: number) => (
                           <TableRow key={i}>
                             <TableCell className="font-mono text-xs">{s.phone}</TableCell>
+                            <TableCell className="font-mono text-xs">{s.raw_phone || "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">{s.matched_variant || "—"}</TableCell>
                             <TableCell className="font-mono text-xs">{s.bsuid}</TableCell>
                             <TableCell>
-                              {s.matched ? (
+                              {s.updated ? (
                                 <Badge className="bg-green-600">OK</Badge>
+                              ) : s.already_had_bsuid ? (
+                                <Badge variant="outline">já tinha</Badge>
+                              ) : s.matched ? (
+                                <Badge variant="secondary" title={s.update_error || "Casou, mas não atualizou"}>casou</Badge>
                               ) : (
                                 <Badge variant="secondary">não casou</Badge>
                               )}
+                              {s.update_error && <div className="mt-1 text-xs text-destructive">{s.update_error}</div>}
                             </TableCell>
                           </TableRow>
                         ))}
