@@ -147,6 +147,9 @@ Deno.serve(async (req) => {
         const contactBsuid = contacts.length > 0 ? contacts[0].user_id : null;
         const contactWaId = contacts.length > 0 ? contacts[0].wa_id : null;
 
+        // BSUID diagnostics
+        console.log(`[WEBHOOK][BSUID-DIAG] contacts=${JSON.stringify(contacts)} | statuses_count=${(change.value.statuses||[]).length} | messages_count=${(change.value.messages||[]).length}`);
+
         for (const status of statuses) {
           const messageId = status.id;
           const normalizedStatus = normalizeMetaStatus(status.status);
