@@ -538,7 +538,7 @@ export default function Porteiros() {
                       ...p.profile,
                       full_name: editForm.full_name.trim(),
                       email: editForm.email.trim().toLowerCase(),
-                      phone: editForm.phone.trim() || null,
+                      phone: editForm.phone.replace(/\D/g, "") || null,
                     }
                   : null,
               }
