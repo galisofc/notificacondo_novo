@@ -343,22 +343,10 @@ Deno.serve(async (req) => {
             // Try to find resident by phone
             let residentId: string | null = null;
             let condominiumId: string | null = null;
-            const phoneVariantsMsg = [cleanMsgPhone];
-            if (cleanMsgPhone.startsWith("55")) {
-              phoneVariantsMsg.push(cleanMsgPhone.substring(2));
-            }
-            for (const pv of phoneVariantsMsg) {
-              const { data: res } = await supabase
-                .from("residents")
-                .select("id, condominium_id")
-                .or(`phone.like.%${pv}`)
-                .limit(1)
-                .single();
-              if (res) {
-                residentId = res.id;
-                condominiumId = res.condominium_id;
-                break;
-              }
+            const [matchedResident] = await findResidentsByPhone(supabase, cleanMsgPhone, false, 1);
+            if (matchedResident) {
+              residentId = matchedResident.id;
+              condominiumId = matchedResident.condominium_id || null;
             }
 
             await supabase.from("whatsapp_messages").insert({
@@ -383,33 +371,17 @@ Deno.serve(async (req) => {
 
           // Capture BSUID
           if (msgBsuid && msgPhone) {
-            const cleanPhone = msgPhone.replace(/\D/g, "");
-            const phoneVariants = [cleanPhone];
-            if (cleanPhone.startsWith("55")) {
-              phoneVariants.push(cleanPhone.substring(2));
-            }
+            const residents = await findResidentsByPhone(supabase, msgPhone, true, 5);
 
-            for (const phoneVar of phoneVariants) {
-              const { data: residents, error: findError } = await supabase
+            for (const resident of residents) {
+              const { error: updateError } = await supabase
                 .from("residents")
-                .select("id, bsuid")
-                .or(`phone.like.%${phoneVar}`)
-                .is("bsuid", null)
-                .limit(5);
+                .update({ bsuid: msgBsuid })
+                .eq("id", resident.id);
 
-              if (!findError && residents && residents.length > 0) {
-                for (const resident of residents) {
-                  const { error: updateError } = await supabase
-                    .from("residents")
-                    .update({ bsuid: msgBsuid })
-                    .eq("id", resident.id);
-
-                  if (!updateError) {
-                    totalBsuidsCapured++;
-                    console.log(`[WEBHOOK] BSUID captured from incoming msg for resident ${resident.id}: ${msgBsuid}`);
-                  }
-                }
-                break;
+              if (!updateError) {
+                totalBsuidsCapured++;
+                console.log(`[WEBHOOK] BSUID captured from incoming msg for resident ${resident.id}: ${msgBsuid}`);
               }
             }
           }
