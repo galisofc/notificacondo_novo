@@ -530,34 +530,34 @@ export function SubscriptionsMonitor() {
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">Notificações</span>
                             <span className="font-medium">
-                              {sub.realUsage.notifications}/{sub.notifications_limit}
-                              {getUsagePercentage(sub.realUsage.notifications, sub.notifications_limit) >= 90 && (
+                              {sub.realUsage.notifications}/{sub.notifications_limit === -1 ? '∞' : sub.notifications_limit}
+                              {sub.notifications_limit !== -1 && getUsagePercentage(sub.realUsage.notifications, sub.notifications_limit) >= 90 && (
                                 <AlertCircle className="inline-block h-3 w-3 text-amber-500 ml-1" />
                               )}
                             </span>
                           </div>
                           <Progress 
-                            value={getUsagePercentage(sub.realUsage.notifications, sub.notifications_limit)} 
+                            value={sub.notifications_limit === -1 ? 0 : getUsagePercentage(sub.realUsage.notifications, sub.notifications_limit)} 
                             className="h-1.5"
                           />
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">Advertências</span>
-                            <span className="font-medium">{sub.realUsage.warnings}/{sub.warnings_limit}</span>
+                            <span className="font-medium">{sub.realUsage.warnings}/{sub.warnings_limit === -1 ? '∞' : sub.warnings_limit}</span>
                           </div>
                           <Progress 
-                            value={getUsagePercentage(sub.realUsage.warnings, sub.warnings_limit)} 
+                            value={sub.warnings_limit === -1 ? 0 : getUsagePercentage(sub.realUsage.warnings, sub.warnings_limit)} 
                             className="h-1.5"
                           />
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">Multas</span>
-                            <span className="font-medium">{sub.realUsage.fines}/{sub.fines_limit}</span>
+                            <span className="font-medium">{sub.realUsage.fines}/{sub.fines_limit === -1 ? '∞' : sub.fines_limit}</span>
                           </div>
                           <Progress 
-                            value={getUsagePercentage(sub.realUsage.fines, sub.fines_limit)} 
+                            value={sub.fines_limit === -1 ? 0 : getUsagePercentage(sub.realUsage.fines, sub.fines_limit)} 
                             className="h-1.5"
                           />
                         </div>
