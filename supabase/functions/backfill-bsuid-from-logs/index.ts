@@ -205,9 +205,7 @@ Deno.serve(async (req) => {
 
     let alreadyHadBsuidCount = 0;
     for (const [phone, bsuid] of phoneToBsuid.entries()) {
-      const candidates = [phone];
-      if (phone.length >= 11) candidates.push(phone.slice(-11));
-      if (phone.length >= 10) candidates.push(phone.slice(-10));
+      const candidates = phoneVariants(phone);
 
       let info: { id: string; missing: boolean; rawPhone: string } | undefined;
       for (const c of candidates) {
