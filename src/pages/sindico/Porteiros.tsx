@@ -485,7 +485,7 @@ export default function Porteiros() {
     setEditForm({
       full_name: porter.profile?.full_name || "",
       email: porter.profile?.email || "",
-      phone: porter.profile?.phone || "",
+      phone: formatPhoneForEdit(porter.profile?.phone),
     });
     setIsEditDialogOpen(true);
   };
