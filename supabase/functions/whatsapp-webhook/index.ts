@@ -82,6 +82,64 @@ function formatErrors(errors: Array<{ code: number; title: string; message?: str
   return errors.map(e => `[${e.code}] ${e.title}${e.message ? ': ' + e.message : ''}`).join(' | ');
 }
 
+function digitsOnly(value: unknown): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+function phoneKeys(value: unknown): Set<string> {
+  const digits = digitsOnly(value);
+  const keys = new Set<string>();
+  if (!digits) return keys;
+  keys.add(digits);
+  if (digits.startsWith("55") && digits.length > 11) keys.add(digits.slice(2));
+  if (digits.length >= 11) keys.add(digits.slice(-11));
+  if (digits.length >= 10) keys.add(digits.slice(-10));
+  return keys;
+}
+
+function phonesMatch(metaPhone: unknown, residentPhone: unknown): boolean {
+  const metaKeys = phoneKeys(metaPhone);
+  if (metaKeys.size === 0) return false;
+  for (const key of phoneKeys(residentPhone)) {
+    if (metaKeys.has(key)) return true;
+  }
+  return false;
+}
+
+function isMissingBsuid(bsuid: unknown): boolean {
+  return String(bsuid ?? "").trim() === "";
+}
+
+async function findResidentsByPhone(supabase: any, phone: unknown, onlyMissingBsuid = false, limit = 5) {
+  const matches: Array<{ id: string; phone: string | null; bsuid: string | null; condominium_id?: string | null }> = [];
+  const PAGE = 500;
+  let from = 0;
+
+  while (matches.length < limit) {
+    const { data, error } = await supabase
+      .from("residents")
+      .select("id, phone, bsuid, condominium_id")
+      .not("phone", "is", null)
+      .range(from, from + PAGE - 1);
+
+    if (error || !data || data.length === 0) break;
+
+    for (const resident of data) {
+      if (onlyMissingBsuid && !isMissingBsuid(resident.bsuid)) continue;
+      if (phonesMatch(phone, resident.phone)) {
+        matches.push(resident);
+        if (matches.length >= limit) break;
+      }
+    }
+
+    if (data.length < PAGE) break;
+    from += PAGE;
+    if (from > 100000) break;
+  }
+
+  return matches;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
