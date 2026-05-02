@@ -178,32 +178,39 @@ Deno.serve(async (req) => {
     }
     console.log(`[BACKFILL-BSUID] Residents loaded: ${totalResidentsLoaded}, with digits: ${residentsWithDigits}, index keys: ${residentsByDigits.size}`);
 
+    let alreadyHadBsuidCount = 0;
     for (const [phone, bsuid] of phoneToBsuid.entries()) {
       const candidates = [phone];
       if (phone.length >= 11) candidates.push(phone.slice(-11));
       if (phone.length >= 10) candidates.push(phone.slice(-10));
 
-      let residentId: string | undefined;
+      let info: { id: string; missing: boolean; rawPhone: string } | undefined;
       for (const c of candidates) {
         if (residentsByDigits.has(c)) {
-          residentId = residentsByDigits.get(c);
+          info = residentsByDigits.get(c);
           break;
         }
       }
 
       let matched = false;
-      if (residentId) {
-        const { error: upErr } = await supabase
-          .from("residents")
-          .update({ bsuid })
-          .eq("id", residentId);
-        if (!upErr) {
-          updatedCount++;
+      let residentId: string | undefined = info?.id;
+      if (info) {
+        if (info.missing) {
+          const { error: upErr } = await supabase
+            .from("residents")
+            .update({ bsuid })
+            .eq("id", info.id);
+          if (!upErr) {
+            updatedCount++;
+            matched = true;
+          }
+        } else {
+          alreadyHadBsuidCount++;
           matched = true;
         }
       }
-      if (!matched) notFoundCount++;
-      if (samples.length < 20) samples.push({ phone, bsuid, resident_id: residentId, matched });
+      if (!info) notFoundCount++;
+      if (samples.length < 30) samples.push({ phone, bsuid, resident_id: residentId, matched });
     }
 
     return new Response(JSON.stringify({
@@ -211,7 +218,11 @@ Deno.serve(async (req) => {
       payloads_scanned: payloadsScanned,
       payloads_with_bsuid: payloadsWithBsuid,
       unique_phones_with_bsuid: phoneToBsuid.size,
+      residents_loaded: totalResidentsLoaded,
+      residents_with_digits: residentsWithDigits,
+      residents_index_keys: residentsByDigits.size,
       residents_updated: updatedCount,
+      residents_already_had_bsuid: alreadyHadBsuidCount,
       phones_without_resident: notFoundCount,
       samples,
     }), {
