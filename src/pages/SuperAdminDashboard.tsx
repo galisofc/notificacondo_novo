@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -182,14 +184,37 @@ export default function SuperAdminDashboard() {
   // Polling instead of realtime for audit_logs - refreshes every 60s when page is visible
   // (removed WebSocket channel to reduce Cloud consumption)
   
+  const [notificationsPeriod, setNotificationsPeriod] = useState<"day" | "week" | "month" | "all">("month");
+
+  const { data: notificationsCount, isLoading: notificationsLoading } = useQuery({
+    queryKey: ["superadmin-notifications-count", notificationsPeriod],
+    queryFn: async () => {
+      let query = supabase
+        .from("whatsapp_notification_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("success", true);
+
+      if (notificationsPeriod !== "all") {
+        const now = new Date();
+        const since = new Date(now);
+        if (notificationsPeriod === "day") since.setDate(now.getDate() - 1);
+        if (notificationsPeriod === "week") since.setDate(now.getDate() - 7);
+        if (notificationsPeriod === "month") since.setMonth(now.getMonth() - 1);
+        query = query.gte("created_at", since.toISOString());
+      }
+
+      const { count } = await query;
+      return count || 0;
+    },
+  });
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["superadmin-stats"],
     queryFn: async () => {
-      const [sindicos, condominiums, subscriptions, notifications] = await Promise.all([
+      const [sindicos, condominiums, subscriptions] = await Promise.all([
         supabase.from("user_roles").select("id", { count: "exact" }).eq("role", "sindico"),
         supabase.from("condominiums").select("id", { count: "exact" }),
         supabase.from("subscriptions").select("id, plan, active"),
-        supabase.from("whatsapp_notification_logs").select("id", { count: "exact", head: true }).eq("success", true),
       ]);
 
       const activeSubscriptions = subscriptions.data?.filter((s) => s.active) || [];
@@ -218,7 +243,6 @@ export default function SuperAdminDashboard() {
         totalCondominiums: condominiums.count || 0,
         activeSubscriptions: activeSubscriptions.length,
         paidSubscriptions: paidPlans.length,
-        totalNotifications: notifications.count || 0,
         planDistribution,
         planCounts,
       };
@@ -287,13 +311,6 @@ export default function SuperAdminDashboard() {
       icon: TrendingUp,
       gradient: "from-sky-500 via-blue-500 to-indigo-500",
       borderColor: "border-l-sky-500",
-    },
-    {
-      title: "Notificações",
-      value: stats?.totalNotifications ?? 0,
-      icon: MessageCircle,
-      gradient: "from-slate-500 via-slate-600 to-gray-700",
-      borderColor: "border-l-slate-500",
     },
   ];
 
@@ -382,6 +399,48 @@ export default function SuperAdminDashboard() {
               </CardContent>
             </Card>
           ))}
+
+          {/* Card Notificações com filtro de período */}
+          <Card className="relative overflow-hidden bg-gradient-to-br from-slate-500 via-slate-600 to-gray-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
+            <CardContent className="p-4 md:p-5">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <p className="text-white/80 text-xs md:text-sm font-medium">
+                    Notificações
+                  </p>
+                  <Select
+                    value={notificationsPeriod}
+                    onValueChange={(v) => setNotificationsPeriod(v as typeof notificationsPeriod)}
+                  >
+                    <SelectTrigger
+                      className="h-6 w-auto px-2 py-0 text-[10px] md:text-xs bg-white/20 border-white/30 text-white hover:bg-white/30 focus:ring-0 focus:ring-offset-0 gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      <SelectItem value="day">Dia</SelectItem>
+                      <SelectItem value="week">Semana</SelectItem>
+                      <SelectItem value="month">Mês</SelectItem>
+                      <SelectItem value="all">Total</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end justify-between">
+                  {notificationsLoading ? (
+                    <Skeleton className="h-8 md:h-10 w-12 md:w-16 bg-white/20" />
+                  ) : (
+                    <p className="font-display text-2xl md:text-4xl font-bold text-white">
+                      {(notificationsCount ?? 0).toLocaleString("pt-BR")}
+                    </p>
+                  )}
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions */}
