@@ -55,7 +55,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
   },
   {
     id: "party_hall",
-    name: "Salão de Festas",
+    name: "Reserva de Espaços",
     description: "Lembretes e cancelamentos de reservas",
     icon: Calendar,
     color: "text-pink-500",
