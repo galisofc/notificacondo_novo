@@ -572,6 +572,7 @@ const CondominiumDetails = () => {
     
     setSaving(true);
     try {
+      const normalizedPhone = residentForm.phone?.replace(/\D/g, "") || null;
       if (editingResident) {
         const { error } = await supabase
           .from("residents")
@@ -579,7 +580,7 @@ const CondominiumDetails = () => {
             apartment_id: residentForm.apartment_id,
             full_name: residentForm.full_name.toUpperCase(),
             email: residentForm.email,
-            phone: residentForm.phone || null,
+            phone: normalizedPhone,
             cpf: residentForm.cpf || null,
             is_owner: residentForm.is_owner,
             is_responsible: residentForm.is_responsible,
@@ -592,7 +593,7 @@ const CondominiumDetails = () => {
           apartment_id: residentForm.apartment_id,
           full_name: residentForm.full_name.toUpperCase(),
           email: residentForm.email,
-          phone: residentForm.phone || null,
+          phone: normalizedPhone,
           cpf: residentForm.cpf || null,
           is_owner: residentForm.is_owner,
           is_responsible: residentForm.is_responsible,
