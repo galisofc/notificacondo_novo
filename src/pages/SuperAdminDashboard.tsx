@@ -399,6 +399,48 @@ export default function SuperAdminDashboard() {
               </CardContent>
             </Card>
           ))}
+
+          {/* Card Notificações com filtro de período */}
+          <Card className="relative overflow-hidden bg-gradient-to-br from-slate-500 via-slate-600 to-gray-700 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
+            <CardContent className="p-4 md:p-5">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between mb-2 gap-2">
+                  <p className="text-white/80 text-xs md:text-sm font-medium">
+                    Notificações
+                  </p>
+                  <Select
+                    value={notificationsPeriod}
+                    onValueChange={(v) => setNotificationsPeriod(v as typeof notificationsPeriod)}
+                  >
+                    <SelectTrigger
+                      className="h-6 w-auto px-2 py-0 text-[10px] md:text-xs bg-white/20 border-white/30 text-white hover:bg-white/30 focus:ring-0 focus:ring-offset-0 gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent align="end">
+                      <SelectItem value="day">Dia</SelectItem>
+                      <SelectItem value="week">Semana</SelectItem>
+                      <SelectItem value="month">Mês</SelectItem>
+                      <SelectItem value="all">Total</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end justify-between">
+                  {notificationsLoading ? (
+                    <Skeleton className="h-8 md:h-10 w-12 md:w-16 bg-white/20" />
+                  ) : (
+                    <p className="font-display text-2xl md:text-4xl font-bold text-white">
+                      {(notificationsCount ?? 0).toLocaleString("pt-BR")}
+                    </p>
+                  )}
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions */}
