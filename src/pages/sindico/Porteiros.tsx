@@ -353,7 +353,7 @@ export default function Porteiros() {
         body: {
           full_name: newPorter.full_name,
           email: newPorter.email,
-          phone: newPorter.phone || null,
+          phone: newPorter.phone.replace(/\D/g, "") || null,
           condominium_id: newPorter.condominium_id,
         },
       });
