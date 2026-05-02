@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
