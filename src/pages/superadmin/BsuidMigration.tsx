@@ -26,7 +26,27 @@ const BsuidMigration = () => {
   const [page, setPage] = useState(0);
   const [selectedPayload, setSelectedPayload] = useState<any>(null);
   const [logsPage, setLogsPage] = useState(0);
+  const [backfilling, setBackfilling] = useState(false);
   const LOGS_PAGE_SIZE = 10;
+  const queryClient = useQueryClient();
+
+  const handleBackfill = async () => {
+    setBackfilling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("backfill-bsuid-from-logs");
+      if (error) throw error;
+      toast({
+        title: "Backfill concluído",
+        description: `${data.residents_updated} morador(es) atualizado(s). ${data.unique_phones_with_bsuid} telefone(s) com BSUID encontrados nos payloads. ${data.phones_without_resident} sem morador correspondente.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["bsuid-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["bsuid-residents"] });
+    } catch (err: any) {
+      toast({ title: "Erro no backfill", description: err.message, variant: "destructive" });
+    } finally {
+      setBackfilling(false);
+    }
+  };
 
   // Stats query
   const { data: stats } = useQuery({
