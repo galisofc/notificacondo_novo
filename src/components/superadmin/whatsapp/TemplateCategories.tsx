@@ -50,7 +50,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
     color: "text-pink-500",
     bgColor: "bg-pink-500/10",
     borderColor: "border-pink-500/20",
-    slugs: ["party_hall_reminder", "party_hall_cancelled", "party_hall_checklist_entrada"],
+    slugs: ["party_hall_reminder", "party_hall_cancelled", "party_hall_checklist_entrada", "gatehouse_party_hall_release"],
   },
   {
     id: "billing",
