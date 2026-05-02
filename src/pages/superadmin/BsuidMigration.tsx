@@ -165,15 +165,22 @@ const BsuidMigration = () => {
       }
 
       let matched = false;
+      let updated = false;
+      let alreadyHadResidentBsuid = false;
+      let updateError: string | undefined;
       if (info) {
+        matched = true;
         if (info.missing) {
           const { error } = await supabase.from("residents").update({ bsuid }).eq("id", info.id);
           if (!error) {
             residentsUpdated++;
-            matched = true;
+            updated = true;
+          } else {
+            updateError = error.message;
           }
         } else {
           alreadyHadBsuid++;
+          alreadyHadResidentBsuid = true;
           matched = true;
         }
       } else {
@@ -181,7 +188,7 @@ const BsuidMigration = () => {
       }
 
       if (samples.length < 30) {
-        samples.push({ phone, bsuid, resident_id: info?.id, raw_phone: info?.rawPhone, matched, matched_variant: matchedVariant, payload_variants: candidates.slice(0, 8) });
+        samples.push({ phone, bsuid, resident_id: info?.id, raw_phone: info?.rawPhone, matched, updated, already_had_bsuid: alreadyHadResidentBsuid, update_error: updateError, matched_variant: matchedVariant, payload_variants: candidates.slice(0, 8) });
       }
     }
 
