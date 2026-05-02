@@ -282,33 +282,17 @@ Deno.serve(async (req) => {
 
           // Capture BSUID if present
           if (bsuid && recipientPhone) {
-            const cleanPhone = recipientPhone.replace(/\D/g, "");
-            const phoneVariants = [cleanPhone];
-            if (cleanPhone.startsWith("55")) {
-              phoneVariants.push(cleanPhone.substring(2));
-            }
+            const residents = await findResidentsByPhone(supabase, recipientPhone, true, 5);
 
-            for (const phoneVar of phoneVariants) {
-              const { data: residents, error: findError } = await supabase
+            for (const resident of residents) {
+              const { error: updateError } = await supabase
                 .from("residents")
-                .select("id, bsuid")
-                .or(`phone.like.%${phoneVar}`)
-                .is("bsuid", null)
-                .limit(5);
+                .update({ bsuid })
+                .eq("id", resident.id);
 
-              if (!findError && residents && residents.length > 0) {
-                for (const resident of residents) {
-                  const { error: updateError } = await supabase
-                    .from("residents")
-                    .update({ bsuid })
-                    .eq("id", resident.id);
-
-                  if (!updateError) {
-                    totalBsuidsCapured++;
-                    console.log(`[WEBHOOK] BSUID captured for resident ${resident.id}: ${bsuid}`);
-                  }
-                }
-                break;
+              if (!updateError) {
+                totalBsuidsCapured++;
+                console.log(`[WEBHOOK] BSUID captured for resident ${resident.id}: ${bsuid}`);
               }
             }
           }
