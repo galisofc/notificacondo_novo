@@ -189,7 +189,7 @@ export default function SuperAdminDashboard() {
         supabase.from("user_roles").select("id", { count: "exact" }).eq("role", "sindico"),
         supabase.from("condominiums").select("id", { count: "exact" }),
         supabase.from("subscriptions").select("id, plan, active"),
-        supabase.from("notifications_sent").select("id", { count: "exact" }),
+        supabase.from("whatsapp_notification_logs").select("id", { count: "exact", head: true }).eq("success", true),
       ]);
 
       const activeSubscriptions = subscriptions.data?.filter((s) => s.active) || [];
