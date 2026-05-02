@@ -312,13 +312,6 @@ export default function SuperAdminDashboard() {
       gradient: "from-sky-500 via-blue-500 to-indigo-500",
       borderColor: "border-l-sky-500",
     },
-    {
-      title: "Notificações",
-      value: stats?.totalNotifications ?? 0,
-      icon: MessageCircle,
-      gradient: "from-slate-500 via-slate-600 to-gray-700",
-      borderColor: "border-l-slate-500",
-    },
   ];
 
   const quickActions = [
