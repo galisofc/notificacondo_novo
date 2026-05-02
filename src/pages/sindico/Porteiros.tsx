@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DoorOpen, Plus, Trash2, Building2, Mail, Phone, Search, UserPlus, MessageCircle, Copy, Check, Key, AlertCircle, UserX, RefreshCw, Loader2, Pencil, ArrowLeft, ShieldCheck, Send, Lock, Power } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { cn } from "@/lib/utils";
+import { cn, formatPhoneForEdit } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
@@ -353,7 +353,7 @@ export default function Porteiros() {
         body: {
           full_name: newPorter.full_name,
           email: newPorter.email,
-          phone: newPorter.phone || null,
+          phone: newPorter.phone.replace(/\D/g, "") || null,
           condominium_id: newPorter.condominium_id,
         },
       });
@@ -485,7 +485,7 @@ export default function Porteiros() {
     setEditForm({
       full_name: porter.profile?.full_name || "",
       email: porter.profile?.email || "",
-      phone: porter.profile?.phone || "",
+      phone: formatPhoneForEdit(porter.profile?.phone),
     });
     setIsEditDialogOpen(true);
   };
@@ -517,7 +517,7 @@ export default function Porteiros() {
           porter_user_id: editingPorter.user_id,
           full_name: editForm.full_name.trim(),
           email: editForm.email.trim().toLowerCase(),
-          phone: editForm.phone.trim() || null,
+          phone: editForm.phone.replace(/\D/g, "") || null,
         },
       });
 
@@ -538,7 +538,7 @@ export default function Porteiros() {
                       ...p.profile,
                       full_name: editForm.full_name.trim(),
                       email: editForm.email.trim().toLowerCase(),
-                      phone: editForm.phone.trim() || null,
+                      phone: editForm.phone.replace(/\D/g, "") || null,
                     }
                   : null,
               }

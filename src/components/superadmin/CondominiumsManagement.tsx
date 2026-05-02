@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
-import { isValidCNPJ } from "@/lib/utils";
+import { isValidCNPJ, formatPhoneForEdit } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -473,7 +473,7 @@ export function CondominiumsManagement() {
     setEditForm({
       name: condominium.name || "",
       cnpj: condominium.cnpj || "",
-      phone: condominium.phone || "",
+      phone: formatPhoneForEdit(condominium.phone),
       zip_code: condominium.zip_code || "",
       address: condominium.address || "",
       address_number: (condominium as any).address_number || "",
