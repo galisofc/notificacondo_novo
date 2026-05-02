@@ -335,6 +335,7 @@ export function CronJobsLogs() {
 
   const availableFunctions = [
     { name: "notify-trial-ending", label: "Avisar Fim do Trial", description: "Envia notificações para síndicos cujo período de teste expira em 1-2 dias" },
+    { name: "notify-gatehouse-party-hall", label: "Aviso da Portaria", description: "Envia notificações para a portaria sobre as reservas do dia" },
     { name: "generate-invoices", label: "Gerar Faturas", description: "Gera faturas mensais para assinaturas ativas com período vencido" },
     { name: "notify-party-hall-reminders", label: "Lembretes Salão de Festas", description: "Envia lembretes de reservas de salão de festas para amanhã" },
     { name: "start-party-hall-usage", label: "Iniciar Uso Salão", description: "Marca reservas do dia como 'em uso' e envia checklist de entrada" },
@@ -345,12 +346,14 @@ export function CronJobsLogs() {
   // Translation map for job names to Portuguese
   const jobNameTranslations: Record<string, string> = {
     "notify-trial-ending-daily": "Avisar Fim do Trial (Diário)",
+    "notify-gatehouse-party-hall-daily": "Aviso da Portaria (Diário)",
     "generate-invoices-daily": "Gerar Faturas (Diário)",
     "notify-party-hall-reminders-daily": "Lembretes Salão de Festas (Diário)",
     "start-party-hall-usage-daily": "Iniciar Uso Salão (Diário)",
     "finish-party-hall-usage-daily": "Finalizar Uso Salão (Diário)",
     "cleanup-orphan-package-photos": "Limpar Fotos Órfãs (Semanal)",
     "notify-trial-ending": "Avisar Fim do Trial",
+    "notify-gatehouse-party-hall": "Aviso da Portaria",
     "generate-invoices": "Gerar Faturas",
     "notify-party-hall-reminders": "Lembretes Salão de Festas",
     "start-party-hall-usage": "Iniciar Uso Salão",
