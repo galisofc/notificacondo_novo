@@ -1902,6 +1902,67 @@ export function InvoicesManagement({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir fatura?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Esta ação não pode ser desfeita. A fatura será removida permanentemente do sistema.
+                </p>
+                {invoiceToDelete && (
+                  <div className="rounded-md border bg-muted/50 p-3 text-sm space-y-1">
+                    <p>
+                      <span className="font-semibold">Nº:</span>{" "}
+                      <span className="font-mono">{invoiceToDelete.invoice_number || "—"}</span>
+                    </p>
+                    <p>
+                      <span className="font-semibold">Condomínio:</span>{" "}
+                      {invoiceToDelete.condominium?.name || "—"}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Valor:</span>{" "}
+                      {formatCurrency(Number(invoiceToDelete.amount))}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Status:</span> {invoiceToDelete.status}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteInvoiceMutation.isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (invoiceToDelete) {
+                  deleteInvoiceMutation.mutate(invoiceToDelete.id);
+                }
+              }}
+              disabled={deleteInvoiceMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteInvoiceMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir fatura
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
