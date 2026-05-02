@@ -231,7 +231,7 @@ serve(async (req) => {
       .from('party_hall_bookings')
       .select('id, booking_date, start_time, end_time, resident_id, condominium_id, party_hall_setting_id')
       .lte('booking_date', today)
-      .eq('status', 'confirmed');
+      .eq('status', 'confirmada');
 
     if (bookingsError) throw new Error(`Error fetching bookings: ${bookingsError.message}`);
 
@@ -262,12 +262,12 @@ serve(async (req) => {
         const checklistToken = crypto.randomUUID();
         const { error: updateError } = await supabase
           .from('party_hall_bookings')
-          .update({ status: 'in_use', checklist_token: checklistToken })
+          .update({ status: 'em_uso', checklist_token: checklistToken })
           .eq('id', booking.id);
 
         if (updateError) throw updateError;
 
-        console.log(`Booking ${booking.id} updated to 'in_use'`);
+        console.log(`Booking ${booking.id} updated to 'em_uso'`);
         successCount++;
 
         // Send WhatsApp
