@@ -74,7 +74,7 @@ serve(async (req) => {
         party_hall_setting_id
       `)
       .lte('booking_date', today)
-      .eq('status', 'in_use');
+      .eq('status', 'em_uso');
 
     if (bookingsError) {
       throw new Error(`Error fetching bookings: ${bookingsError.message}`);
@@ -114,19 +114,19 @@ serve(async (req) => {
     let errorCount = 0;
     const results: Array<{ bookingId: string; success: boolean; error?: string }> = [];
 
-    // Update each booking to 'finished' status
+    // Update each booking to 'finalizada' status
     for (const booking of bookings) {
       try {
         const { error: updateError } = await supabase
           .from('party_hall_bookings')
-          .update({ status: 'finished' })
+          .update({ status: 'finalizada' })
           .eq('id', booking.id);
 
         if (updateError) {
           throw updateError;
         }
 
-        console.log(`Booking ${booking.id} status updated to 'finished'`);
+        console.log(`Booking ${booking.id} status updated to 'finalizada'`);
         successCount++;
         results.push({ bookingId: booking.id, success: true });
       } catch (error) {
