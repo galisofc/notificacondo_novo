@@ -259,7 +259,7 @@ Deno.serve(async (req) => {
         // Also capture BSUID from incoming messages and save to whatsapp_messages
         const incomingMessages = change.value.messages || [];
         for (const msg of incomingMessages) {
-          const msgBsuid = msg.user_id || contactBsuid;
+          const msgBsuid = msg.from_user_id || msg.user_id || contactBsuid;
           const msgPhone = msg.from || contactWaId;
           const contactName = contacts.length > 0 ? contacts[0].profile?.name : null;
 
