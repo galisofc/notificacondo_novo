@@ -184,14 +184,37 @@ export default function SuperAdminDashboard() {
   // Polling instead of realtime for audit_logs - refreshes every 60s when page is visible
   // (removed WebSocket channel to reduce Cloud consumption)
   
+  const [notificationsPeriod, setNotificationsPeriod] = useState<"day" | "week" | "month" | "all">("month");
+
+  const { data: notificationsCount, isLoading: notificationsLoading } = useQuery({
+    queryKey: ["superadmin-notifications-count", notificationsPeriod],
+    queryFn: async () => {
+      let query = supabase
+        .from("whatsapp_notification_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("success", true);
+
+      if (notificationsPeriod !== "all") {
+        const now = new Date();
+        const since = new Date(now);
+        if (notificationsPeriod === "day") since.setDate(now.getDate() - 1);
+        if (notificationsPeriod === "week") since.setDate(now.getDate() - 7);
+        if (notificationsPeriod === "month") since.setMonth(now.getMonth() - 1);
+        query = query.gte("created_at", since.toISOString());
+      }
+
+      const { count } = await query;
+      return count || 0;
+    },
+  });
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["superadmin-stats"],
     queryFn: async () => {
-      const [sindicos, condominiums, subscriptions, notifications] = await Promise.all([
+      const [sindicos, condominiums, subscriptions] = await Promise.all([
         supabase.from("user_roles").select("id", { count: "exact" }).eq("role", "sindico"),
         supabase.from("condominiums").select("id", { count: "exact" }),
         supabase.from("subscriptions").select("id, plan, active"),
-        supabase.from("whatsapp_notification_logs").select("id", { count: "exact", head: true }).eq("success", true),
       ]);
 
       const activeSubscriptions = subscriptions.data?.filter((s) => s.active) || [];
