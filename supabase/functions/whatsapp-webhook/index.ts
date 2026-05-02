@@ -23,6 +23,7 @@ interface MetaWebhookEntry {
         id: string;
         from: string;
         user_id?: string;
+        from_user_id?: string;
         type: string;
         timestamp: string;
         text?: { body?: string };
