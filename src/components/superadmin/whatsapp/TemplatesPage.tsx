@@ -428,29 +428,25 @@ export function TemplatesPage() {
             />
           ))}
           
-          {/* Password/Credentials templates (moved to its own category or fallback) */}
+          {/* Outros templates não categorizados */}
           {templatesByCategory["other"]?.length > 0 && (
-            <div className="rounded-xl border p-4">
-              <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <Key className="h-4 w-4" />
-                Senhas
-                <Badge variant="secondary" className="text-xs ml-2">
-                  {templatesByCategory["other"].length}
-                </Badge>
-              </h3>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {templatesByCategory["other"].map((template) => (
-                  <TemplateCard
-                    key={template.id}
-                    template={template}
-                    metaTemplate={findMetaTemplate(template.waba_template_name)}
-                    onEdit={setEditingTemplate}
-                    onView={setSelectedTemplate}
-                    onSubmitToMeta={setSubmittingTemplate}
-                  />
-                ))}
-              </div>
-            </div>
+            <CategorySection
+              category={{
+                id: "other",
+                name: "Senhas",
+                description: "Credenciais e recuperação de acesso",
+                icon: Key,
+                color: "text-orange-500",
+                bgColor: "bg-orange-500/10",
+                borderColor: "border-orange-500/20",
+                slugs: [],
+              }}
+              templates={templatesByCategory["other"]}
+              metaTemplates={metaTemplates}
+              onEdit={setEditingTemplate}
+              onView={setSelectedTemplate}
+              onSubmitToMeta={setSubmittingTemplate}
+            />
           )}
         </div>
       ) : (
