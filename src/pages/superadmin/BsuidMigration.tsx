@@ -567,6 +567,7 @@ const BsuidMigration = () => {
               {backfillReport && (
                 <div className="space-y-4 text-sm">
                   <div className="grid grid-cols-2 gap-2">
+                    <div>Versão: <b>{backfillReport.version || "edge-antiga"}</b></div>
                     <div>Payloads escaneados: <b>{backfillReport.payloads_scanned}</b></div>
                     <div>Payloads com BSUID: <b>{backfillReport.payloads_with_bsuid}</b></div>
                     <div>Telefones únicos c/ BSUID: <b>{backfillReport.unique_phones_with_bsuid}</b></div>
@@ -583,6 +584,8 @@ const BsuidMigration = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Telefone (payload)</TableHead>
+                          <TableHead>Telefone (morador)</TableHead>
+                          <TableHead>Variante</TableHead>
                           <TableHead>BSUID</TableHead>
                           <TableHead>Match</TableHead>
                         </TableRow>
@@ -591,13 +594,20 @@ const BsuidMigration = () => {
                         {(backfillReport.samples || []).map((s: any, i: number) => (
                           <TableRow key={i}>
                             <TableCell className="font-mono text-xs">{s.phone}</TableCell>
+                            <TableCell className="font-mono text-xs">{s.raw_phone || "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">{s.matched_variant || "—"}</TableCell>
                             <TableCell className="font-mono text-xs">{s.bsuid}</TableCell>
                             <TableCell>
-                              {s.matched ? (
+                              {s.updated ? (
                                 <Badge className="bg-green-600">OK</Badge>
+                              ) : s.already_had_bsuid ? (
+                                <Badge variant="outline">já tinha</Badge>
+                              ) : s.matched ? (
+                                <Badge variant="secondary" title={s.update_error || "Casou, mas não atualizou"}>casou</Badge>
                               ) : (
                                 <Badge variant="secondary">não casou</Badge>
                               )}
+                              {s.update_error && <div className="mt-1 text-xs text-destructive">{s.update_error}</div>}
                             </TableCell>
                           </TableRow>
                         ))}
