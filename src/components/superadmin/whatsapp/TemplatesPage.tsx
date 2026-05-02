@@ -17,6 +17,7 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Key,
 } from "lucide-react";
 import { TEMPLATE_CATEGORIES, getCategoryForSlug } from "./TemplateCategories";
 import { CategorySection } from "./CategorySection";
