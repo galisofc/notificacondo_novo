@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
     // Update residents
     let updatedCount = 0;
     let notFoundCount = 0;
-    const samples: Array<{ phone: string; bsuid: string; resident_id?: string; raw_phone?: string; matched: boolean; matched_variant?: string; payload_variants?: string[] }> = [];
+    const samples: Array<{ phone: string; bsuid: string; resident_id?: string; raw_phone?: string; matched: boolean; updated?: boolean; already_had_bsuid?: boolean; update_error?: string; matched_variant?: string; payload_variants?: string[] }> = [];
 
     // Load ALL residents (regardless of bsuid status) once and build a digits-only index.
     // We will only update those whose bsuid is missing, but we want to count matches even for
@@ -237,8 +237,12 @@ Deno.serve(async (req) => {
       }
 
       let matched = false;
+      let updated = false;
+      let alreadyHadBsuid = false;
+      let updateError: string | undefined;
       let residentId: string | undefined = info?.id;
       if (info) {
+        matched = true;
         if (info.missing) {
           const { error: upErr } = await supabase
             .from("residents")
@@ -246,11 +250,13 @@ Deno.serve(async (req) => {
             .eq("id", info.id);
           if (!upErr) {
             updatedCount++;
-            matched = true;
+            updated = true;
+          } else {
+            updateError = upErr.message;
           }
         } else {
           alreadyHadBsuidCount++;
-          matched = true;
+          alreadyHadBsuid = true;
         }
       }
       if (!info) notFoundCount++;
@@ -261,6 +267,9 @@ Deno.serve(async (req) => {
           resident_id: residentId,
           raw_phone: info?.rawPhone,
           matched,
+          updated,
+          already_had_bsuid: alreadyHadBsuid,
+          update_error: updateError,
           matched_variant: matchedVariant,
           payload_variants: candidates.slice(0, 8),
         });
