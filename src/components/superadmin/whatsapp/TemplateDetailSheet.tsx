@@ -31,7 +31,7 @@ import {
   Send,
   Pencil,
 } from "lucide-react";
-import { getCategoryForSlug, VARIABLE_EXAMPLES } from "./TemplateCategories";
+import { getCategoryForSlug, applyVariableExamples } from "./TemplateCategories";
 
 interface LocalTemplate {
   id: string;
@@ -43,6 +43,7 @@ interface LocalTemplate {
   is_active: boolean;
   waba_template_name: string | null;
   waba_language: string | null;
+  params_order?: string[] | null;
 }
 
 interface MetaTemplate {
@@ -101,20 +102,11 @@ export function TemplateDetailSheet({
   const localBodyText = template.content?.trim() || "";
   const headerFallbackText = metaHeader?.text?.trim() || "";
 
-  const replaceTemplateVariables = (text: string) => {
-    const numericExamples = [
-      "Residencial Primavera",
-      "Maria Santos",
-      "Advertência",
-      "Barulho após horário permitido",
-      "https://app.exemplo.com/xyz123",
-    ];
+  const paramsOrder = template.params_order && template.params_order.length > 0
+    ? template.params_order
+    : template.variables || [];
 
-    return text
-      .replace(/\{\{(\d+)\}\}/g, (match, num) => numericExamples[parseInt(num, 10) - 1] || match)
-      .replace(/\{\{(\w+)\}\}/g, (match, variable) => VARIABLE_EXAMPLES[variable] || `[${variable}]`)
-      .replace(/\{(\w+)\}/g, (match, variable) => VARIABLE_EXAMPLES[variable] || `[${variable}]`);
-  };
+  const replaceTemplateVariables = (text: string) => applyVariableExamples(text, paramsOrder);
 
   const contentToPreview = metaBodyText || localBodyText || headerFallbackText;
   const previewContent = contentToPreview ? replaceTemplateVariables(contentToPreview) : "";

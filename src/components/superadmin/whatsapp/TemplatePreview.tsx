@@ -1,14 +1,13 @@
-import { VARIABLE_EXAMPLES } from "./TemplateCategories";
+import { applyVariableExamples } from "./TemplateCategories";
 
 interface TemplatePreviewProps {
   content: string;
   className?: string;
+  paramsOrder?: string[];
 }
 
-export function TemplatePreview({ content, className = "" }: TemplatePreviewProps) {
-  const previewContent = content.replace(/\{(\w+)\}/g, (match, variable) => {
-    return VARIABLE_EXAMPLES[variable] || match;
-  });
+export function TemplatePreview({ content, className = "", paramsOrder = [] }: TemplatePreviewProps) {
+  const previewContent = applyVariableExamples(content, paramsOrder);
 
   return (
     <div className={`relative ${className}`}>
