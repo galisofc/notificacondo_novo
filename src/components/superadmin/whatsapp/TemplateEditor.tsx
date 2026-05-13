@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TemplatePreview } from "./TemplatePreview";
-import { TEMPLATE_COLORS, getCategoryForSlug, VARIABLE_EXAMPLES } from "./TemplateCategories";
+import { TEMPLATE_COLORS, getCategoryForSlug, applyVariableExamples } from "./TemplateCategories";
 import { WabaTemplateSelector } from "./WabaTemplateSelector";
 
 interface SingleButtonConfig {
@@ -239,26 +239,15 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
   const isLinked = !!wabaTemplateName;
   const hasMetaContent = isLinked && metaBody?.text;
 
-  // Replace Meta-style variables {{1}}, {{2}} with examples
-  const replaceMetaVariables = (text: string) => {
-    return text.replace(/\{\{(\d+)\}\}/g, (match, num) => {
-      const paramName = paramsOrder[parseInt(num) - 1];
-      if (paramName && VARIABLE_EXAMPLES[paramName]) {
-        return VARIABLE_EXAMPLES[paramName];
-      }
-      const examples = ["Residencial Primavera", "Maria Santos", "Advertência", "Barulho após horário permitido", "https://app.exemplo.com/xyz123"];
-      return examples[parseInt(num) - 1] || match;
-    });
-  };
+  // Replace placeholders ({var}, {{var}}, {{N}}) using template's params order
+  const replaceMetaVariables = (text: string) => applyVariableExamples(text, paramsOrder);
 
   // Get the content to display in preview
   const getPreviewContent = () => {
     if (hasMetaContent && metaBody?.text) {
       return replaceMetaVariables(metaBody.text);
     }
-    return editContent.replace(/\{(\w+)\}/g, (match, variable) => {
-      return VARIABLE_EXAMPLES[variable] || match;
-    });
+    return applyVariableExamples(editContent, paramsOrder);
   };
 
   const updateMutation = useMutation({
