@@ -175,3 +175,85 @@ export const VARIABLE_EXAMPLES: Record<string, string> = {
 export function getCategoryForSlug(slug: string): TemplateCategory | undefined {
   return TEMPLATE_CATEGORIES.find(cat => cat.slugs.includes(slug));
 }
+
+/**
+ * Retorna um exemplo de valor para uma variável de template.
+ * Usa VARIABLE_EXAMPLES quando disponível; caso contrário, gera um valor
+ * coerente a partir do nome da variável (data_*, horario_*, link_*, nome_*, etc.)
+ */
+export function getExampleForVariable(rawName: string): string {
+  if (!rawName) return "";
+  const name = rawName.trim();
+  if (VARIABLE_EXAMPLES[name]) return VARIABLE_EXAMPLES[name];
+
+  const lower = name.toLowerCase();
+
+  if (/^(link|url)(_|$)/.test(lower) || lower.endsWith("_url") || lower.endsWith("_link")) {
+    return "https://app.exemplo.com/xyz123";
+  }
+  if (lower.startsWith("data") || lower.endsWith("_data") || lower === "dia" || lower.endsWith("_dia")) {
+    return "15/01/2026";
+  }
+  if (lower.startsWith("horario") || lower.startsWith("hora") || lower.endsWith("_hora")) {
+    return "14:00";
+  }
+  if (lower.startsWith("nome") || lower.endsWith("_nome") || lower.includes("morador") || lower.includes("sindico") || lower.includes("name")) {
+    return "Maria Santos";
+  }
+  if (lower.startsWith("email") || lower.endsWith("_email")) {
+    return "maria.santos@email.com";
+  }
+  if (lower.startsWith("phone") || lower.startsWith("telefone") || lower.endsWith("_phone") || lower.endsWith("_telefone")) {
+    return "(11) 98888-7777";
+  }
+  if (lower.startsWith("valor") || lower.startsWith("price") || lower.startsWith("preco") || lower.includes("amount")) {
+    return "R$ 149,90";
+  }
+  if (lower.startsWith("codigo") || lower.startsWith("code")) {
+    return "ABC123";
+  }
+  if (lower.startsWith("numero") || lower.startsWith("number") || lower.startsWith("num_")) {
+    return "001";
+  }
+  if (lower.startsWith("senha") || lower.startsWith("password")) {
+    return "Acesso@2026";
+  }
+  if (lower.startsWith("apartamento") || lower === "apto" || lower.endsWith("_apto")) {
+    return "101";
+  }
+  if (lower.startsWith("bloco")) {
+    return "A";
+  }
+  if (lower.startsWith("condominio")) {
+    return "Residencial Primavera";
+  }
+  if (lower.startsWith("espaco") || lower.startsWith("local") || lower.startsWith("ambiente")) {
+    return "Salão de Festas";
+  }
+  if (lower.startsWith("descricao") || lower.startsWith("description") || lower.startsWith("observac") || lower.startsWith("justificativa") || lower.startsWith("motivo")) {
+    return "Texto de exemplo gerado automaticamente para preview.";
+  }
+  if (lower.startsWith("tipo") || lower.startsWith("type") || lower.startsWith("status")) {
+    return "Padrão";
+  }
+
+  const pretty = name.replace(/_/g, " ");
+  return `[${pretty}]`;
+}
+
+/**
+ * Substitui placeholders {var}, {{var}} e {{1}}, {{2}} pelos exemplos.
+ * `paramsOrder` é usado para mapear `{{N}}` à variável correspondente.
+ */
+export function applyVariableExamples(text: string, paramsOrder: string[] = []): string {
+  if (!text) return "";
+  return text
+    .replace(/\{\{(\d+)\}\}/g, (_, num) => {
+      const idx = parseInt(num, 10) - 1;
+      const paramName = paramsOrder[idx];
+      return paramName ? getExampleForVariable(paramName) : `[campo ${num}]`;
+    })
+    .replace(/\{\{(\w+)\}\}/g, (_, v) => getExampleForVariable(v))
+    .replace(/\{(\w+)\}/g, (_, v) => getExampleForVariable(v));
+}
+
