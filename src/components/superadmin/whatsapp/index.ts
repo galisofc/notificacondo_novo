@@ -12,5 +12,5 @@ export { TemplateGrid } from "./TemplateGrid";
 export { TemplateDetailSheet } from "./TemplateDetailSheet";
 export { CategorySection } from "./CategorySection";
 export { TemplatesPage } from "./TemplatesPage";
-export { TEMPLATE_CATEGORIES, TEMPLATE_COLORS, VARIABLE_EXAMPLES, getCategoryForSlug } from "./TemplateCategories";
+export { TEMPLATE_CATEGORIES, TEMPLATE_COLORS, VARIABLE_EXAMPLES, getCategoryForSlug, getExampleForVariable, applyVariableExamples } from "./TemplateCategories";
 export { DEFAULT_TEMPLATES } from "./DefaultTemplates";

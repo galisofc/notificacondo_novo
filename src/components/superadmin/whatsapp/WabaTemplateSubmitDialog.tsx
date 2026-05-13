@@ -38,7 +38,7 @@ import {
   Variable,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { VARIABLE_EXAMPLES } from "./TemplateCategories";
+import { VARIABLE_EXAMPLES, getExampleForVariable, applyVariableExamples } from "./TemplateCategories";
 
 interface MetaTemplate {
   id: string;
@@ -210,15 +210,8 @@ export function WabaTemplateSubmitDialog({
     setButtons(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Build preview text
-  const getPreviewText = () => {
-    let preview = bodyText;
-    paramsList.forEach((param, i) => {
-      const example = VARIABLE_EXAMPLES[param] || `[${param}]`;
-      preview = preview.replace(new RegExp(`\\{\\{${i + 1}\\}\\}`, 'g'), example);
-    });
-    return preview;
-  };
+  // Build preview text using the parameter fields exactly as defined
+  const getPreviewText = () => applyVariableExamples(bodyText, paramsList);
 
   const handleCreateTemplate = async () => {
     if (!templateName.trim() || !bodyText.trim()) {
@@ -284,11 +277,7 @@ export function WabaTemplateSubmitDialog({
         const examples: string[] = [];
         for (let i = 0; i < maxVarNumber; i++) {
           const paramName = paramsList[i];
-          if (paramName) {
-            examples.push(VARIABLE_EXAMPLES[paramName] || `exemplo_${paramName}`);
-          } else {
-            examples.push(`exemplo_${i + 1}`);
-          }
+          examples.push(paramName ? getExampleForVariable(paramName) : `exemplo_${i + 1}`);
         }
         bodyComponent.example = {
           body_text: [examples],
