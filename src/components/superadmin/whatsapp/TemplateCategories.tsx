@@ -157,6 +157,19 @@ export const VARIABLE_EXAMPLES: Record<string, string> = {
   codigo: "PKG-A1B2C3",
   tipo_encomenda: "Correios",
   codigo_rastreio: "BR123456789BR",
+  morador: "Maria Santos",
+  senha: "Acesso@2026",
+  email: "maria.santos@email.com",
+  full_name: "Maria Santos",
+  name: "Maria Santos",
+  password: "Acesso@2026",
+  phone: "(11) 98888-7777",
+  plan_slug: "essencial",
+  price: "R$ 149,90",
+  status: "Aprovado",
+  signer_name: "Carlos Oliveira",
+  local: "Salão de Festas",
+  today: "13/05/2026",
 };
 
 export function getCategoryForSlug(slug: string): TemplateCategory | undefined {
