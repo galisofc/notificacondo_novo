@@ -397,6 +397,7 @@ const Occurrences = () => {
         setSaving(false);
         return;
       }
+      } // end !editingId limit checks
 
       // Validate location field
       if (!formData.location.trim()) {
