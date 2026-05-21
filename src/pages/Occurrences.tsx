@@ -313,6 +313,8 @@ const Occurrences = () => {
 
     setSaving(true);
     try {
+      // Skip plan limit checks when editing existing occurrence (still in "registrada" status)
+      if (!editingId) {
       // Check plan limits before creating occurrence
       const { data: subscription, error: subError } = await supabase
         .from("subscriptions")
