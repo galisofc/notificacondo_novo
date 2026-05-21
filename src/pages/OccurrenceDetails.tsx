@@ -264,7 +264,7 @@ const OccurrenceDetails = () => {
           condominiums(name, defense_deadline_days, address, address_number, neighborhood, city, state, zip_code, owner_id, logo_url, sindico_name),
           blocks(name),
           apartments(number),
-          residents(id, full_name, email)
+          residents(id, full_name, email, phone, bsuid)
         `)
         .eq("id", id)
         .maybeSingle();
