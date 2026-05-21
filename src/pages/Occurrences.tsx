@@ -124,6 +124,7 @@ const Occurrences = () => {
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [sendingNotification, setSendingNotification] = useState<string | null>(null);
   const [confirmNotifyDialog, setConfirmNotifyDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
