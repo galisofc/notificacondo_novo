@@ -96,7 +96,7 @@ interface Occurrence {
   } | null;
   blocks: { name: string } | null;
   apartments: { number: string } | null;
-  residents: { id: string; full_name: string; email: string } | null;
+  residents: { id: string; full_name: string; email: string; phone: string | null; bsuid: string | null } | null;
 }
 
 interface Evidence {
