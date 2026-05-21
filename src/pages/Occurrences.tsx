@@ -803,6 +803,7 @@ const Occurrences = () => {
                 });
                 return;
               }
+              setEditingId(null);
               setIsDialogOpen(true);
             }}
             className="w-full sm:w-auto sm:self-end"
