@@ -882,6 +882,17 @@ const Occurrences = () => {
                       <Eye className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                       Ver
                     </Button>
+                    {occurrence.status === "registrada" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleEdit(occurrence)}
+                      >
+                        <Pencil className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                        Editar
+                      </Button>
+                    )}
                     {occurrence.status === "registrada" && occurrence.resident_id && (
                       <Button 
                         variant="hero" 
