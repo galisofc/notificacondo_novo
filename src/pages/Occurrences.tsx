@@ -50,6 +50,7 @@ import {
   Scale,
   Send,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
