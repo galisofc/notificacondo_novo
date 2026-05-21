@@ -425,42 +425,57 @@ const Occurrences = () => {
         }
       }
 
-      // Create occurrence
-      const { data: occurrenceData, error: occurrenceError } = await supabase
-        .from("occurrences")
-        .insert({
-          condominium_id: formData.condominium_id,
-          block_id: formData.block_id || null,
-          apartment_id: formData.apartment_id || null,
-          resident_id: formData.resident_id || null,
-          registered_by: user.id,
-          type: formData.type,
-          status: "registrada",
-          title: formData.title,
-          description: formData.description,
-          location: formData.location || null,
-          occurred_at: saoPauloInputToISO(formData.occurred_at),
-          convention_article: formData.convention_article || null,
-          internal_rules_article: formData.internal_rules_article || null,
-          civil_code_article: formData.civil_code_article || null,
-          legal_basis: formData.legal_basis || null,
-          fine_percentage:
-            formData.type === "multa" && formData.fine_percentage
-              ? Number(formData.fine_percentage)
-              : null,
-        } as any)
-        .select()
-        .single();
+      const payload = {
+        condominium_id: formData.condominium_id,
+        block_id: formData.block_id || null,
+        apartment_id: formData.apartment_id || null,
+        resident_id: formData.resident_id || null,
+        type: formData.type,
+        title: formData.title,
+        description: formData.description,
+        location: formData.location || null,
+        occurred_at: saoPauloInputToISO(formData.occurred_at),
+        convention_article: formData.convention_article || null,
+        internal_rules_article: formData.internal_rules_article || null,
+        civil_code_article: formData.civil_code_article || null,
+        legal_basis: formData.legal_basis || null,
+        fine_percentage:
+          formData.type === "multa" && formData.fine_percentage
+            ? Number(formData.fine_percentage)
+            : null,
+      };
 
-      if (occurrenceError) throw occurrenceError;
+      let occurrenceId: string;
+
+      if (editingId) {
+        const { error: updateError } = await (supabase
+          .from("occurrences") as any)
+          .update(payload)
+          .eq("id", editingId)
+          .eq("status", "registrada");
+        if (updateError) throw updateError;
+        occurrenceId = editingId;
+      } else {
+        const { data: occurrenceData, error: occurrenceError } = await supabase
+          .from("occurrences")
+          .insert({
+            ...payload,
+            registered_by: user.id,
+            status: "registrada",
+          } as any)
+          .select()
+          .single();
+        if (occurrenceError) throw occurrenceError;
+        occurrenceId = occurrenceData.id;
+      }
 
       // Upload files and create evidence records
       if (uploadedFiles.length > 0) {
-        const urls = await uploadFilesToStorage(occurrenceData.id);
-        
+        const urls = await uploadFilesToStorage(occurrenceId);
+
         for (let i = 0; i < urls.length; i++) {
           await supabase.from("occurrence_evidences").insert({
-            occurrence_id: occurrenceData.id,
+            occurrence_id: occurrenceId,
             file_url: urls[i],
             file_type: uploadedFiles[i].type,
             uploaded_by: user.id,
@@ -470,11 +485,12 @@ const Occurrences = () => {
 
       toast({
         title: "Sucesso!",
-        description: "Ocorrência registrada com sucesso.",
+        description: editingId ? "Ocorrência atualizada com sucesso." : "Ocorrência registrada com sucesso.",
       });
 
       // Reset form
       setIsDialogOpen(false);
+      setEditingId(null);
       setUploadedFiles([]);
       setFormData({
         condominium_id: "",
