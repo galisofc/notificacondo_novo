@@ -488,6 +488,14 @@ const Occurrences = () => {
         }
       }
 
+      // Delete removed existing evidences
+      if (editingId && removedEvidenceIds.length > 0) {
+        await supabase
+          .from("occurrence_evidences")
+          .delete()
+          .in("id", removedEvidenceIds);
+      }
+
       toast({
         title: "Sucesso!",
         description: editingId ? "Ocorrência atualizada com sucesso." : "Ocorrência registrada com sucesso.",
@@ -497,6 +505,8 @@ const Occurrences = () => {
       setIsDialogOpen(false);
       setEditingId(null);
       setUploadedFiles([]);
+      setExistingEvidences([]);
+      setRemovedEvidenceIds([]);
       setFormData({
         condominium_id: "",
         block_id: "",
