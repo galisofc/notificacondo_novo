@@ -1217,7 +1217,135 @@ const OccurrenceDetails = () => {
       });
     }
 
-    // Footer on all pages: condominium name + address + page number
+    // ===== LINHA DO TEMPO (PROVAS) =====
+    {
+      type TLRow = { date: string; title: string; detail: string };
+      const tlRows: TLRow[] = [];
+
+      tlRows.push({
+        date: occurrence.created_at,
+        title: "Ocorrência Registrada",
+        detail: occurrence.title || "",
+      });
+
+      evidences.forEach((ev, i) => {
+        tlRows.push({
+          date: ev.created_at,
+          title: `Prova Adicionada #${i + 1}`,
+          detail: ev.description || `Arquivo ${ev.file_type || ""}`.trim(),
+        });
+      });
+
+      const statusLabelMap: Record<string, string> = {
+        accepted: "Aceita pelo provedor",
+        sent: "Enviada",
+        delivered: "Entregue no aparelho",
+        read: "Lida pelo morador",
+        failed: "Falha no envio",
+      };
+
+      notifications.forEach((n) => {
+        tlRows.push({
+          date: n.sent_at,
+          title: "Notificação Enviada (WhatsApp)",
+          detail: `Via: ${n.sent_via || "WhatsApp"}`,
+        });
+        if (n.accepted_at)
+          tlRows.push({ date: n.accepted_at, title: "Notificação Aceita pelo Provedor", detail: "" });
+        if (n.delivered_at)
+          tlRows.push({ date: n.delivered_at, title: "Notificação Entregue no Aparelho", detail: "" });
+        if (n.read_at)
+          tlRows.push({ date: n.read_at, title: "Notificação Lida pelo Morador", detail: "" });
+        if (n.acknowledged_at)
+          tlRows.push({
+            date: n.acknowledged_at,
+            title: "Notificação Confirmada (Ciência)",
+            detail: "Morador confirmou ciência da notificação",
+          });
+        if (n.zpro_status === "failed") {
+          tlRows.push({
+            date: n.sent_at,
+            title: "Falha na Entrega",
+            detail: statusLabelMap.failed,
+          });
+        }
+      });
+
+      accessLogs.forEach((log) => {
+        const ip = (log.ip_address || "").split(",")[0].trim();
+        tlRows.push({
+          date: log.created_at,
+          title: "Ocorrência Aberta e Lida",
+          detail: ip ? `IP: ${ip}` : "Acessada pelo morador",
+        });
+      });
+
+      defenses.forEach((def, i) => {
+        tlRows.push({
+          date: def.submitted_at,
+          title: `Defesa Apresentada #${i + 1}`,
+          detail: (def.residents?.full_name ? `${def.residents.full_name} — ` : "") +
+            (def.content?.slice(0, 140) || ""),
+        });
+      });
+
+      decisions.forEach((dec) => {
+        const decLabels: Record<string, string> = {
+          arquivada: "Arquivada",
+          advertido: "Advertência Aplicada",
+          multado: "Multa Aplicada",
+        };
+        tlRows.push({
+          date: dec.decided_at,
+          title: `Decisão: ${decLabels[dec.decision] || dec.decision}`,
+          detail: dec.justification?.slice(0, 200) || "",
+        });
+      });
+
+      tlRows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      if (tlRows.length > 0) {
+        doc.addPage();
+        yPos = margin;
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(33, 33, 33);
+        doc.text("LINHA DO TEMPO (PROVAS)", pageWidth / 2, yPos, { align: "center" });
+        yPos += 6;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+          "Registro cronológico de todos os eventos relacionados a esta ocorrência.",
+          pageWidth / 2,
+          yPos + 4,
+          { align: "center" }
+        );
+        yPos += 10;
+
+        autoTable(doc, {
+          startY: yPos,
+          head: [["Data/Hora", "Evento", "Detalhes"]],
+          body: tlRows.map((r) => [
+            `${formatShortDate(r.date)} ${formatTime(r.date)}`,
+            r.title,
+            r.detail,
+          ]),
+          styles: { fontSize: 9, cellPadding: 2, textColor: [33, 33, 33], overflow: "linebreak" },
+          headStyles: { fillColor: [33, 33, 33], textColor: 255, fontStyle: "bold" },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          columnStyles: {
+            0: { cellWidth: 32 },
+            1: { cellWidth: 55, fontStyle: "bold" },
+            2: { cellWidth: "auto" },
+          },
+          margin: { left: margin, right: margin, bottom: 30 },
+          theme: "grid",
+        });
+      }
+    }
+
+
     const totalPages = doc.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
