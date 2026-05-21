@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
-import { nowInSaoPauloForInput, saoPauloInputToISO } from "@/lib/dateUtils";
+import { nowInSaoPauloForInput, saoPauloInputToISO, formatCustom } from "@/lib/dateUtils";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,6 +50,7 @@ import {
   Scale,
   Send,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -123,6 +124,7 @@ const Occurrences = () => {
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [sendingNotification, setSendingNotification] = useState<string | null>(null);
   const [confirmNotifyDialog, setConfirmNotifyDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
@@ -311,6 +313,8 @@ const Occurrences = () => {
 
     setSaving(true);
     try {
+      // Skip plan limit checks when editing existing occurrence (still in "registrada" status)
+      if (!editingId) {
       // Check plan limits before creating occurrence
       const { data: subscription, error: subError } = await supabase
         .from("subscriptions")
@@ -393,6 +397,7 @@ const Occurrences = () => {
         setSaving(false);
         return;
       }
+      } // end !editingId limit checks
 
       // Validate location field
       if (!formData.location.trim()) {
@@ -423,42 +428,57 @@ const Occurrences = () => {
         }
       }
 
-      // Create occurrence
-      const { data: occurrenceData, error: occurrenceError } = await supabase
-        .from("occurrences")
-        .insert({
-          condominium_id: formData.condominium_id,
-          block_id: formData.block_id || null,
-          apartment_id: formData.apartment_id || null,
-          resident_id: formData.resident_id || null,
-          registered_by: user.id,
-          type: formData.type,
-          status: "registrada",
-          title: formData.title,
-          description: formData.description,
-          location: formData.location || null,
-          occurred_at: saoPauloInputToISO(formData.occurred_at),
-          convention_article: formData.convention_article || null,
-          internal_rules_article: formData.internal_rules_article || null,
-          civil_code_article: formData.civil_code_article || null,
-          legal_basis: formData.legal_basis || null,
-          fine_percentage:
-            formData.type === "multa" && formData.fine_percentage
-              ? Number(formData.fine_percentage)
-              : null,
-        } as any)
-        .select()
-        .single();
+      const payload = {
+        condominium_id: formData.condominium_id,
+        block_id: formData.block_id || null,
+        apartment_id: formData.apartment_id || null,
+        resident_id: formData.resident_id || null,
+        type: formData.type,
+        title: formData.title,
+        description: formData.description,
+        location: formData.location || null,
+        occurred_at: saoPauloInputToISO(formData.occurred_at),
+        convention_article: formData.convention_article || null,
+        internal_rules_article: formData.internal_rules_article || null,
+        civil_code_article: formData.civil_code_article || null,
+        legal_basis: formData.legal_basis || null,
+        fine_percentage:
+          formData.type === "multa" && formData.fine_percentage
+            ? Number(formData.fine_percentage)
+            : null,
+      };
 
-      if (occurrenceError) throw occurrenceError;
+      let occurrenceId: string;
+
+      if (editingId) {
+        const { error: updateError } = await (supabase
+          .from("occurrences") as any)
+          .update(payload)
+          .eq("id", editingId)
+          .eq("status", "registrada");
+        if (updateError) throw updateError;
+        occurrenceId = editingId;
+      } else {
+        const { data: occurrenceData, error: occurrenceError } = await supabase
+          .from("occurrences")
+          .insert({
+            ...payload,
+            registered_by: user.id,
+            status: "registrada",
+          } as any)
+          .select()
+          .single();
+        if (occurrenceError) throw occurrenceError;
+        occurrenceId = occurrenceData.id;
+      }
 
       // Upload files and create evidence records
       if (uploadedFiles.length > 0) {
-        const urls = await uploadFilesToStorage(occurrenceData.id);
-        
+        const urls = await uploadFilesToStorage(occurrenceId);
+
         for (let i = 0; i < urls.length; i++) {
           await supabase.from("occurrence_evidences").insert({
-            occurrence_id: occurrenceData.id,
+            occurrence_id: occurrenceId,
             file_url: urls[i],
             file_type: uploadedFiles[i].type,
             uploaded_by: user.id,
@@ -468,11 +488,12 @@ const Occurrences = () => {
 
       toast({
         title: "Sucesso!",
-        description: "Ocorrência registrada com sucesso.",
+        description: editingId ? "Ocorrência atualizada com sucesso." : "Ocorrência registrada com sucesso.",
       });
 
       // Reset form
       setIsDialogOpen(false);
+      setEditingId(null);
       setUploadedFiles([]);
       setFormData({
         condominium_id: "",
@@ -502,6 +523,31 @@ const Occurrences = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEdit = (occurrence: any) => {
+    setEditingId(occurrence.id);
+    setUploadedFiles([]);
+    setFormData({
+      condominium_id: occurrence.condominium_id || "",
+      block_id: occurrence.block_id || "",
+      apartment_id: occurrence.apartment_id || "",
+      resident_id: occurrence.resident_id || "",
+      type: occurrence.type || "advertencia",
+      title: occurrence.title || "",
+      description: occurrence.description || "",
+      location: occurrence.location || "",
+      occurred_at: occurrence.occurred_at
+        ? formatCustom(occurrence.occurred_at, "yyyy-MM-dd'T'HH:mm")
+        : nowInSaoPauloForInput(),
+      convention_article: occurrence.convention_article || "",
+      internal_rules_article: occurrence.internal_rules_article || "",
+      civil_code_article: occurrence.civil_code_article || "",
+      legal_basis: occurrence.legal_basis || "",
+      fine_percentage:
+        occurrence.fine_percentage != null ? String(occurrence.fine_percentage) : "50",
+    });
+    setIsDialogOpen(true);
   };
 
   const handleNotify = async (occurrence: any) => {
@@ -757,6 +803,7 @@ const Occurrences = () => {
                 });
                 return;
               }
+              setEditingId(null);
               setIsDialogOpen(true);
             }}
             className="w-full sm:w-auto sm:self-end"
@@ -812,7 +859,7 @@ const Occurrences = () => {
                 : "Registre ocorrências para iniciar o fluxo de notificações."}
             </p>
             {statusFilter === "all" && typeFilter === "all" && (
-              <Button variant="hero" onClick={() => setIsDialogOpen(true)} className="w-full sm:w-auto">
+              <Button variant="hero" onClick={() => { setEditingId(null); setIsDialogOpen(true); }} className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Registrar Ocorrência
               </Button>
@@ -861,6 +908,17 @@ const Occurrences = () => {
                       <Eye className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                       Ver
                     </Button>
+                    {occurrence.status === "registrada" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleEdit(occurrence)}
+                      >
+                        <Pencil className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                        Editar
+                      </Button>
+                    )}
                     {occurrence.status === "registrada" && occurrence.resident_id && (
                       <Button 
                         variant="hero" 
@@ -978,12 +1036,12 @@ const Occurrences = () => {
         </AlertDialog>
 
         {/* Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingId(null); }}>
           <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-xl flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-primary" />
-                Registrar Ocorrência
+                {editingId ? "Editar Ocorrência" : "Registrar Ocorrência"}
               </DialogTitle>
             </DialogHeader>
 
@@ -1333,7 +1391,7 @@ const Occurrences = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => { setIsDialogOpen(false); setEditingId(null); }}
                 >
                   Cancelar
                 </Button>
@@ -1345,8 +1403,8 @@ const Occurrences = () => {
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Registrar Ocorrência
+                      {editingId ? <Pencil className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                      {editingId ? "Salvar Alterações" : "Registrar Ocorrência"}
                     </>
                   )}
                 </Button>
