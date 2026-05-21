@@ -1295,7 +1295,7 @@ const OccurrenceDetails = () => {
           date: def.submitted_at,
           title: `Defesa Apresentada #${i + 1}`,
           detail: (def.residents?.full_name ? `${def.residents.full_name} — ` : "") +
-            (def.content?.slice(0, 140) || ""),
+            (def.content || ""),
         });
       });
 
