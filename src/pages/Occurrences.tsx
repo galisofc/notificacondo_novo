@@ -1390,7 +1390,7 @@ const Occurrences = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={() => { setIsDialogOpen(false); setEditingId(null); }}
                 >
                   Cancelar
                 </Button>
@@ -1402,8 +1402,8 @@ const Occurrences = () => {
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Registrar Ocorrência
+                      {editingId ? <Pencil className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                      {editingId ? "Salvar Alterações" : "Registrar Ocorrência"}
                     </>
                   )}
                 </Button>
