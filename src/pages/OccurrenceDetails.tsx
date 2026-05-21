@@ -1252,8 +1252,18 @@ const OccurrenceDetails = () => {
         });
         if (n.accepted_at)
           tlRows.push({ date: n.accepted_at, title: "Notificação Aceita pelo Provedor", detail: "" });
-        if (n.delivered_at)
-          tlRows.push({ date: n.delivered_at, title: "Notificação Entregue no Aparelho", detail: "" });
+        if (n.delivered_at) {
+          const phone = occurrence.residents?.phone || "";
+          const bsuid = occurrence.residents?.bsuid || "";
+          const parts: string[] = [];
+          if (phone) parts.push(`Celular: ${phone}`);
+          if (bsuid) parts.push(`BSUID: ${bsuid}`);
+          tlRows.push({
+            date: n.delivered_at,
+            title: "Notificação Entregue no Aparelho",
+            detail: parts.join(" | "),
+          });
+        }
         if (n.read_at)
           tlRows.push({ date: n.read_at, title: "Notificação Lida pelo Morador", detail: "" });
         if (n.acknowledged_at)
