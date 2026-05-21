@@ -131,6 +131,8 @@ const Occurrences = () => {
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
   const [deleting, setDeleting] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [existingEvidences, setExistingEvidences] = useState<Array<{ id: string; file_url: string; file_type: string }>>([]);
+  const [removedEvidenceIds, setRemovedEvidenceIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     condominium_id: "",
     block_id: "",
@@ -486,6 +488,14 @@ const Occurrences = () => {
         }
       }
 
+      // Delete removed existing evidences
+      if (editingId && removedEvidenceIds.length > 0) {
+        await supabase
+          .from("occurrence_evidences")
+          .delete()
+          .in("id", removedEvidenceIds);
+      }
+
       toast({
         title: "Sucesso!",
         description: editingId ? "Ocorrência atualizada com sucesso." : "Ocorrência registrada com sucesso.",
@@ -495,6 +505,8 @@ const Occurrences = () => {
       setIsDialogOpen(false);
       setEditingId(null);
       setUploadedFiles([]);
+      setExistingEvidences([]);
+      setRemovedEvidenceIds([]);
       setFormData({
         condominium_id: "",
         block_id: "",
@@ -525,9 +537,11 @@ const Occurrences = () => {
     }
   };
 
-  const handleEdit = (occurrence: any) => {
+  const handleEdit = async (occurrence: any) => {
     setEditingId(occurrence.id);
     setUploadedFiles([]);
+    setExistingEvidences([]);
+    setRemovedEvidenceIds([]);
     setFormData({
       condominium_id: occurrence.condominium_id || "",
       block_id: occurrence.block_id || "",
@@ -548,6 +562,18 @@ const Occurrences = () => {
         occurrence.fine_percentage != null ? String(occurrence.fine_percentage) : "50",
     });
     setIsDialogOpen(true);
+
+    // Load existing evidences
+    const { data: evidences } = await (supabase
+      .from("occurrence_evidences") as any)
+      .select("id, file_url, file_type")
+      .eq("occurrence_id", occurrence.id);
+    if (evidences) setExistingEvidences(evidences);
+  };
+
+  const removeExistingEvidence = (id: string) => {
+    setRemovedEvidenceIds((prev) => [...prev, id]);
+    setExistingEvidences((prev) => prev.filter((e) => e.id !== id));
   };
 
   const handleNotify = async (occurrence: any) => {
@@ -1351,8 +1377,33 @@ const Occurrences = () => {
                   </label>
                 </div>
 
-                {uploadedFiles.length > 0 && (
+                {(uploadedFiles.length > 0 || existingEvidences.length > 0) && (
                   <div className="grid grid-cols-4 gap-2">
+                    {existingEvidences.map((ev) => (
+                      <div
+                        key={ev.id}
+                        className="relative aspect-square rounded-lg overflow-hidden bg-secondary/50"
+                      >
+                        {ev.file_type === "image" ? (
+                          <img src={ev.file_url} alt="Evidência" className="w-full h-full object-cover" />
+                        ) : ev.file_type === "video" ? (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Video className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <FileText className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeExistingEvidence(ev.id)}
+                          className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
                     {uploadedFiles.map((file, index) => (
                       <div
                         key={index}
