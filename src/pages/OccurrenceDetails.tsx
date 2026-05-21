@@ -96,7 +96,7 @@ interface Occurrence {
   } | null;
   blocks: { name: string } | null;
   apartments: { number: string } | null;
-  residents: { id: string; full_name: string; email: string } | null;
+  residents: { id: string; full_name: string; email: string; phone: string | null; bsuid: string | null } | null;
 }
 
 interface Evidence {
@@ -264,7 +264,7 @@ const OccurrenceDetails = () => {
           condominiums(name, defense_deadline_days, address, address_number, neighborhood, city, state, zip_code, owner_id, logo_url, sindico_name),
           blocks(name),
           apartments(number),
-          residents(id, full_name, email)
+          residents(id, full_name, email, phone, bsuid)
         `)
         .eq("id", id)
         .maybeSingle();
@@ -1252,8 +1252,18 @@ const OccurrenceDetails = () => {
         });
         if (n.accepted_at)
           tlRows.push({ date: n.accepted_at, title: "Notificação Aceita pelo Provedor", detail: "" });
-        if (n.delivered_at)
-          tlRows.push({ date: n.delivered_at, title: "Notificação Entregue no Aparelho", detail: "" });
+        if (n.delivered_at) {
+          const phone = occurrence.residents?.phone || "";
+          const bsuid = occurrence.residents?.bsuid || "";
+          const parts: string[] = [];
+          if (phone) parts.push(`Celular: ${phone}`);
+          if (bsuid) parts.push(`BSUID: ${bsuid}`);
+          tlRows.push({
+            date: n.delivered_at,
+            title: "Notificação Entregue no Aparelho",
+            detail: parts.join(" | "),
+          });
+        }
         if (n.read_at)
           tlRows.push({ date: n.read_at, title: "Notificação Lida pelo Morador", detail: "" });
         if (n.acknowledged_at)
