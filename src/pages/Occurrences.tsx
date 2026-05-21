@@ -525,6 +525,31 @@ const Occurrences = () => {
     }
   };
 
+  const handleEdit = (occurrence: any) => {
+    setEditingId(occurrence.id);
+    setUploadedFiles([]);
+    setFormData({
+      condominium_id: occurrence.condominium_id || "",
+      block_id: occurrence.block_id || "",
+      apartment_id: occurrence.apartment_id || "",
+      resident_id: occurrence.resident_id || "",
+      type: occurrence.type || "advertencia",
+      title: occurrence.title || "",
+      description: occurrence.description || "",
+      location: occurrence.location || "",
+      occurred_at: occurrence.occurred_at
+        ? formatCustom(occurrence.occurred_at, "yyyy-MM-dd'T'HH:mm")
+        : nowInSaoPauloForInput(),
+      convention_article: occurrence.convention_article || "",
+      internal_rules_article: occurrence.internal_rules_article || "",
+      civil_code_article: occurrence.civil_code_article || "",
+      legal_basis: occurrence.legal_basis || "",
+      fine_percentage:
+        occurrence.fine_percentage != null ? String(occurrence.fine_percentage) : "50",
+    });
+    setIsDialogOpen(true);
+  };
+
   const handleNotify = async (occurrence: any) => {
     if (!occurrence.resident_id) {
       toast({
