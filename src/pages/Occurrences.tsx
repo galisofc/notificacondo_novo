@@ -1035,7 +1035,7 @@ const Occurrences = () => {
         </AlertDialog>
 
         {/* Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingId(null); }}>
           <DialogContent className="bg-card border-border max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-xl flex items-center gap-2">
