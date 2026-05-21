@@ -131,6 +131,8 @@ const Occurrences = () => {
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
   const [deleting, setDeleting] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [existingEvidences, setExistingEvidences] = useState<Array<{ id: string; file_url: string; file_type: string }>>([]);
+  const [removedEvidenceIds, setRemovedEvidenceIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     condominium_id: "",
     block_id: "",
