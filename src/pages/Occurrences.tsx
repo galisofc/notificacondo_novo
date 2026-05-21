@@ -859,7 +859,7 @@ const Occurrences = () => {
                 : "Registre ocorrências para iniciar o fluxo de notificações."}
             </p>
             {statusFilter === "all" && typeFilter === "all" && (
-              <Button variant="hero" onClick={() => setIsDialogOpen(true)} className="w-full sm:w-auto">
+              <Button variant="hero" onClick={() => { setEditingId(null); setIsDialogOpen(true); }} className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Registrar Ocorrência
               </Button>
