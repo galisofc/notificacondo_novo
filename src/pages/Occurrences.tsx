@@ -527,9 +527,11 @@ const Occurrences = () => {
     }
   };
 
-  const handleEdit = (occurrence: any) => {
+  const handleEdit = async (occurrence: any) => {
     setEditingId(occurrence.id);
     setUploadedFiles([]);
+    setExistingEvidences([]);
+    setRemovedEvidenceIds([]);
     setFormData({
       condominium_id: occurrence.condominium_id || "",
       block_id: occurrence.block_id || "",
@@ -550,6 +552,18 @@ const Occurrences = () => {
         occurrence.fine_percentage != null ? String(occurrence.fine_percentage) : "50",
     });
     setIsDialogOpen(true);
+
+    // Load existing evidences
+    const { data: evidences } = await (supabase
+      .from("occurrence_evidences") as any)
+      .select("id, file_url, file_type")
+      .eq("occurrence_id", occurrence.id);
+    if (evidences) setExistingEvidences(evidences);
+  };
+
+  const removeExistingEvidence = (id: string) => {
+    setRemovedEvidenceIds((prev) => [...prev, id]);
+    setExistingEvidences((prev) => prev.filter((e) => e.id !== id));
   };
 
   const handleNotify = async (occurrence: any) => {
