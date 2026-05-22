@@ -1483,6 +1483,28 @@ const PorteiroPackagesHistory = () => {
                   </div>
                 </div>
 
+                {/* Description & Tracking */}
+                {(selectedPackage.description || selectedPackage.tracking_code) && (
+                  <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+                    <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
+                      <Hash className="w-4 h-4" />
+                      Informações Adicionais
+                    </h4>
+                    {selectedPackage.tracking_code && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Código de Rastreio</p>
+                        <p className="font-mono font-medium">{selectedPackage.tracking_code}</p>
+                      </div>
+                    )}
+                    {selectedPackage.description && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Descrição</p>
+                        <p className="font-medium">{selectedPackage.description}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* WhatsApp Notification */}
                 <div className="space-y-3 p-3 rounded-lg bg-muted/30 border">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
@@ -1567,29 +1589,6 @@ const PorteiroPackagesHistory = () => {
                     </div>
                   )}
                 </div>
-
-
-                {/* Description & Tracking */}
-                {(selectedPackage.description || selectedPackage.tracking_code) && (
-                  <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
-                    <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-                      <Hash className="w-4 h-4" />
-                      Informações Adicionais
-                    </h4>
-                    {selectedPackage.tracking_code && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Código de Rastreio</p>
-                        <p className="font-mono font-medium">{selectedPackage.tracking_code}</p>
-                      </div>
-                    )}
-                    {selectedPackage.description && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Descrição</p>
-                        <p className="font-medium">{selectedPackage.description}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 <Button variant="outline" className="w-full" onClick={() => setShowDetailsModal(false)}>
                   Fechar
