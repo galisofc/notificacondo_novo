@@ -56,7 +56,13 @@ import {
   Filter,
   Home,
   Search,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
+import { DeliveryStatusTracker } from "@/components/packages/DeliveryStatusTracker";
+import { cn } from "@/lib/utils";
 import { format, parseISO, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
@@ -143,6 +149,8 @@ const PorteiroPackagesHistory = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
+  const [notificationLogs, setNotificationLogs] = useState<any[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const pageSize = 20;
 
   // Fetch porter's condominiums
@@ -238,6 +246,26 @@ const PorteiroPackagesHistory = () => {
 
     fetchSignedUrl();
   }, [showDetailsModal, selectedPackage?.photo_url]);
+
+  // Fetch notification logs when details modal opens
+  useEffect(() => {
+    const fetchLogs = async () => {
+      if (!showDetailsModal || !selectedPackage?.id) {
+        setNotificationLogs([]);
+        return;
+      }
+      setIsLoadingLogs(true);
+      const { data, error } = await supabase
+        .from("whatsapp_notification_logs")
+        .select("*")
+        .eq("package_id", selectedPackage.id)
+        .order("created_at", { ascending: false });
+      if (!error) setNotificationLogs(data || []);
+      setIsLoadingLogs(false);
+    };
+    fetchLogs();
+  }, [showDetailsModal, selectedPackage?.id]);
+
 
   // Fetch total count for pagination
   const { data: totalCount = 0 } = useQuery({
@@ -1456,35 +1484,90 @@ const PorteiroPackagesHistory = () => {
                 </div>
 
                 {/* WhatsApp Notification */}
-                <div className={`space-y-3 p-3 rounded-lg ${selectedPackage.notification_sent ? 'bg-green-500/10 border border-green-500/20' : 'bg-amber-500/10 border border-amber-500/20'}`}>
-                  <h4 className={`text-sm font-semibold uppercase tracking-wide flex items-center gap-2 ${selectedPackage.notification_sent ? 'text-green-600' : 'text-amber-600'}`}>
+                <div className="space-y-3 p-3 rounded-lg bg-muted/30 border">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
                     Notificação WhatsApp
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Status</p>
-                      <Badge variant="outline" className={selectedPackage.notification_sent ? 'bg-green-100 text-green-700 border-green-300' : 'bg-amber-100 text-amber-700 border-amber-300'}>
-                        {selectedPackage.notification_sent ? 'Enviada' : 'Não Enviada'}
+                    {notificationLogs.length > 0 && (
+                      <Badge variant="secondary" className="text-xs ml-auto">
+                        {notificationLogs.length} {notificationLogs.length === 1 ? "envio" : "envios"}
                       </Badge>
+                    )}
+                  </h4>
+
+                  {isLoadingLogs ? (
+                    <div className="flex items-center justify-center py-4 text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      <span className="text-sm">Carregando histórico...</span>
                     </div>
-                    {selectedPackage.notification_sent_at && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Enviada em</p>
-                        <p className="font-medium">{format(parseISO(selectedPackage.notification_sent_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-                      </div>
-                    )}
-                    {selectedPackage.notification_count !== null && selectedPackage.notification_count > 0 && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Moradores Notificados</p>
-                        <p className="font-medium flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          {selectedPackage.notification_count}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  ) : notificationLogs.length > 0 ? (
+                    <div className="space-y-2">
+                      {notificationLogs.map((log, index) => (
+                        <div
+                          key={log.id}
+                          className={cn(
+                            "p-3 rounded-lg border text-sm",
+                            log.success
+                              ? "bg-[hsl(142,76%,97%)] border-[hsl(142,76%,80%)] dark:bg-[hsl(142,30%,12%)] dark:border-[hsl(142,30%,25%)]"
+                              : "bg-destructive/5 border-destructive/20"
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="mt-0.5 shrink-0">
+                              {log.success ? (
+                                <CheckCircle2 className="w-4 h-4 text-[hsl(142,72%,29%)] dark:text-[hsl(142,60%,50%)]" />
+                              ) : (
+                                <XCircle className="w-4 h-4 text-destructive" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={cn("font-medium text-xs", log.success ? "text-[hsl(142,72%,25%)] dark:text-[hsl(142,60%,55%)]" : "")}>
+                                  {log.success ? "Enviada com sucesso" : "Falha no envio"}
+                                </span>
+                                <Badge variant="outline" className="text-xs shrink-0">
+                                  #{notificationLogs.length - index}º envio
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <Clock className="w-3 h-3 shrink-0" />
+                                {format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              </p>
+                              {log.debug_info?.sent_by_name && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                                  <User className="w-3 h-3 shrink-0" />
+                                  Enviado por: <span className="font-medium">{log.debug_info.sent_by_name}</span>
+                                </p>
+                              )}
+                              {!log.success && log.error_message && (
+                                <p className="text-xs text-destructive mt-1 truncate">
+                                  {log.error_message}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          {log.success && (
+                            <DeliveryStatusTracker
+                              status={log.status}
+                              timestamps={{
+                                accepted_at: log.accepted_at,
+                                sent_at: log.sent_at,
+                                delivered_at: log.delivered_at,
+                                read_at: log.read_at,
+                              }}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-muted/50 rounded-lg border border-dashed text-center">
+                      <AlertCircle className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
+                      <p className="text-xs text-muted-foreground">Nenhuma notificação enviada</p>
+                    </div>
+                  )}
                 </div>
+
 
                 {/* Description & Tracking */}
                 {(selectedPackage.description || selectedPackage.tracking_code) && (
