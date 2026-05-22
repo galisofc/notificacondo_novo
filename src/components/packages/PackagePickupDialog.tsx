@@ -58,6 +58,7 @@ export function PackagePickupDialog({
   const [errorMessage, setErrorMessage] = useState("");
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
+  const [showConferenceConfirm, setShowConferenceConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens
