@@ -99,12 +99,18 @@ export function PackagePickupDialog({
     setCodeValid(isValid);
   }, [inputCode, package_]);
 
+  const requestConfirm = () => {
+    if (!codeValid || !pickedUpByName.trim()) return;
+    setShowConferenceConfirm(true);
+  };
+
   const handleConfirm = async () => {
     if (!codeValid || !pickedUpByName.trim()) return;
-    
+    setShowConferenceConfirm(false);
+
     setStep("processing");
     const result = await onConfirm(pickedUpByName.trim());
-    
+
     if (result.success) {
       setStep("success");
       // Auto close after success animation
