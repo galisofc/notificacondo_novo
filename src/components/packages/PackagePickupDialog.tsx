@@ -318,6 +318,30 @@ export function PackagePickupDialog({
           </div>
         )}
       </DialogContent>
+
+      <AlertDialog open={showConferenceConfirm} onOpenChange={setShowConferenceConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-primary" />
+              Confirmar conferência da encomenda
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você conferiu se a encomenda{package_.description ? ` (${package_.description})` : ""} está sendo entregue corretamente para o morador do{" "}
+              <strong>{package_.block?.name} - Apto {package_.apartment?.number}</strong>?
+              <br />
+              <br />
+              Essa ação dará baixa na encomenda e não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, revisar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>
+              Sim, conferi e entregar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
