@@ -6,7 +6,8 @@ import {
   Loader2, 
   AlertCircle,
   KeyRound,
-  Package as PackageIcon
+  Package as PackageIcon,
+  ArrowLeft
 } from "lucide-react";
 import { getSignedPackagePhotoUrl } from "@/lib/packageStorage";
 import { PackageCardImage } from "./PackageCardImage";
@@ -17,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,14 +87,15 @@ export function PackagePickupDialog({
     setCodeValid(isValid);
   }, [inputCode, package_]);
 
-  const requestConfirm = () => {
-    if (!codeValid || !pickedUpByName.trim()) return;
-    setShowConferenceConfirm(true);
-  };
+  // Focus input when entering validate step
+  useEffect(() => {
+    if (step === "validate") {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [step]);
 
   const handleConfirm = async () => {
     if (!codeValid || !pickedUpByName.trim()) return;
-    setShowConferenceConfirm(false);
 
     setStep("processing");
     const result = await onConfirm(pickedUpByName.trim());
@@ -121,6 +122,85 @@ export function PackagePickupDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
+        {step === "conference" && (
+          <div className="flex flex-col items-center justify-center py-6 space-y-6">
+            <DialogHeader className="text-center">
+              <DialogTitle className="flex items-center justify-center gap-2">
+                <PackageCheck className="w-5 h-5 text-primary" />
+                Conferir Encomenda
+              </DialogTitle>
+              <DialogDescription>
+                Antes de prosseguir, confirme que a encomenda foi verificada
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Package Preview */}
+            <div className="flex items-center gap-4 p-4 bg-muted rounded-lg w-full">
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-background shrink-0">
+                {isLoadingPhoto ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : signedPhotoUrl ? (
+                  <PackageCardImage
+                    src={signedPhotoUrl}
+                    alt="Encomenda"
+                    className="w-full h-full rounded-lg"
+                    compact
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    <PackageIcon className="w-6 h-6" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                {revealPickupCode && (
+                  <p className="font-mono font-bold text-xl text-primary tracking-wider">
+                    {package_.pickup_code}
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  {package_.block?.name} - Apto {package_.apartment?.number}
+                </p>
+                {package_.description && (
+                  <p className="text-xs text-muted-foreground truncate mt-1">
+                    {package_.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 w-full">
+              <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
+                <strong>Você conferiu</strong> se a encomenda está sendo entregue corretamente para o morador do{" "}
+                <strong>{package_.block?.name} - Apto {package_.apartment?.number}</strong>?
+              </p>
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center">
+              Essa ação dará baixa na encomenda e não poderá ser desfeita.
+            </p>
+
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={() => setStep("validate")}
+                className="flex-1 gap-2"
+              >
+                <PackageCheck className="w-4 h-4" />
+                Sim, conferi e entregar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {step === "validate" && (
           <>
             <DialogHeader>
@@ -235,13 +315,14 @@ export function PackagePickupDialog({
               <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"
-                  onClick={handleClose}
-                  className="flex-1"
+                  onClick={() => setStep("conference")}
+                  className="flex-1 gap-2"
                 >
-                  Cancelar
+                  <ArrowLeft className="w-4 h-4" />
+                  Voltar
                 </Button>
                 <Button
-                  onClick={requestConfirm}
+                  onClick={handleConfirm}
                   disabled={!codeValid || !pickedUpByName.trim()}
                   className="flex-1 gap-2"
                 >
@@ -306,30 +387,6 @@ export function PackagePickupDialog({
           </div>
         )}
       </DialogContent>
-
-      <AlertDialog open={showConferenceConfirm} onOpenChange={setShowConferenceConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <PackageCheck className="w-5 h-5 text-primary" />
-              Confirmar conferência da encomenda
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Você conferiu se a encomenda{package_.description ? ` (${package_.description})` : ""} está sendo entregue corretamente para o morador do{" "}
-              <strong>{package_.block?.name} - Apto {package_.apartment?.number}</strong>?
-              <br />
-              <br />
-              Essa ação dará baixa na encomenda e não poderá ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Não, revisar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>
-              Sim, conferi e entregar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }
