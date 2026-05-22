@@ -247,6 +247,26 @@ const PorteiroPackagesHistory = () => {
     fetchSignedUrl();
   }, [showDetailsModal, selectedPackage?.photo_url]);
 
+  // Fetch notification logs when details modal opens
+  useEffect(() => {
+    const fetchLogs = async () => {
+      if (!showDetailsModal || !selectedPackage?.id) {
+        setNotificationLogs([]);
+        return;
+      }
+      setIsLoadingLogs(true);
+      const { data, error } = await supabase
+        .from("whatsapp_notification_logs")
+        .select("*")
+        .eq("package_id", selectedPackage.id)
+        .order("created_at", { ascending: false });
+      if (!error) setNotificationLogs(data || []);
+      setIsLoadingLogs(false);
+    };
+    fetchLogs();
+  }, [showDetailsModal, selectedPackage?.id]);
+
+
   // Fetch total count for pagination
   const { data: totalCount = 0 } = useQuery({
     queryKey: ["porteiro-packages-count", selectedCondominium, selectedBlock, selectedApartment, statusFilter, dateFrom, dateTo],
