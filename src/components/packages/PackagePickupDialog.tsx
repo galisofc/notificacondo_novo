@@ -253,7 +253,7 @@ export function PackagePickupDialog({
                   Cancelar
                 </Button>
                 <Button
-                  onClick={handleConfirm}
+                  onClick={requestConfirm}
                   disabled={!codeValid || !pickedUpByName.trim()}
                   className="flex-1 gap-2"
                 >
