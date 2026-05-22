@@ -17,6 +17,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +58,7 @@ export function PackagePickupDialog({
   const [errorMessage, setErrorMessage] = useState("");
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
+  const [showConferenceConfirm, setShowConferenceConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens
@@ -88,12 +99,18 @@ export function PackagePickupDialog({
     setCodeValid(isValid);
   }, [inputCode, package_]);
 
+  const requestConfirm = () => {
+    if (!codeValid || !pickedUpByName.trim()) return;
+    setShowConferenceConfirm(true);
+  };
+
   const handleConfirm = async () => {
     if (!codeValid || !pickedUpByName.trim()) return;
-    
+    setShowConferenceConfirm(false);
+
     setStep("processing");
     const result = await onConfirm(pickedUpByName.trim());
-    
+
     if (result.success) {
       setStep("success");
       // Auto close after success animation
@@ -236,7 +253,7 @@ export function PackagePickupDialog({
                   Cancelar
                 </Button>
                 <Button
-                  onClick={handleConfirm}
+                  onClick={requestConfirm}
                   disabled={!codeValid || !pickedUpByName.trim()}
                   className="flex-1 gap-2"
                 >
@@ -301,6 +318,30 @@ export function PackagePickupDialog({
           </div>
         )}
       </DialogContent>
+
+      <AlertDialog open={showConferenceConfirm} onOpenChange={setShowConferenceConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-primary" />
+              Confirmar conferência da encomenda
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você conferiu se a encomenda{package_.description ? ` (${package_.description})` : ""} está sendo entregue corretamente para o morador do{" "}
+              <strong>{package_.block?.name} - Apto {package_.apartment?.number}</strong>?
+              <br />
+              <br />
+              Essa ação dará baixa na encomenda e não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Não, revisar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>
+              Sim, conferi e entregar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
