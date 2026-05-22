@@ -42,7 +42,7 @@ interface PackagePickupDialogProps {
   revealPickupCode?: boolean;
 }
 
-type Step = "validate" | "processing" | "success" | "error";
+type Step = "conference" | "validate" | "processing" | "success" | "error";
 
 export function PackagePickupDialog({
   open,
@@ -51,14 +51,13 @@ export function PackagePickupDialog({
   onConfirm,
   revealPickupCode = true,
 }: PackagePickupDialogProps) {
-  const [step, setStep] = useState<Step>("validate");
+  const [step, setStep] = useState<Step>("conference");
   const [inputCode, setInputCode] = useState("");
   const [pickedUpByName, setPickedUpByName] = useState("");
   const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
-  const [showConferenceConfirm, setShowConferenceConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Reset state when dialog opens
