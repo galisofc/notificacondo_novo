@@ -54,14 +54,12 @@ export function PackagePickupDialog({
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setStep("validate");
+      setStep("conference");
       setInputCode("");
       setPickedUpByName("");
       setCodeValid(null);
       setErrorMessage("");
       setSignedPhotoUrl(null);
-      // Focus input after dialog opens
-      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [open]);
 
