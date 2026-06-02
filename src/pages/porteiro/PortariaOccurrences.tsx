@@ -477,7 +477,7 @@ export default function PortariaOccurrences() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
-              Livro de Ocorrências
+              Advertencias e Multas
               {openCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {openCount} em aberto
@@ -496,7 +496,7 @@ export default function PortariaOccurrences() {
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Registrar no Livro de Ocorrências</DialogTitle>
+                <DialogTitle>Registrar em Advertencias e Multas</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -654,7 +654,7 @@ export default function PortariaOccurrences() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-primary" />
-              Livro de Ocorrências
+              Advertencias e Multas
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               {condominiums.length > 1 && (

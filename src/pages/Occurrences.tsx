@@ -1072,7 +1072,7 @@ const Occurrences = () => {
             <DialogHeader>
               <DialogTitle className="font-display text-xl flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-primary" />
-                {editingId ? "Editar Livro de Ocorrência" : "Registrar no Livro de Ocorrências"}
+                {editingId ? "Editar Advertências e Multas" : "Registrar em Advertências e Multas"}
               </DialogTitle>
             </DialogHeader>
 
