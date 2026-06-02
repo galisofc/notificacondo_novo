@@ -103,6 +103,8 @@ export default function PortariaOccurrences() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
+  const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -356,6 +358,7 @@ export default function PortariaOccurrences() {
   // Create occurrence
   const createMutation = useMutation({
     mutationFn: async () => {
+      const occurredAt = new Date(`${occurredDate}T${occurredTime}:00`);
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
@@ -363,6 +366,7 @@ export default function PortariaOccurrences() {
         description: newDescription,
         category: newCategory,
         priority: newPriority,
+        occurred_at: isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString(),
         reporter_block_id: reporterBlockId || null,
         reporter_apartment_id: reporterApartmentId || null,
         target_block_id: targetBlockId || null,
@@ -384,6 +388,9 @@ export default function PortariaOccurrences() {
       setTargetBlockId("");
       setTargetApartmentId("");
       setPhotos([]);
+      const now = new Date();
+      setOccurredDate(format(now, "yyyy-MM-dd"));
+      setOccurredTime(format(now, "HH:mm"));
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
@@ -509,7 +516,18 @@ export default function PortariaOccurrences() {
                         {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Data da Ocorrência</Label>
+                    <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
                   </div>
+                  <div>
+                    <Label>Horário</Label>
+                    <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+                  </div>
+                </div>
                   <div>
                     <Label>Prioridade</Label>
                     <Select value={newPriority} onValueChange={setNewPriority}>
