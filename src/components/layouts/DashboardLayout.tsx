@@ -150,7 +150,7 @@ const getPorteiroNavItems = (pendingPackages: number, openPorterOccs: number): N
     title: "Portaria",
     icon: ClipboardList,
     items: [
-      { title: "Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
+      { title: "Livro de Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
       { title: "Passagem de Plantão", url: "/porteiro/portaria/plantao", icon: ClipboardCheck },
     ],
   },
@@ -482,7 +482,7 @@ function SidebarNavigation() {
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
-        { title: "Ocorrências", url: "/occurrences", icon: FileText },
+        { title: "Livro de Ocorrências", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Salão de Festas", url: "/party-hall", icon: PartyPopper },
       ],
@@ -491,7 +491,7 @@ function SidebarNavigation() {
       title: "Portaria",
       icon: DoorOpen,
       items: [
-        { title: "Ocorrências Portaria", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
+        { title: "Livro de Ocorrências Portaria", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
         { title: "Passagens de Plantão", url: "/sindico/portaria/plantoes", icon: ClipboardCheck },
         { title: "Checklist Portaria", url: "/sindico/portaria/checklist", icon: Cog },
         { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },

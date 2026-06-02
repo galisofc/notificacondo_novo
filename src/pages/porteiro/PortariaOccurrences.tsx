@@ -469,7 +469,7 @@ export default function PortariaOccurrences() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
-              Ocorrências da Portaria
+              Livro de Ocorrências da Portaria
               {openCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {openCount} em aberto
@@ -483,12 +483,12 @@ export default function PortariaOccurrences() {
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 shrink-0" disabled={!selectedCondominium}>
-                <Plus className="w-4 h-4" /> Nova Ocorrência
+                <Plus className="w-4 h-4" /> Registrar no Livro
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Registrar Nova Ocorrência</DialogTitle>
+                <DialogTitle>Registrar no Livro de Ocorrências</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -635,7 +635,7 @@ export default function PortariaOccurrences() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-primary" />
-              Ocorrências
+              Livro de Ocorrências
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               {condominiums.length > 1 && (
