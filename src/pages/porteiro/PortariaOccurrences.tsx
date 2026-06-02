@@ -477,7 +477,7 @@ export default function PortariaOccurrences() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
-              Livro de Ocorrências da Portaria
+              Livro de Ocorrências
               {openCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {openCount} em aberto
