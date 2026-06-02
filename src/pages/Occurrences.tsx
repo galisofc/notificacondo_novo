@@ -901,6 +901,11 @@ const Occurrences = () => {
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {occurrence.protocol && (
+                        <span className="px-2 py-1 rounded-md text-xs font-mono bg-muted text-foreground border border-border">
+                          Protocolo {occurrence.protocol}
+                        </span>
+                      )}
                       {getTypeBadge(occurrence.type)}
                       {getStatusBadge(occurrence.status)}
                       {getDefenseDeadlineBadge(occurrence)}

@@ -56,6 +56,7 @@ interface Occurrence {
   target_block_name?: string | null;
   target_apartment_number?: string | null;
   photos?: string[] | null;
+  protocol?: string | null;
 }
 
 interface Category {
@@ -756,6 +757,11 @@ export default function SindicoPortariaOccurrences() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                          {occ.protocol && (
+                            <Badge variant="secondary" className="font-mono text-xs">
+                              Protocolo {occ.protocol}
+                            </Badge>
+                          )}
                           <h3 className="font-semibold text-foreground">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
                           <Badge variant="outline">{occ.category}</Badge>
