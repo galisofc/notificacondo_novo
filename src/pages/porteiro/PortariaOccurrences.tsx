@@ -516,7 +516,18 @@ export default function PortariaOccurrences() {
                         {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Data da Ocorrência</Label>
+                    <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
                   </div>
+                  <div>
+                    <Label>Horário</Label>
+                    <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+                  </div>
+                </div>
                   <div>
                     <Label>Prioridade</Label>
                     <Select value={newPriority} onValueChange={setNewPriority}>
