@@ -758,7 +758,7 @@ const Occurrences = () => {
             })()}
           </h1>
            <p className="text-sm md:text-base text-muted-foreground mt-1">
-            Registre e gerencie ocorrências do condomínio
+            Registre e gerencie as Advertências e Multas do Condomínio
           </p>
         </div>
 
