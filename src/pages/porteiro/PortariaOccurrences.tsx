@@ -55,6 +55,7 @@ interface Occurrence {
   target_block_name?: string | null;
   target_apartment_number?: string | null;
   photos?: string[] | null;
+  protocol?: string | null;
 }
 
 interface Category {
