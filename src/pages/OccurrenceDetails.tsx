@@ -1434,6 +1434,11 @@ const OccurrenceDetails = () => {
           </Button>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-2">
+              {occurrence.protocol && (
+                <span className="px-2 py-1 rounded-md text-xs font-mono bg-muted text-foreground border border-border">
+                  Protocolo {occurrence.protocol}
+                </span>
+              )}
               {getTypeBadge(occurrence.type)}
               {getStatusBadge(occurrence.status)}
             </div>
