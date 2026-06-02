@@ -358,6 +358,7 @@ export default function PortariaOccurrences() {
   // Create occurrence
   const createMutation = useMutation({
     mutationFn: async () => {
+      const occurredAt = new Date(`${occurredDate}T${occurredTime}:00`);
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
@@ -365,6 +366,7 @@ export default function PortariaOccurrences() {
         description: newDescription,
         category: newCategory,
         priority: newPriority,
+        occurred_at: isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString(),
         reporter_block_id: reporterBlockId || null,
         reporter_apartment_id: reporterApartmentId || null,
         target_block_id: targetBlockId || null,
@@ -386,6 +388,9 @@ export default function PortariaOccurrences() {
       setTargetBlockId("");
       setTargetApartmentId("");
       setPhotos([]);
+      const now = new Date();
+      setOccurredDate(format(now, "yyyy-MM-dd"));
+      setOccurredTime(format(now, "HH:mm"));
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
