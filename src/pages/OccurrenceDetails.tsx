@@ -67,6 +67,7 @@ import { fetchOccurrencePdfTemplate, interpolate } from "@/hooks/useOccurrencePd
 
 interface Occurrence {
   id: string;
+  protocol?: string | null;
   title: string;
   description: string;
   type: "advertencia" | "notificacao" | "multa";
