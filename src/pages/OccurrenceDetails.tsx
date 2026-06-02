@@ -802,7 +802,7 @@ const OccurrenceDetails = () => {
     const footerReserve = 27;
     const bottomLimit = pageHeight - footerReserve;
 
-    const today = new Date().toISOString();
+    const today = occurrence.created_at || new Date().toISOString();
     const headerCity = city || "São Paulo";
     const blockName = occurrence.blocks?.name || "-";
     const aptNumber = occurrence.apartments?.number || "-";
