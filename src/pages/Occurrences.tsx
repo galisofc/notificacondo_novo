@@ -747,15 +747,7 @@ const Occurrences = () => {
         <SindicoBreadcrumbs items={[{ label: "Ocorrências" }]} />
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-            Ocorrências
-            {(() => {
-              const openCount = occurrences.filter(o => o.status === "registrada" || o.status === "notificado").length;
-              return openCount > 0 ? (
-                <Badge variant="destructive" className="text-xs">
-                  {openCount} em aberto
-                </Badge>
-              ) : null;
-            })()}
+            Advertências e Multas
           </h1>
            <p className="text-sm md:text-base text-muted-foreground mt-1">
             Registre e gerencie as Advertências e Multas do Condomínio
