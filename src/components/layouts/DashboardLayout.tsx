@@ -485,7 +485,7 @@ function SidebarNavigation() {
       title: "Portaria",
       icon: DoorOpen,
       items: [
-        { title: "Serviços", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
+        { title: "Livro de Ocorrências", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
         { title: "Passagens de Plantão", url: "/sindico/portaria/plantoes", icon: ClipboardCheck },
         { title: "Checklist Portaria", url: "/sindico/portaria/checklist", icon: Cog },
         { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },
