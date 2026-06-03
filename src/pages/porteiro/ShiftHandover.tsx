@@ -114,23 +114,20 @@ export default function ShiftHandover() {
           .eq("condominium_id", selectedCondominium)
           .in("user_id", userIds);
 
-        // Garantimos que apenas vínculos com is_active === true sejam considerados
-        const activeUserIds = new Set(
-          (links as any[])?.filter(l => l.is_active === true).map(l => l.user_id)
-        );
+        const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
 
-        const activePorters = data
-          .filter((p: any) => activeUserIds.has(p.user_id))
-          .map((p: { user_id: string; full_name: string }) => ({
-            id: p.user_id,
-            full_name: p.full_name,
-          }));
+        const allPorters = data.map((p: { user_id: string; full_name: string }) => ({
+          id: p.user_id,
+          full_name: p.full_name,
+          is_active: linkMap.get(p.user_id) !== false
+        }));
 
-        setCondominiumPorters(activePorters);
+        setCondominiumPorters(allPorters);
       }
     };
     
     fetchPorters();
+  }, [selectedCondominium, user]);
     
     // Reset incoming porter when condominium changes
     setIncomingPorterName("");
