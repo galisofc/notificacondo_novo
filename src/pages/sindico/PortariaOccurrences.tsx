@@ -603,7 +603,6 @@ export default function SindicoPortariaOccurrences() {
     const margin = 20;
     const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
-    let yPos = margin;
 
     const condo = occurrence.condominium;
     const condominiumName = condo?.name || "Condomínio";
