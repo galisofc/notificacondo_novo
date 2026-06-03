@@ -490,7 +490,7 @@ function SidebarNavigation() {
         { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },
       ],
     },
-    { title: "Advertências e Multas", url: "/occurrences", icon: FileText },
+    { title: "Livro de Ocorrências", url: "/occurrences", icon: FileText },
     {
       title: "Manutenção",
       icon: Wrench,
