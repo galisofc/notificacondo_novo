@@ -107,132 +107,157 @@ export default function Autenticidade() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl space-y-8">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <ShieldCheck className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Autenticidade NotificaCondo
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Valide a veracidade de documentos emitidos pela nossa plataforma.
-          </p>
-        </div>
+    <>
+      <Helmet>
+        <title>Autenticidade de Documentos - NotificaCondo</title>
+        <meta name="description" content="Valide a veracidade de documentos emitidos pela plataforma NotificaCondo." />
+      </Helmet>
 
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle>Validar Documento</CardTitle>
-            <CardDescription>
-              Insira o código alfanumérico impresso no documento.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleValidate} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="verificationCode">Código de verificação</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="verificationCode"
-                    placeholder="Ex: 2026/0029"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    className="uppercase font-mono"
-                  />
-                  <Button type="submit" disabled={isValidating}>
-                    {isValidating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
+      <div className="min-h-screen bg-background">
+        <Header />
+        
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto space-y-8">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-2">
+                  <ShieldCheck className="w-8 h-8 text-primary" />
                 </div>
+                <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                  Autenticidade de Documentos
+                </h1>
+                <p className="text-lg text-muted-foreground max-w-lg mx-auto">
+                  Utilize esta ferramenta oficial para validar a veracidade de ocorrências e notificações emitidas pela nossa plataforma.
+                </p>
               </div>
-            </form>
-          </CardContent>
-        </Card>
 
-        {isValidating && (
-          <div className="flex flex-col items-center justify-center p-12 space-y-4">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm text-muted-foreground italic">Consultando base de dados oficial...</p>
-          </div>
-        )}
+              <Card className="border-border shadow-lg">
+                <CardHeader>
+                  <CardTitle>Validar Código</CardTitle>
+                  <CardDescription>
+                    Insira o código alfanumérico ou protocolo impresso no documento para verificação imediata.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleValidate} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="verificationCode">Código de verificação</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="verificationCode"
+                          placeholder="Ex: 2026/0029"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          className="uppercase font-mono h-12 text-lg"
+                        />
+                        <Button type="submit" size="lg" disabled={isValidating} className="px-6">
+                          {isValidating ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <Search className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
 
-        {error && (
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 flex items-start gap-4 animate-in fade-in slide-in-from-top-4">
-            <XCircle className="w-6 h-6 text-destructive shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-destructive">Documento Inválido</h3>
-              <p className="text-sm text-destructive/80 mt-1">{error}</p>
+              {isValidating && (
+                <div className="flex flex-col items-center justify-center p-12 space-y-4">
+                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                  <p className="text-muted-foreground font-medium">Consultando base de dados oficial...</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-8 flex items-start gap-5 animate-in fade-in slide-in-from-top-4">
+                  <XCircle className="w-8 h-8 text-destructive shrink-0" />
+                  <div>
+                    <h3 className="text-lg font-bold text-destructive">Documento não autenticado</h3>
+                    <p className="text-destructive/80 mt-1 leading-relaxed">
+                      {error} Verifique se o código foi digitado corretamente. Caso o erro persista, este documento pode não ter sido emitido pela nossa plataforma oficial.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {occurrence && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 space-y-8 animate-in fade-in slide-in-from-top-4 shadow-sm">
+                  <div className="flex items-start gap-5">
+                    <div className="bg-emerald-100 p-2 rounded-full">
+                      <CheckCircle2 className="w-10 h-10 text-emerald-600 shrink-0" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-emerald-900 leading-tight">Documento Autêntico</h3>
+                      <p className="text-emerald-700 mt-1">Este documento foi emitido e registrado em nossa plataforma NotificaCondo sob total conformidade.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-emerald-200/50">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-emerald-100/50 rounded-lg">
+                        <FileText className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Título</p>
+                        <p className="font-semibold text-emerald-950">{occurrence.title}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-emerald-100/50 rounded-lg">
+                        <Building2 className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Condomínio</p>
+                        <p className="font-semibold text-emerald-950">{occurrence.condominium?.name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-emerald-100/50 rounded-lg">
+                        <Calendar className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Data de Registro</p>
+                        <p className="font-semibold text-emerald-950">
+                          {format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-emerald-100/50 rounded-lg">
+                        <User className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Registrado por</p>
+                        <p className="font-semibold text-emerald-950">
+                          {profile?.full_name || "Sistema"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 md:col-span-2">
+                      <div className="p-2 bg-emerald-100/50 rounded-lg">
+                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Protocolo de Verificação</p>
+                        <p className="font-mono font-bold text-emerald-900 text-lg">{occurrence.protocol || occurrence.id}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/60 p-6 rounded-lg border border-emerald-100">
+                    <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider mb-2">Conteúdo do Documento</p>
+                    <p className="text-emerald-950 leading-relaxed whitespace-pre-wrap">{occurrence.description}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </main>
 
-        {occurrence && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6 space-y-6 animate-in fade-in slide-in-from-top-4">
-            <div className="flex items-start gap-4">
-              <CheckCircle2 className="w-8 h-8 text-emerald-600 shrink-0" />
-              <div>
-                <h3 className="text-xl font-bold text-emerald-900">Documento Autêntico</h3>
-                <p className="text-emerald-700">Este documento foi emitido e registrado em nossa plataforma.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-emerald-100">
-              <div className="flex items-center gap-3">
-                <FileText className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <p className="text-xs text-emerald-600 uppercase font-bold">Título da Ocorrência</p>
-                  <p className="font-medium text-emerald-900">{occurrence.title}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Building2 className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <p className="text-xs text-emerald-600 uppercase font-bold">Condomínio</p>
-                  <p className="font-medium text-emerald-900">{occurrence.condominium?.name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <p className="text-xs text-emerald-600 uppercase font-bold">Data de Registro</p>
-                  <p className="font-medium text-emerald-900">
-                    {format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <User className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <p className="text-xs text-emerald-600 uppercase font-bold">Registrado por</p>
-                  <p className="font-medium text-emerald-900">
-                    {profile?.full_name || "Sistema"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                <div>
-                  <p className="text-xs text-emerald-600 uppercase font-bold">Protocolo de Verificação</p>
-                  <p className="font-mono font-medium text-emerald-900">{occurrence.protocol}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/50 p-4 rounded border border-emerald-100 mt-4">
-              <p className="text-xs text-emerald-600 uppercase font-bold mb-1">Descrição Registrada</p>
-              <p className="text-sm text-emerald-900 whitespace-pre-wrap">{occurrence.description}</p>
-            </div>
-          </div>
-        )}
-
-        <p className="text-center text-xs text-gray-500 pt-8">
-          © {new Date().getFullYear()} NotificaCondo - Todos os direitos reservados.
-        </p>
+        <Footer />
       </div>
-    </div>
+    </>
   );
 }
