@@ -93,6 +93,19 @@ export default function Autenticidade() {
     }
   };
 
+  const handleCodeChange = (value: string) => {
+    // Remove everything that is not a number or /
+    let cleanValue = value.replace(/[^\d/]/g, "");
+    
+    // Automatically add / after 4 digits if not present
+    if (cleanValue.length > 4 && !cleanValue.includes("/")) {
+      cleanValue = cleanValue.slice(0, 4) + "/" + cleanValue.slice(4);
+    }
+    
+    // Limit size if necessary (YYYY/XXXX is usually 9 chars)
+    setVerificationCode(cleanValue.toUpperCase());
+  };
+
   const handleValidate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode.trim()) {
