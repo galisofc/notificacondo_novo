@@ -542,6 +542,164 @@ export default function SindicoPortariaOccurrences() {
     return <Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
   };
 
+  const generatePDF = async (occurrence: Occurrence) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+    let yPos = margin;
+
+    const condo = occurrence.condominium;
+    const condominiumName = condo?.name || "Condomínio";
+    const city = condo?.city || "";
+    const stateUf = condo?.state || "";
+    const cityState = [city, stateUf].filter(Boolean).join("/");
+    const fullAddress = [
+      [condo?.address, condo?.address_number].filter(Boolean).join(", "),
+      condo?.neighborhood,
+    ].filter(Boolean).join(" – ");
+    const addressLine = [fullAddress, cityState].filter(Boolean).join(" – ");
+    const cepLine = condo?.zip_code ? `CEP: ${condo.zip_code}` : "";
+
+    // Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
+    yPos += 10;
+    
+    doc.setFontSize(12);
+    doc.text(condominiumName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+    yPos += 8;
+
+    if (addressLine) {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(addressLine, pageWidth / 2, yPos, { align: "center" });
+      yPos += 5;
+    }
+    if (cepLine) {
+      doc.text(cepLine, pageWidth / 2, yPos, { align: "center" });
+      yPos += 10;
+    }
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+
+    // Occurrence Details
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(occurrence.title, margin, yPos);
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    
+    const details = [
+      { label: "Protocolo:", value: occurrence.protocol || "-" },
+      { label: "Data:", value: format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
+      { label: "Categoria:", value: occurrence.category },
+      { label: "Prioridade:", value: PRIORITIES.find(p => p.value === occurrence.priority)?.label || occurrence.priority },
+      { label: "Status:", value: occurrence.status === "aberta" ? "Aberta" : "Resolvida" },
+    ];
+
+    details.forEach(detail => {
+      doc.setFont("helvetica", "bold");
+      doc.text(detail.label, margin, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(detail.value, margin + 25, yPos);
+      yPos += 6;
+    });
+
+    if (occurrence.reporter_block_name) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Registrado por:", margin, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${occurrence.reporter_block_name} - APTO ${occurrence.reporter_apartment_number || "-"}`, margin + 35, yPos);
+      yPos += 6;
+    }
+
+    if (occurrence.target_block_name) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Sobre:", margin, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${occurrence.target_block_name} - APTO ${occurrence.target_apartment_number || "-"}`, margin + 35, yPos);
+      yPos += 6;
+    }
+
+    yPos += 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("Descrição:", margin, yPos);
+    yPos += 6;
+    doc.setFont("helvetica", "normal");
+    const descLines = doc.splitTextToSize(occurrence.description, contentWidth);
+    doc.text(descLines, margin, yPos);
+    yPos += descLines.length * 5 + 8;
+
+    if (occurrence.status === "resolvida" && occurrence.resolution_notes) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Resolução:", margin, yPos);
+      yPos += 6;
+      doc.setFont("helvetica", "normal");
+      const resLines = doc.splitTextToSize(occurrence.resolution_notes, contentWidth);
+      doc.text(resLines, margin, yPos);
+      yPos += resLines.length * 5 + 8;
+    }
+
+    // Photos
+    if (occurrence.photos && occurrence.photos.length > 0) {
+      if (yPos > 200) {
+        doc.addPage();
+        yPos = margin;
+      }
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("EVIDÊNCIAS FOTOGRÁFICAS", margin, yPos);
+      yPos += 10;
+
+      for (const photoUrl of occurrence.photos) {
+        try {
+          const img = new Image();
+          img.src = photoUrl;
+          await new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
+          
+          if (img.complete && img.naturalWidth > 0) {
+            const ratio = img.naturalWidth / img.naturalHeight;
+            let drawW = contentWidth / 2 - 5;
+            let drawH = drawW / ratio;
+            
+            if (yPos + drawH > 270) {
+              doc.addPage();
+              yPos = margin;
+            }
+            
+            doc.addImage(photoUrl, "JPEG", margin, yPos, drawW, drawH);
+            yPos += drawH + 10;
+          }
+        } catch (e) {
+          console.error("Error adding photo to PDF", e);
+        }
+      }
+    }
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        `Documento gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")} - Página ${i} de ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    }
+
+    doc.save(`ocorrencia_${occurrence.protocol || occurrence.id.slice(0, 8)}.pdf`);
+    toast({ title: "PDF gerado com sucesso!" });
+  };
+
   const openCount = occurrences.filter((o) => o.status === "aberta").length;
   const resolvedCount = occurrences.filter((o) => o.status === "resolvida").length;
 
