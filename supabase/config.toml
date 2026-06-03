@@ -193,3 +193,6 @@ verify_jwt = false
 # Backfill retroativo de BSUID a partir dos webhook_raw_logs
 [functions.backfill-bsuid-from-logs]
 verify_jwt = false
+
+[functions.setup-certificate-storage]
+verify_jwt = false
