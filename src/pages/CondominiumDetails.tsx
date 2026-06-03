@@ -122,6 +122,7 @@ const CondominiumDetails = () => {
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Search and filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -168,6 +169,15 @@ const CondominiumDetails = () => {
   });
 
   const [saving, setSaving] = useState(false);
+
+  const filterBlocksBySearch = (blocksToFilter: Block[]) => {
+    if (!searchTerm.trim()) return blocksToFilter;
+    const term = searchTerm.toLowerCase();
+    return blocksToFilter.filter(block => 
+      block.name.toLowerCase().includes(term) ||
+      getFilteredApartments(block.id).length > 0
+    );
+  };
 
   // Build full address
   const fullAddress = useMemo(() => {

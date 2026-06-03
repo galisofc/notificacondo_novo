@@ -582,7 +582,7 @@ export default function PorteiroCondominio() {
                 }}
                 disabled={!selectedCondoId}
               >
-                <SelectTrigger className="w-full md:w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <Building2 className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Bloco" />
                 </SelectTrigger>
@@ -602,7 +602,7 @@ export default function PorteiroCondominio() {
                 onValueChange={setSelectedApartmentFilter}
                 disabled={selectedBlockFilter === "all"}
               >
-                <SelectTrigger className="w-full md:w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Home className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Apto" />
                 </SelectTrigger>
