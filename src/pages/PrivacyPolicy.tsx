@@ -27,7 +27,7 @@ Os dados são coletados de forma direta (quando você os fornece) e automática 
     title: "2. Uso dos Dados",
     content: `Utilizamos seus dados pessoais para:
 
-• **Prestação de Serviços:** Gerenciar notificações, advertências e multas condominiais.
+• **Prestação de Livro de Ocorrências:** Gerenciar notificações, advertências e multas condominiais.
 
 • **Comunicação:** Enviar mensagens via WhatsApp e e-mail relacionadas às ocorrências do condomínio.
 
