@@ -105,28 +105,41 @@ export default function ShiftHandover() {
         return;
       }
 
-      if (data) {
-        // Buscamos os vínculos para verificar o is_active
-        const userIds = data.map((p: any) => p.user_id);
-        const { data: links } = await supabase
-          .from("user_condominiums")
-          .select("user_id, is_active")
-          .eq("condominium_id", selectedCondominium)
-          .in("user_id", userIds);
-
-        const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
-
-        // Filtramos para exibir APENAS os porteiros que estão ativos (is_active !== false)
-        const activePorters = data
-          .filter((p: any) => linkMap.get(p.user_id) !== false)
-          .map((p: { user_id: string; full_name: string }) => ({
-            id: p.user_id,
-            full_name: p.full_name,
-            is_active: true
-          }));
-
-        setCondominiumPorters(activePorters);
+      if (!data || data.length === 0) {
+        setCondominiumPorters([]);
+        return;
       }
+
+      const userIds = data.map((p: any) => p.user_id);
+
+      // 1. Vínculos ativos do condomínio
+      const { data: links } = await supabase
+        .from("user_condominiums")
+        .select("user_id, is_active")
+        .eq("condominium_id", selectedCondominium)
+        .in("user_id", userIds);
+
+      const activeIds = new Set(
+        (links as any[])?.filter(l => l.is_active === true).map(l => l.user_id)
+      );
+
+      // 2. Apenas usuários com cargo 'porteiro' (exclui zeladores etc.)
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "porteiro")
+        .in("user_id", userIds);
+
+      const porterIds = new Set((roles || []).map((r: any) => r.user_id));
+
+      const filtered = data
+        .filter((p: any) => activeIds.has(p.user_id) && porterIds.has(p.user_id))
+        .map((p: { user_id: string; full_name: string }) => ({
+          id: p.user_id,
+          full_name: p.full_name,
+        }));
+
+      setCondominiumPorters(filtered);
     };
     
     fetchPorters();
