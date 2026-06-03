@@ -44,6 +44,7 @@ interface Occurrence {
   resolved_at: string | null;
   resolved_by: string | null;
   resolved_by_name?: string | null;
+  registered_by_name?: string | null;
   resolution_notes: string | null;
   created_at: string;
   reporter_block_id: string | null;
@@ -282,14 +283,17 @@ export default function PortariaOccurrences() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch profile names for resolved_by
+      // Fetch profile names for resolved_by and registered_by
       const resolvedByIds = [...new Set((data || []).map((o) => o.resolved_by).filter(Boolean))];
+      const registeredByIds = [...new Set((data || []).map((o) => o.registered_by).filter(Boolean))];
+      const allUserIds = [...new Set([...resolvedByIds, ...registeredByIds])];
+      
       let profileMap: Record<string, string> = {};
-      if (resolvedByIds.length > 0) {
+      if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name")
-          .in("user_id", resolvedByIds);
+          .in("user_id", allUserIds);
         profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
       }
 
@@ -312,6 +316,7 @@ export default function PortariaOccurrences() {
       return (data || []).map((o) => ({
         ...o,
         resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
+        registered_by_name: o.registered_by ? (profileMap[o.registered_by] ?? null) : null,
         reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
         reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
         target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
@@ -860,6 +865,11 @@ export default function PortariaOccurrences() {
 
                         <p className="text-xs text-muted-foreground mt-1">
                           {format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          {occ.registered_by_name && (
+                            <span className="ml-2">
+                              · Criado por: <span className="font-semibold text-foreground">{occ.registered_by_name}</span>
+                            </span>
+                          )}
                         </p>
                         {occ.status === "resolvida" && occ.resolution_notes && (
                           <p className="text-sm text-muted-foreground mt-1.5">
