@@ -33,6 +33,7 @@ export default function Autenticidade() {
     setIsValidating(true);
     setError(null);
     setOccurrence(null);
+    setProfile(null);
 
     try {
       const cleanCode = code.trim().toUpperCase();
