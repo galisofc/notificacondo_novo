@@ -599,7 +599,8 @@ export default function SindicoPortariaOccurrences() {
     // Right-side block: city + date and logo (matches multa/advertência PDF)
     const rightColX = pageWidth - margin;
     const headerCity = (city || "").toUpperCase();
-    const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(new Date())}`;
+    const occurrenceDate = new Date(occurrence.created_at);
+    const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(occurrenceDate)}`;
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(33, 33, 33);
