@@ -94,7 +94,7 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      // Primeiro, buscamos os IDs de todos os usuários vinculados a este condomínio
+      // Primeiro buscamos os usuários vinculados ao condomínio
       const { data: userCondos, error: ucError } = await supabase
         .from("user_condominiums")
         .select("user_id")
@@ -111,10 +111,8 @@ export default function ShiftHandover() {
         return;
       }
 
-      // Agora buscamos apenas os usuários que têm o cargo de 'porteiro' E estão ativos
-      // Nota: No Supabase, usuários deletados não aparecem em user_roles/profiles, 
-      // mas se houver uma coluna específica de status ou se precisarmos filtrar por login, 
-      // garantimos que o perfil exista e o cargo seja correto.
+      // Agora buscamos apenas os usuários que têm o cargo de 'porteiro'
+      // No sistema, a remoção/inatividade de um porteiro remove seu 'user_role' ou o próprio perfil
       const { data: porters, error: pError } = await supabase
         .from("user_roles")
         .select(`
