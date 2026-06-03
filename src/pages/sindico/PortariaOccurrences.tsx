@@ -845,7 +845,7 @@ export default function SindicoPortariaOccurrences() {
   };
 
   const handleSignPdf = async (occurrence: Occurrence) => {
-    if (!profile?.has_certificate) {
+    if (!(profile as any)?.has_certificate) {
       toast({
         title: "Certificado não configurado",
         description: "Você precisa configurar seu certificado digital nas configurações do perfil.",
