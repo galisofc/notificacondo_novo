@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -739,13 +740,37 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
-    // Footer
+    // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageCount = doc.getNumberOfPages();
+    const authUrl = "https://notificacondo.com.br/autenticidade";
+    let qrDataUrl = "";
+    try {
+      qrDataUrl = await QRCode.toDataURL(authUrl, { margin: 1, width: 100 });
+    } catch (e) {
+      console.error("Error generating QR Code", e);
+    }
+
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
+      
+      // QR Code and Authentication Text
+      if (qrDataUrl) {
+        const qrSize = 18;
+        const qrX = margin;
+        const qrY = pageHeight - 23;
+        doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(33, 33, 33);
+        doc.text("Autenticação", qrX + qrSize / 2, qrY + qrSize + 3, { align: "center" });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.text("notificacondo.com.br/autenticidade", qrX + qrSize / 2, qrY + qrSize + 5.5, { align: "center" });
+      }
+
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(33, 33, 33);
