@@ -44,6 +44,7 @@ interface Occurrence {
   resolved_at: string | null;
   resolved_by: string | null;
   resolved_by_name?: string | null;
+  registered_by_name?: string | null;
   resolution_notes: string | null;
   created_at: string;
   reporter_block_id: string | null;
