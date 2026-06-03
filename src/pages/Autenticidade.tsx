@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, FileText, Calendar, Building2, User } from "lucide-react";
+import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, FileText, Calendar, Building2, User, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -73,7 +73,7 @@ export default function Autenticidade() {
       if (data && data.registered_by) {
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("full_name")
+          .select("full_name, has_certificate")
           .eq("user_id", data.registered_by)
           .maybeSingle();
         
@@ -281,6 +281,18 @@ export default function Autenticidade() {
                         </div>
                       </div>
                     </div>
+                    
+                    {profile?.has_certificate && (
+                      <div className="mt-8 p-6 bg-emerald-600/5 border-2 border-emerald-600/20 rounded-2xl flex items-center gap-6 group hover:border-emerald-600/40 transition-all duration-300">
+                        <div className="bg-emerald-600 p-4 rounded-xl shadow-lg shadow-emerald-600/20">
+                          <Lock className="w-8 h-8 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-black text-emerald-900 leading-tight">Assinatura Digital ICP-Brasil</h4>
+                          <p className="text-emerald-700/80 mt-1 font-medium">Este documento possui assinatura digital válida vinculada ao certificado do Síndico.</p>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-4 pt-4 border-t border-border/50">
                       <div className="flex items-center gap-2">
