@@ -370,6 +370,15 @@ export default function PortariaOccurrences() {
       const targetBlock = targetBlockId === "none" ? null : (targetBlockId || null);
       const targetApartment = targetApartmentId === "none" ? null : (targetApartmentId || null);
 
+      // Generate a random protocol like 3XRB-98RTG
+      const generateProtocol = () => {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const part1 = Array.from({ length: 4 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+        const part2 = Array.from({ length: 5 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+        return `${part1}-${part2}`;
+      };
+      const protocol = generateProtocol();
+
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
@@ -383,6 +392,7 @@ export default function PortariaOccurrences() {
         target_block_id: targetBlock,
         target_apartment_id: targetApartment,
         photos: photos,
+        protocol: protocol,
       } as any);
       if (error) throw error;
     },
