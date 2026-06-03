@@ -104,6 +104,8 @@ export default function SindicoPortariaOccurrences() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
+  const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -377,6 +379,13 @@ export default function SindicoPortariaOccurrences() {
   // Create occurrence
   const createMutation = useMutation({
     mutationFn: async () => {
+      const occurredAt = new Date(`${occurredDate}T${occurredTime}:00`);
+      
+      const reporterBlock = reporterBlockId === "none" ? null : (reporterBlockId || null);
+      const reporterApartment = reporterApartmentId === "none" ? null : (reporterApartmentId || null);
+      const targetBlock = targetBlockId === "none" ? null : (targetBlockId || null);
+      const targetApartment = targetApartmentId === "none" ? null : (targetApartmentId || null);
+
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
@@ -384,10 +393,11 @@ export default function SindicoPortariaOccurrences() {
         description: newDescription,
         category: newCategory,
         priority: newPriority,
-        reporter_block_id: reporterBlockId || null,
-        reporter_apartment_id: reporterApartmentId || null,
-        target_block_id: targetBlockId || null,
-        target_apartment_id: targetApartmentId || null,
+        occurred_at: isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString(),
+        reporter_block_id: reporterBlock,
+        reporter_apartment_id: reporterApartment,
+        target_block_id: targetBlock,
+        target_apartment_id: targetApartment,
         photos: photos,
       } as any);
       if (error) throw error;
@@ -405,6 +415,9 @@ export default function SindicoPortariaOccurrences() {
       setTargetBlockId("");
       setTargetApartmentId("");
       setPhotos([]);
+      const now = new Date();
+      setOccurredDate(format(now, "yyyy-MM-dd"));
+      setOccurredTime(format(now, "HH:mm"));
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
@@ -871,7 +884,7 @@ export default function SindicoPortariaOccurrences() {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Registrar Nova Ocorrência</DialogTitle>
+              <DialogTitle className="text-left">Registrar Ocorrência</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -882,17 +895,20 @@ export default function SindicoPortariaOccurrences() {
                 <Label>Descrição</Label>
                 <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descreva o ocorrido..." rows={4} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label>Categoria</Label>
                   <Select value={newCategory} onValueChange={setNewCategory}>
                     <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
                     <SelectContent>
-                      {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                      {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                      }
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label>Prioridade</Label>
                   <Select value={newPriority} onValueChange={setNewPriority}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -900,6 +916,17 @@ export default function SindicoPortariaOccurrences() {
                       {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data da Ocorrência</Label>
+                  <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário</Label>
+                  <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
                 </div>
               </div>
 
