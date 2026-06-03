@@ -319,7 +319,7 @@ export default function SindicoPortariaOccurrences() {
       // Fetch condominium details for PDF
       const { data: condoDetails } = await supabase
         .from("condominiums")
-        .select("id, name, city, state, address, address_number, neighborhood, zip_code")
+        .select("id, name, city, state, address, address_number, neighborhood, zip_code, logo_url")
         .in("id", (data || []).map(o => o.condominium_id));
       
       const condoMap = Object.fromEntries((condoDetails || []).map(c => [c.id, c]));
