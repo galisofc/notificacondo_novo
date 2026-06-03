@@ -283,14 +283,17 @@ export default function PortariaOccurrences() {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch profile names for resolved_by
+      // Fetch profile names for resolved_by and registered_by
       const resolvedByIds = [...new Set((data || []).map((o) => o.resolved_by).filter(Boolean))];
+      const registeredByIds = [...new Set((data || []).map((o) => o.registered_by).filter(Boolean))];
+      const allUserIds = [...new Set([...resolvedByIds, ...registeredByIds])];
+      
       let profileMap: Record<string, string> = {};
-      if (resolvedByIds.length > 0) {
+      if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name")
-          .in("user_id", resolvedByIds);
+          .in("user_id", allUserIds);
         profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
       }
 
