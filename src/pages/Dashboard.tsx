@@ -450,28 +450,29 @@ const Dashboard = () => {
             {statCards.map((stat, index) => (
               <Card
                 key={index}
-                className="bg-card border-border shadow-card hover:shadow-elevated transition-all duration-300 cursor-pointer group relative"
+                className="bg-card border-border/50 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer group relative overflow-hidden"
                 onClick={stat.action}
               >
-                <CardContent className="p-3 sm:p-4 md:p-5">
-                  <div className="flex items-center gap-3 sm:flex-col sm:items-start">
+                <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${stat.gradient}`} />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-4">
                     <div
-                      className={`w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg shrink-0`}
+                      className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}
                     >
-                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      <stat.icon className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex-1 min-w-0 sm:mt-3 sm:w-full">
-                      {loading ? (
-                        <Skeleton className="h-6 sm:h-8 w-10 sm:w-16 mb-1" />
-                      ) : (
-                        <p className="font-display text-lg sm:text-2xl md:text-3xl font-bold text-foreground">
-                          {stat.value}
-                        </p>
-                      )}
-                      <p className="text-[11px] sm:text-xs md:text-sm text-muted-foreground leading-tight line-clamp-2">{stat.title}</p>
-                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </div>
-                  <ArrowUpRight className="hidden sm:block w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors absolute top-3 right-3 md:top-4 md:right-4" />
+                  <div>
+                    {loading ? (
+                      <Skeleton className="h-8 w-16 mb-1" />
+                    ) : (
+                      <p className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+                        {stat.value}
+                      </p>
+                    )}
+                    <p className="text-sm font-medium text-muted-foreground mt-1">{stat.title}</p>
+                  </div>
                 </CardContent>
               </Card>
             ))}
