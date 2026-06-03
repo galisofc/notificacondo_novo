@@ -94,48 +94,24 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      // Primeiro, buscamos os IDs de todos os usuários vinculados a este condomínio
-      const { data: userCondos, error: ucError } = await supabase
-        .from("user_condominiums")
-        .select("user_id")
-        .eq("condominium_id", selectedCondominium);
+      const { data, error } = await supabase.rpc("get_co_porters", {
+        _user_id: user.id,
+        _condominium_id: selectedCondominium,
+      });
 
-      if (ucError) {
-        console.error("Error fetching user_condominiums:", ucError);
-        return;
-      }
-
-      const userIds = userCondos.map(uc => uc.user_id);
-      if (userIds.length === 0) {
+      if (error) {
+        console.error("Error fetching co-porters:", error);
         setCondominiumPorters([]);
         return;
       }
 
-      // Agora filtramos apenas aqueles que têm o papel de 'porteiro'
-      const { data: porters, error: pError } = await supabase
-        .from("profiles")
-        .select(`
-          user_id,
-          full_name,
-          user_roles!inner(role)
-        `)
-        .in("user_id", userIds)
-        .eq("user_roles.role", "porteiro");
-
-      if (pError) {
-        console.error("Error fetching porters:", pError);
-        setCondominiumPorters([]);
-        return;
-      }
-
-      if (porters) {
-        // Mapeamos para o formato necessário
-        const formattedPorters = porters.map((p: any) => ({
-          id: p.user_id,
-          full_name: p.full_name,
-        }));
-        
-        setCondominiumPorters(formattedPorters);
+      if (data) {
+        setCondominiumPorters(
+          data.map((p: { user_id: string; full_name: string }) => ({
+            id: p.user_id,
+            full_name: p.full_name,
+          }))
+        );
       }
     };
     fetchPorters();
