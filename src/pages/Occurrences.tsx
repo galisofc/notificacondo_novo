@@ -51,6 +51,7 @@ import {
   Send,
   Trash2,
   Pencil,
+  Search,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
