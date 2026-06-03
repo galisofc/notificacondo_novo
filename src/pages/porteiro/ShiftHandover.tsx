@@ -106,33 +106,23 @@ export default function ShiftHandover() {
       }
 
       if (data) {
+        // Buscamos os vínculos para verificar o is_active
         const userIds = data.map((p: any) => p.user_id);
-
-        // Buscamos vínculos ativos no condomínio
         const { data: links } = await supabase
           .from("user_condominiums")
           .select("user_id, is_active")
           .eq("condominium_id", selectedCondominium)
           .in("user_id", userIds);
 
-        const activeLinkSet = new Set(
-          (links as any[])?.filter(l => l.is_active !== false).map(l => l.user_id)
-        );
+        const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
 
-        // Buscamos roles para garantir que são realmente porteiros
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("user_id")
-          .eq("role", "porteiro")
-          .in("user_id", userIds);
-
-        const porterRoleSet = new Set((roles as any[])?.map(r => r.user_id));
-
+        // Filtramos para exibir APENAS os porteiros que estão ativos (is_active !== false)
         const activePorters = data
-          .filter((p: any) => activeLinkSet.has(p.user_id) && porterRoleSet.has(p.user_id))
+          .filter((p: any) => linkMap.get(p.user_id) !== false)
           .map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
             full_name: p.full_name,
+            is_active: true
           }));
 
         setCondominiumPorters(activePorters);
