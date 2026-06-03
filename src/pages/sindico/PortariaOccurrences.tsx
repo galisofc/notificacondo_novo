@@ -683,17 +683,26 @@ export default function SindicoPortariaOccurrences() {
     }
 
     // Footer
+    const pageHeight = doc.internal.pageSize.getHeight();
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(33, 33, 33);
+      doc.text(condominiumName.toUpperCase(), pageWidth / 2, pageHeight - 18, { align: "center" });
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
-      doc.setTextColor(150);
-      doc.text(
-        `Documento gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")} - Página ${i} de ${pageCount}`,
-        pageWidth / 2,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: "center" }
-      );
+      doc.setTextColor(100, 100, 100);
+      if (addressLine) {
+        doc.text(addressLine, pageWidth / 2, pageHeight - 13, { align: "center" });
+      }
+      if (cepLine) {
+        doc.text(cepLine, pageWidth / 2, pageHeight - 9, { align: "center" });
+      }
+      doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 5, { align: "right" });
     }
 
     doc.save(`ocorrencia_${occurrence.protocol || occurrence.id.slice(0, 8)}.pdf`);
