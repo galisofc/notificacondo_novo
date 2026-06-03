@@ -316,6 +316,7 @@ export default function PortariaOccurrences() {
       return (data || []).map((o) => ({
         ...o,
         resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
+        registered_by_name: o.registered_by ? (profileMap[o.registered_by] ?? null) : null,
         reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
         reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
         target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
