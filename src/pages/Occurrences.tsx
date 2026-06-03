@@ -1042,8 +1042,9 @@ const AdvertenciasEMultas = () => {
               </div>
             ))}
           </div>
-        )}
-      </TabsContent>
+        </>
+      )}
+    </TabsContent>
 
         {/* Confirmation Dialog for Notification */}
         <AlertDialog 
