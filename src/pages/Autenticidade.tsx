@@ -206,7 +206,7 @@ export default function Autenticidade() {
                 <div>
                   <p className="text-xs text-emerald-600 uppercase font-bold">Registrado por</p>
                   <p className="font-medium text-emerald-900">
-                    {occurrence.registered_by_profile?.full_name || "Sistema"}
+                    {profile?.full_name || "Sistema"}
                   </p>
                 </div>
               </div>
