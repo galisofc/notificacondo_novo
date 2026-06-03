@@ -581,10 +581,24 @@ export default function SindicoPortariaOccurrences() {
   };
 
   const generatePDF = async (occurrence: Occurrence) => {
+    // If protocol is missing, generate one and update the record (best effort)
+    let currentProtocol = occurrence.protocol;
+    if (!currentProtocol) {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      const part1 = Array.from({ length: 4 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      const part2 = Array.from({ length: 5 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      currentProtocol = `${part1}-${part2}`;
+      
+      // Update in background
+      supabase.from("porter_occurrences").update({ protocol: currentProtocol } as any).eq("id", occurrence.id).then(({ error }) => {
+        if (!error) {
+          occurrence.protocol = currentProtocol;
+          queryClient.invalidateQueries({ queryKey: ["sindico-porter-occurrences"] });
+        }
+      });
+    }
+
     const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    const contentWidth = pageWidth - margin * 2;
     let yPos = margin;
 
     const condo = occurrence.condominium;
