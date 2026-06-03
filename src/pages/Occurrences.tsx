@@ -1043,6 +1043,7 @@ const AdvertenciasEMultas = () => {
             ))}
           </div>
         )}
+      </TabsContent>
 
         {/* Confirmation Dialog for Notification */}
         <AlertDialog 
@@ -1527,7 +1528,6 @@ const AdvertenciasEMultas = () => {
           </DialogContent>
         </Dialog>
 
-          </TabsContent>
 
           <TabsContent value="unit-history">
             <UnitHistoryTab />
