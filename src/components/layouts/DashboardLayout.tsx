@@ -478,7 +478,7 @@ function SidebarNavigation() {
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
         { title: "Advertências e Multas", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
-        { title: "Salão de Festas", url: "/party-hall", icon: PartyPopper },
+        { title: "Espaços", url: "/party-hall", icon: PartyPopper },
       ],
     },
     {
