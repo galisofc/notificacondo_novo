@@ -472,7 +472,7 @@ function SidebarNavigation() {
       ],
     },
     {
-      title: "Serviços",
+      title: "Livro de Ocorrências",
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
