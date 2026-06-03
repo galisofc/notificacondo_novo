@@ -94,22 +94,47 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      const { data, error } = await supabase.rpc("get_co_porters", {
-        _user_id: user.id,
-        _condominium_id: selectedCondominium,
-      });
+      // Primeiro, buscamos os IDs de todos os usuários vinculados a este condomínio
+      const { data: userCondos, error: ucError } = await supabase
+        .from("user_condominiums")
+        .select("user_id")
+        .eq("condominium_id", selectedCondominium);
 
-      if (error) {
-        console.error("Error fetching co-porters:", error);
+      if (ucError) {
+        console.error("Error fetching user_condominiums:", ucError);
+        return;
+      }
+
+      const userIds = userCondos.map(uc => uc.user_id);
+      if (userIds.length === 0) {
         setCondominiumPorters([]);
         return;
       }
 
-      if (data) {
+      // Agora buscamos apenas os usuários que têm o cargo de 'porteiro' E estão ativos
+      // Nota: No Supabase, usuários deletados não aparecem em user_roles/profiles, 
+      // mas se houver uma coluna específica de status ou se precisarmos filtrar por login, 
+      // garantimos que o perfil exista e o cargo seja correto.
+      const { data: porters, error: pError } = await supabase
+        .from("user_roles")
+        .select(`
+          user_id,
+          profiles!inner(full_name)
+        `)
+        .in("user_id", userIds)
+        .eq("role", "porteiro");
+
+      if (pError) {
+        console.error("Error fetching porters:", pError);
+        setCondominiumPorters([]);
+        return;
+      }
+
+      if (porters) {
         setCondominiumPorters(
-          data.map((p: { user_id: string; full_name: string }) => ({
+          porters.map((p: any) => ({
             id: p.user_id,
-            full_name: p.full_name,
+            full_name: p.profiles.full_name,
           }))
         );
       }
