@@ -132,7 +132,7 @@ export default function ShiftHandover() {
         // Mapeamos para o formato necessário
         const formattedPorters = porters.map((p: any) => ({
           id: p.user_id,
-          full_name: p.profiles.full_name,
+          full_name: p.full_name,
         }));
         
         setCondominiumPorters(formattedPorters);
