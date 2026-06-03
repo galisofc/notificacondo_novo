@@ -116,13 +116,16 @@ export default function ShiftHandover() {
 
         const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
 
-        const allPorters = data.map((p: { user_id: string; full_name: string }) => ({
-          id: p.user_id,
-          full_name: p.full_name,
-          is_active: linkMap.get(p.user_id) !== false
-        }));
+        // Filtramos para exibir APENAS os porteiros que estão ativos (is_active !== false)
+        const activePorters = data
+          .filter((p: any) => linkMap.get(p.user_id) !== false)
+          .map((p: { user_id: string; full_name: string }) => ({
+            id: p.user_id,
+            full_name: p.full_name,
+            is_active: true
+          }));
 
-        setCondominiumPorters(allPorters);
+        setCondominiumPorters(activePorters);
       }
     };
     
