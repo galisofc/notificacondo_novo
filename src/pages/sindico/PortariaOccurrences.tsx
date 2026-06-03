@@ -316,6 +316,14 @@ export default function SindicoPortariaOccurrences() {
       const { data, error } = await query;
       if (error) throw error;
 
+      // Fetch condominium details for PDF
+      const { data: condoDetails } = await supabase
+        .from("condominiums")
+        .select("id, name, city, state, address, address_number, neighborhood, zip_code, logo_url")
+        .in("id", (data || []).map(o => o.condominium_id));
+      
+      const condoMap = Object.fromEntries((condoDetails || []).map(c => [c.id, c]));
+
       const resolvedByIds = [...new Set((data || []).map((o) => o.resolved_by).filter(Boolean))] as string[];
       let profileMap: Record<string, string> = {};
       if (resolvedByIds.length > 0) {
