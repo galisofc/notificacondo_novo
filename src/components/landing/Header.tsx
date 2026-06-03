@@ -55,6 +55,9 @@ const Header = () => {
             <Link to="/contato" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               Contato
             </Link>
+            <Link to="/autenticidade" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+              Autenticidade
+            </Link>
             <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
               FAQ
             </a>
@@ -119,6 +122,13 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contato
+              </Link>
+              <Link 
+                to="/autenticidade" 
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Autenticidade
               </Link>
               <a 
                 href="#faq" 
