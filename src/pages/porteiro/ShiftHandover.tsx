@@ -120,17 +120,20 @@ export default function ShiftHandover() {
 
         const linkData = (links as any[]) || [];
         
-        // Filtramos para exibir APENAS os usuários que:
-        // 1. Estão ativos (is_active !== false)
-        // 2. Possuem o cargo de 'porteiro'
-        const activePorters = data
+        // Filtramos para exibir APENAS os usuários que estão ativos (is_active !== false)
+        // Se houver porteiros, filtramos apenas por eles. Caso contrário, mostramos todos os ativos.
+        const portersInLink = linkData.filter(l => l.profiles?.role === 'porteiro');
+        const hasPorters = portersInLink.length > 0;
+
+        const filteredPorters = data
           .filter((p: any) => {
             const link = linkData.find(l => l.user_id === p.user_id);
             const isActive = link?.is_active !== false;
-            // Acessa o cargo através do objeto profiles retornado
+            
+            if (!hasPorters) return isActive;
+            
             const role = link?.profiles?.role;
-            const isPorter = role === 'porteiro';
-            return isActive && isPorter;
+            return isActive && role === 'porteiro';
           })
           .map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
@@ -138,7 +141,7 @@ export default function ShiftHandover() {
             is_active: true
           }));
 
-        setCondominiumPorters(activePorters);
+        setCondominiumPorters(filteredPorters);
       }
     };
     
