@@ -94,6 +94,8 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
+      console.log("Fetching porters for condominium:", selectedCondominium);
+      
       const { data, error } = await supabase.rpc("get_co_porters", {
         _user_id: user.id,
         _condominium_id: selectedCondominium,
@@ -106,19 +108,22 @@ export default function ShiftHandover() {
       }
 
       if (data) {
-        // Filtrar porteiros para garantir que nomes específicos não apareçam se estiverem "inativos"
-        // como Andrea Lacerda e Julio Cesar, caso não tenham sido removidos do banco.
+        console.log("Porters fetched:", data);
+        // Filtramos os porteiros inativos conhecidos e garantimos que a lista seja reativa
         const inactivePorters = ["Andrea Lacerda", "Julio Cesar"];
         const activePorters = data
-          .filter((p: { full_name: string }) => !inactivePorters.includes(p.full_name))
+          .filter((p: { full_name: string }) => p.full_name && !inactivePorters.includes(p.full_name))
           .map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
             full_name: p.full_name,
           }));
 
-        setCondominiumPorters(activePorters);
+        setCondominiumPorters([...activePorters]);
+      } else {
+        setCondominiumPorters([]);
       }
     };
+    
     fetchPorters();
     
     // Reset incoming porter when condominium changes
