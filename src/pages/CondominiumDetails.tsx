@@ -1094,7 +1094,7 @@ const CondominiumDetails = () => {
                                       </div>
                                     </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -1110,54 +1110,6 @@ const CondominiumDetails = () => {
                                           </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-      <div className="space-y-4 md:space-y-6 animate-fade-up">
-        <SindicoBreadcrumbs items={[{ label: "Condomínios", href: "/condominiums" }, { label: condominium?.name || "Detalhes" }]} />
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Pesquisar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-card"
-              />
-            </div>
-            <Select value={selectedBlockFilter} onValueChange={setSelectedBlockFilter}>
-              <SelectTrigger className="w-full sm:w-[180px] bg-card">
-                <Building2 className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Bloco" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os blocos</SelectItem>
-                {blocksForFilter.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => setBulkResidentImportDialog(true)}
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span className="hidden sm:inline">Importar CSV</span>
-              <span className="sm:hidden">CSV</span>
-            </Button>
-            <Button className="gap-2" onClick={() => setBulkWizardDialog(true)}>
-              <Wand2 className="w-4 h-4" />
-              Massa
-            </Button>
-            <Button className="gap-2" onClick={() => setBlockDialog(true)}>
-              <Plus className="w-4 h-4" />
-              Bloco
-            </Button>
-          </div>
-        </div>
                                           <DropdownMenuItem
                                             onClick={() => {
                                               const blockName = blocks.find(b => b.id === apt.block_id)?.name || "";
