@@ -418,6 +418,14 @@ const SindicoSettings = () => {
     try {
       setUploadingCertificate(true);
       
+      // Chamada para garantir que o bucket existe antes do upload
+      try {
+        await supabase.functions.invoke("setup-certificate-storage");
+      } catch (err) {
+        console.warn("Falha ao rodar setup-certificate-storage, tentando upload direto:", err);
+      }
+
+      
       // Sanitização básica do nome do arquivo
       const safeExtension = extension === 'pfx' ? 'pfx' : 'p12';
       const fileName = `${user.id}/certificate.${safeExtension}`;
