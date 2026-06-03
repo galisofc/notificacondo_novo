@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 const Auth = lazy(() => import("./pages/Auth"));
 const Contact = lazy(() => import("./pages/Contact"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Autenticidade = lazy(() => import("./pages/Autenticidade"));
 const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
 const CivilCode = lazy(() => import("./pages/CivilCode"));
 const Plans = lazy(() => import("./pages/Plans"));
@@ -117,6 +118,7 @@ const App = () => (
               <Route path="/privacidade" element={<PrivacyPolicy />} />
               <Route path="/termos" element={<TermsOfUse />} />
               <Route path="/codigo-civil" element={<CivilCode />} />
+              <Route path="/autenticidade" element={<Autenticidade />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/auth/callback/next/:next" element={<AuthCallback />} />
