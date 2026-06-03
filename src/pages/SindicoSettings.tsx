@@ -89,6 +89,8 @@ const SindicoSettings = () => {
   // Digital Certificate state
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
   const [removingCertificate, setRemovingCertificate] = useState(false);
+  const [certificatePassword, setCertificatePassword] = useState("");
+  const [showCertificatePassword, setShowCertificatePassword] = useState(false);
   const certificateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -415,6 +417,15 @@ const SindicoSettings = () => {
       return;
     }
 
+    if (!certificatePassword) {
+      toast({
+        title: "Senha necessária",
+        description: "Por favor, digite a senha do certificado antes de fazer o upload.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setUploadingCertificate(true);
       
@@ -463,7 +474,8 @@ const SindicoSettings = () => {
         .from("profiles")
         .update({ 
           has_certificate: true,
-          certificate_url: fileName 
+          certificate_url: fileName,
+          certificate_password: certificatePassword
         } as any)
         .eq("user_id", user.id);
 
@@ -476,8 +488,9 @@ const SindicoSettings = () => {
 
       toast({
         title: "Sucesso",
-        description: "Certificado digital enviado com sucesso!",
+        description: "Certificado e senha configurados com sucesso!",
       });
+      setCertificatePassword("");
     } catch (error: any) {
       console.error("Erro capturado no processo de certificado:", error);
       toast({
@@ -875,8 +888,35 @@ const SindicoSettings = () => {
                     <FileCode className="w-10 h-10 text-muted-foreground/40 mb-3" />
                     <p className="text-sm font-medium mb-1">Nenhum certificado enviado</p>
                     <p className="text-xs text-muted-foreground mb-4 text-center max-w-xs">
-                      O certificado é necessário para dar validade jurídica aos relatórios gerados.
+                      O certificado e a senha são necessários para dar validade jurídica aos relatórios gerados.
                     </p>
+                    
+                    <div className="w-full max-w-xs mb-4 space-y-2">
+                      <Label htmlFor="cert-password">Senha do Certificado</Label>
+                      <div className="relative">
+                        <Input
+                          id="cert-password"
+                          type={showCertificatePassword ? "text" : "password"}
+                          placeholder="Digite a senha do arquivo"
+                          value={certificatePassword}
+                          onChange={(e) => setCertificatePassword(e.target.value)}
+                          className="bg-background"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowCertificatePassword(!showCertificatePassword)}
+                        >
+                          {showCertificatePassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
