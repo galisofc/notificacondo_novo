@@ -36,7 +36,8 @@ export default function Autenticidade() {
     try {
       const cleanCode = code.trim().toUpperCase();
       
-      const { data, error: fetchError } = await supabase
+      // Try fetching by protocol first
+      let { data, error: fetchError } = await supabase
         .from("porter_occurrences")
         .select(`
           *,
@@ -44,6 +45,24 @@ export default function Autenticidade() {
         `)
         .filter("protocol", "eq", cleanCode)
         .maybeSingle();
+
+      // If not found by protocol, try by ID (checking if it is a valid UUID first)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanCode);
+      if (!data && isUuid) {
+        const { data: idData, error: idError } = await supabase
+          .from("porter_occurrences")
+          .select(`
+            *,
+            condominium:condominiums(name)
+          `)
+          .eq("id", cleanCode.toLowerCase())
+          .maybeSingle();
+        
+        if (idData) {
+          data = idData;
+          fetchError = idError;
+        }
+      }
 
       if (fetchError || !data) {
         setError("Documento não encontrado ou código inválido.");
