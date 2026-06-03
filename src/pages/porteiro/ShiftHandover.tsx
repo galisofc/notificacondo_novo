@@ -141,7 +141,7 @@ export default function ShiftHandover() {
             is_active: true
           }));
 
-        setCondominiumPorters(activePorters);
+        setCondominiumPorters(filteredPorters);
       }
     };
     
