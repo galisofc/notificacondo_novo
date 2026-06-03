@@ -683,7 +683,10 @@ export default function PortariaOccurrences() {
                 <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
-                  {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                  {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho-filter", name: "Barulho" }] : [])]
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                  }
                 </SelectContent>
               </Select>
               <Select
