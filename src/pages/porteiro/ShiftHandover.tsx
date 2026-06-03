@@ -108,6 +108,8 @@ export default function ShiftHandover() {
 
       // Agora buscamos os vínculos ativos com o condomínio para esses porteiros
       // Usamos string na query e casting para evitar erros de tipo em colunas novas
+      // Agora buscamos os vínculos com o condomínio para esses porteiros
+      // Usamos 'is_active' para garantir que apenas porteiros ativos apareçam
       const { data: rawLinks, error: linksError } = await supabase
         .from("user_condominiums")
         .select("user_id, is_active")
