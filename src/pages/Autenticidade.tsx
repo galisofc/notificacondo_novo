@@ -42,8 +42,8 @@ export default function Autenticidade() {
           *,
           condominium:condominiums(name)
         `)
-        .eq("protocol", cleanCode)
-        .single();
+        .eq("protocol", cleanCode as any)
+        .maybeSingle();
 
       if (fetchError || !data) {
         setError("Documento não encontrado ou código inválido.");
