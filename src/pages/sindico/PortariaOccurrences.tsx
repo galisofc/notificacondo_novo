@@ -408,6 +408,15 @@ export default function SindicoPortariaOccurrences() {
       const targetBlock = targetBlockId === "none" ? null : (targetBlockId || null);
       const targetApartment = targetApartmentId === "none" ? null : (targetApartmentId || null);
 
+      // Generate a random protocol like 3XRB-98RTG
+      const generateProtocol = () => {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const part1 = Array.from({ length: 4 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+        const part2 = Array.from({ length: 5 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+        return `${part1}-${part2}`;
+      };
+      const protocol = generateProtocol();
+
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
@@ -421,6 +430,7 @@ export default function SindicoPortariaOccurrences() {
         target_block_id: targetBlock,
         target_apartment_id: targetApartment,
         photos: photos,
+        protocol: protocol,
       } as any);
       if (error) throw error;
     },
@@ -571,6 +581,23 @@ export default function SindicoPortariaOccurrences() {
   };
 
   const generatePDF = async (occurrence: Occurrence) => {
+    // If protocol is missing, generate one and update the record (best effort)
+    let currentProtocol = occurrence.protocol;
+    if (!currentProtocol) {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      const part1 = Array.from({ length: 4 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      const part2 = Array.from({ length: 5 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      currentProtocol = `${part1}-${part2}`;
+      
+      // Update in background
+      supabase.from("porter_occurrences").update({ protocol: currentProtocol } as any).eq("id", occurrence.id).then(({ error }) => {
+        if (!error) {
+          occurrence.protocol = currentProtocol;
+          queryClient.invalidateQueries({ queryKey: ["sindico-porter-occurrences"] });
+        }
+      });
+    }
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
@@ -760,15 +787,23 @@ export default function SindicoPortariaOccurrences() {
       if (qrDataUrl) {
         const qrSize = 18;
         const qrX = pageWidth - margin - qrSize;
-        const qrY = pageHeight - 48; // Positioned above the footer line (which is at pageHeight - 25)
+        const qrY = pageHeight - 50; 
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+        
         doc.setFontSize(7);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(33, 33, 33);
         doc.text("Autenticação", qrX + qrSize / 2, qrY + qrSize + 3, { align: "center" });
+        
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6);
         doc.text("notificacondo.com.br/autenticidade", qrX + qrSize / 2, qrY + qrSize + 5.5, { align: "center" });
+        
+        // Show the unique validation code
+        const validationCode = occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.text(`CÓDIGO: ${validationCode}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: "center" });
       }
 
       doc.setFontSize(9);
