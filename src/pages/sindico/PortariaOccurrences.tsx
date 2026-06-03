@@ -895,17 +895,20 @@ export default function SindicoPortariaOccurrences() {
                 <Label>Descrição</Label>
                 <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descreva o ocorrido..." rows={4} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label>Categoria</Label>
                   <Select value={newCategory} onValueChange={setNewCategory}>
                     <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
                     <SelectContent>
-                      {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                      {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                      }
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label>Prioridade</Label>
                   <Select value={newPriority} onValueChange={setNewPriority}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -913,6 +916,17 @@ export default function SindicoPortariaOccurrences() {
                       {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data da Ocorrência</Label>
+                  <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário</Label>
+                  <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
                 </div>
               </div>
 
