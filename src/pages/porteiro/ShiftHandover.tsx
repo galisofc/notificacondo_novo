@@ -127,8 +127,6 @@ export default function ShiftHandover() {
     };
     
     fetchPorters();
-  }, [selectedCondominium, user]);
-    
     // Reset incoming porter when condominium changes
     setIncomingPorterName("");
     setIncomingPorterSelectValue("");
