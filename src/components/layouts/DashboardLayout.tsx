@@ -476,7 +476,7 @@ function SidebarNavigation() {
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
-        { title: "Livro de Ocorrências", url: "/occurrences", icon: FileText },
+        { title: "Advertências e Multas", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Espaços", url: "/party-hall", icon: PartyPopper },
       ],
