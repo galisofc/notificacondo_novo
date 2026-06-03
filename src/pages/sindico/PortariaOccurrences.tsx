@@ -706,7 +706,7 @@ export default function SindicoPortariaOccurrences() {
     const descLines = doc.splitTextToSize(occurrence.description, contentWidth);
     // Usando lineheightfactor de 1.5 para espaçamento entre linhas e alinhamento justify
     doc.text(descLines, margin, yPos, { align: "justify", maxWidth: contentWidth, lineHeightFactor: 1.5 });
-    yPos += descLines.length * (5 * 1.5) + 8;
+    yPos += (descLines.length * 5 * 1.5) + 5;
 
     if (occurrence.status === "resolvida" && occurrence.resolution_notes) {
       if (yPos > 250) {
@@ -719,7 +719,7 @@ export default function SindicoPortariaOccurrences() {
       doc.setFont("helvetica", "normal");
       const resLines = doc.splitTextToSize(occurrence.resolution_notes, contentWidth);
       doc.text(resLines, margin, yPos, { align: "justify", maxWidth: contentWidth, lineHeightFactor: 1.5 });
-      yPos += resLines.length * (5 * 1.5) + 8;
+      yPos += (resLines.length * 5 * 1.5) + 5;
     }
 
     // Photos
