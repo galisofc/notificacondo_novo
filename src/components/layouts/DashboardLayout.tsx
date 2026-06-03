@@ -150,7 +150,7 @@ const getPorteiroNavItems = (pendingPackages: number, openPorterOccs: number): N
     title: "Portaria",
     icon: ClipboardList,
     items: [
-      { title: "Advertências e Multas", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
+      { title: "Livro de Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
       { title: "Passagem de Plantão", url: "/porteiro/portaria/plantao", icon: ClipboardCheck },
     ],
   },
@@ -482,7 +482,7 @@ function SidebarNavigation() {
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
-        { title: "Advertências e Multas", url: "/occurrences", icon: FileText },
+        { title: "Livro de Ocorrências", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Salão de Festas", url: "/party-hall", icon: PartyPopper },
       ],
