@@ -443,7 +443,7 @@ export default function PorteiroPackages() {
                 </TabsTrigger>
                 <TabsTrigger value="retirada" className="gap-2">
                   <PackageCheck className="w-4 h-4" />
-                  Retiradas
+                  <span className="hidden sm:inline">Retiradas</span>
                 </TabsTrigger>
                 <TabsTrigger value="all">Todas</TabsTrigger>
               </TabsList>
