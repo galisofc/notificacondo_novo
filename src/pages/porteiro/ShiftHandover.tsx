@@ -369,11 +369,13 @@ export default function ShiftHandover() {
                             <SelectValue placeholder="Selecione o porteiro..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {condominiumPorters.map((p) => (
-                              <SelectItem key={p.id} value={p.full_name}>
-                                {p.full_name}
-                              </SelectItem>
-                            ))}
+                            {condominiumPorters
+                              .filter(p => p.id !== user?.id)
+                              .map((p) => (
+                                <SelectItem key={p.id} value={p.full_name}>
+                                  {p.full_name}
+                                </SelectItem>
+                              ))}
                             <SelectItem value="__outro__">Outro...</SelectItem>
                           </SelectContent>
                         </Select>
