@@ -94,25 +94,45 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      const { data, error } = await supabase.rpc("get_co_porters", {
-        _user_id: user.id,
-        _condominium_id: selectedCondominium,
-      });
+      // Primeiro buscamos os usuários vinculados ao condomínio
+      const { data: userCondos, error: ucError } = await supabase
+        .from("user_condominiums")
+        .select("user_id")
+        .eq("condominium_id", selectedCondominium);
 
-      if (error) {
-        console.error("Error fetching co-porters:", error);
+      if (ucError) {
+        console.error("Error fetching user_condominiums:", ucError);
+        return;
+      }
+
+      const userIds = userCondos.map(uc => uc.user_id);
+      if (userIds.length === 0) {
         setCondominiumPorters([]);
         return;
       }
 
-      if (data) {
-        // Filtrar porteiros que não possuem um perfil completo ou estão marcados como inativos.
-        // Como o status de login "inativo" geralmente se refere à exclusão ou desativação do usuário,
-        // garantimos que o perfil retornado seja válido.
+      // Agora buscamos apenas os usuários que têm o cargo de 'porteiro'
+      // No sistema, a remoção/inatividade de um porteiro remove seu 'user_role' ou o próprio perfil
+      const { data: porters, error: pError } = await supabase
+        .from("user_roles")
+        .select(`
+          user_id,
+          profiles!inner(full_name)
+        `)
+        .in("user_id", userIds)
+        .eq("role", "porteiro");
+
+      if (pError) {
+        console.error("Error fetching porters:", pError);
+        setCondominiumPorters([]);
+        return;
+      }
+
+      if (porters) {
         setCondominiumPorters(
-          data.map((p: { user_id: string; full_name: string }) => ({
+          porters.map((p: any) => ({
             id: p.user_id,
-            full_name: p.full_name,
+            full_name: p.profiles.full_name,
           }))
         );
       }
