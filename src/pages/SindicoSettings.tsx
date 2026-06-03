@@ -403,6 +403,8 @@ const SindicoSettings = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    console.log("Iniciando upload do certificado:", file.name, "Tamanho:", file.size);
+
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (extension !== 'pfx' && extension !== 'p12') {
       toast({
@@ -415,15 +417,26 @@ const SindicoSettings = () => {
 
     try {
       setUploadingCertificate(true);
-      const fileName = `${user.id}/certificate.${extension}`;
+      
+      // Sanitização básica do nome do arquivo
+      const safeExtension = extension === 'pfx' ? 'pfx' : 'p12';
+      const fileName = `${user.id}/certificate.${safeExtension}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log("Caminho do arquivo no storage:", fileName);
+
+      const { data, error: uploadError } = await supabase.storage
         .from("certificates")
         .upload(fileName, file, { 
           upsert: true,
+          cacheControl: '3600',
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Erro detalhado do upload storage:", uploadError);
+        throw uploadError;
+      }
+
+      console.log("Upload storage concluído com sucesso:", data);
 
       const { error: updateError } = await supabase
         .from("profiles")
@@ -433,7 +446,10 @@ const SindicoSettings = () => {
         } as any)
         .eq("user_id", user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Erro detalhado ao atualizar perfil:", updateError);
+        throw updateError;
+      }
 
       setProfile((prev) => prev ? { ...prev, has_certificate: true, certificate_url: fileName } : null);
 
@@ -442,10 +458,10 @@ const SindicoSettings = () => {
         description: "Certificado digital enviado com sucesso!",
       });
     } catch (error: any) {
-      console.error("Error uploading certificate:", error);
+      console.error("Erro capturado no processo de certificado:", error);
       toast({
-        title: "Erro",
-        description: error.message || "Não foi possível enviar o certificado.",
+        title: "Erro no Upload",
+        description: error.message || "Não foi possível enviar o certificado. Verifique as permissões do sistema.",
         variant: "destructive",
       });
     } finally {
