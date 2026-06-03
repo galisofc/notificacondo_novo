@@ -150,10 +150,10 @@ const getPorteiroNavItems = (pendingPackages: number, openPorterOccs: number): N
     title: "Portaria",
     icon: ClipboardList,
     items: [
-      { title: "Livro de Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
       { title: "Passagem de Plantão", url: "/porteiro/portaria/plantao", icon: ClipboardCheck },
     ],
   },
+  { title: "Livro de Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
   { title: "Configurações", url: "/porteiro/configuracoes", icon: Settings },
 ];
 
