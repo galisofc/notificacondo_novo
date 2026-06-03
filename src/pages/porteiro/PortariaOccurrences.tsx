@@ -496,7 +496,7 @@ export default function PortariaOccurrences() {
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Registrar em Advertencias e Multas</DialogTitle>
+                <DialogTitle>Registrar Ocorrência</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
