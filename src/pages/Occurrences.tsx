@@ -1274,7 +1274,7 @@ const AdvertenciasEMultas = () => {
                   <FileText className="w-4 h-4 text-primary" />
                   Detalhes da Ocorrência
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Tipo *</Label>
                     <Select
@@ -1379,7 +1379,7 @@ const AdvertenciasEMultas = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Artigo da Convenção</Label>
                       <Input
@@ -1441,7 +1441,7 @@ const AdvertenciasEMultas = () => {
                 </div>
 
                 {(uploadedFiles.length > 0 || existingEvidences.length > 0) && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2">
                     {existingEvidences.map((ev) => (
                       <div
                         key={ev.id}
