@@ -599,6 +599,10 @@ export default function SindicoPortariaOccurrences() {
     }
 
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+    let yPos = margin;
     let yPos = margin;
 
     const condo = occurrence.condominium;
