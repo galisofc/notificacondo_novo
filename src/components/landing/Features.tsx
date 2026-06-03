@@ -283,7 +283,7 @@ const Features = () => {
           <TabsContent value="ocorrencias" className="mt-0">
             <div className="text-center mb-8">
               <h3 className="font-display text-2xl font-bold text-foreground mb-2">
-                Advertências e Multas
+                Serviços
               </h3>
               <p className="text-muted-foreground">
                 Sistema completo com validade jurídica, contraditório e ampla defesa garantidos.

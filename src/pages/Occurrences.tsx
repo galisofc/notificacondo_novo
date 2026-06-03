@@ -105,7 +105,7 @@ const OCCURRENCE_TYPES = [
   { value: "multa", label: "Multa" },
 ];
 
-const LivroDeOcorrencias = () => {
+const Servicos = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -1473,4 +1473,4 @@ const LivroDeOcorrencias = () => {
   );
 };
 
-export default LivroDeOcorrencias;
+export default Servicos;
