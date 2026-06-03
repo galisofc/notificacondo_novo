@@ -13,9 +13,52 @@ import { ptBR } from "date-fns/locale";
 export default function Autenticidade() {
   const [verificationCode, setVerificationCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const [occurrence, setOccurrence] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
-  const handleValidate = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (code) {
+      setVerificationCode(code.toUpperCase());
+      validateCode(code.toUpperCase());
+    }
+  }, [searchParams]);
+
+  const validateCode = async (code: string) => {
+    if (!code.trim()) return;
+
+    setIsValidating(true);
+    setError(null);
+    setOccurrence(null);
+
+    try {
+      const cleanCode = code.trim().toUpperCase();
+      
+      const { data, error: fetchError } = await supabase
+        .from("porter_occurrences")
+        .select(`
+          *,
+          condominium:condominiums(name)
+        `)
+        .eq("protocol", cleanCode)
+        .single();
+
+      if (fetchError || !data) {
+        setError("Documento não encontrado ou código inválido.");
+      } else {
+        setOccurrence(data);
+      }
+    } catch (err) {
+      console.error("Erro ao validar código:", err);
+      setError("Ocorreu um erro ao validar o documento.");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleValidate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode.trim()) {
       toast({
@@ -25,16 +68,7 @@ export default function Autenticidade() {
       });
       return;
     }
-
-    setIsValidating(true);
-    // Simulating validation logic for now as per requirements
-    setTimeout(() => {
-      setIsValidating(false);
-      toast({
-        title: "Validação concluída",
-        description: "Funcionalidade de verificação em implementação.",
-      });
-    }, 1500);
+    validateCode(verificationCode);
   };
 
   return (
