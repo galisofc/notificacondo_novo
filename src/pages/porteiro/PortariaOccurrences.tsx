@@ -865,6 +865,11 @@ export default function PortariaOccurrences() {
 
                         <p className="text-xs text-muted-foreground mt-1">
                           {format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          {occ.registered_by_name && (
+                            <span className="ml-2">
+                              · Criado por: <span className="font-semibold text-foreground">{occ.registered_by_name}</span>
+                            </span>
+                          )}
                         </p>
                         {occ.status === "resolvida" && occ.resolution_notes && (
                           <p className="text-sm text-muted-foreground mt-1.5">
