@@ -131,43 +131,58 @@ export default function Autenticidade() {
         
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto space-y-8">
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-2">
-                  <ShieldCheck className="w-8 h-8 text-primary" />
+            <div className="max-w-2xl mx-auto space-y-10">
+              <div className="text-center space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 mb-2 transform transition-transform hover:rotate-6 duration-300">
+                  <ShieldCheck className="w-10 h-10 text-primary" />
                 </div>
-                <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                  Autenticidade de Documentos
-                </h1>
-                <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-                  Utilize esta ferramenta oficial para validar a veracidade de ocorrências e notificações emitidas pela nossa plataforma.
-                </p>
+                <div className="space-y-3">
+                  <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+                    Autenticidade de Documentos
+                  </h1>
+                  <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
+                    Utilize esta ferramenta oficial para validar a veracidade de ocorrências e notificações emitidas pela nossa plataforma.
+                  </p>
+                </div>
               </div>
 
-              <Card className="border-border shadow-lg">
-                <CardHeader>
-                  <CardTitle>Validar Código</CardTitle>
-                  <CardDescription>
+              <Card className="border-border/50 shadow-xl shadow-primary/5 overflow-hidden transition-all duration-300 hover:shadow-primary/10 group animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <CardHeader className="relative">
+                  <CardTitle className="text-2xl">Validar Código</CardTitle>
+                  <CardDescription className="text-base">
                     Insira o código alfanumérico ou protocolo impresso no documento para verificação imediata.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleValidate} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="verificationCode">Código de verificação</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="verificationCode"
-                          placeholder="Ex: 2026/0029"
-                          value={verificationCode}
-                          onChange={(e) => handleCodeChange(e.target.value)}
-                          className="uppercase font-mono h-12 text-lg"
-                        />
-                        <Button type="submit" size="lg" disabled={isValidating} className="px-6">
+                <CardContent className="relative">
+                  <form onSubmit={handleValidate} className="space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="verificationCode" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        Código de verificação
+                      </Label>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1 group">
+                          <Input
+                            id="verificationCode"
+                            placeholder="Ex: 2026/0029"
+                            value={verificationCode}
+                            onChange={(e) => handleCodeChange(e.target.value)}
+                            className="uppercase font-mono h-14 text-xl px-5 border-2 transition-all duration-300 focus-visible:ring-primary/20 focus-visible:border-primary group-hover:border-primary/50"
+                          />
+                        </div>
+                        <Button 
+                          type="submit" 
+                          size="lg" 
+                          disabled={isValidating} 
+                          className="h-14 px-8 text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-95 transition-all duration-200"
+                        >
                           {isValidating ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <Loader2 className="h-6 w-6 animate-spin" />
                           ) : (
-                            <Search className="h-5 w-5" />
+                            <>
+                              <Search className="mr-2 h-5 w-5" />
+                              Validar
+                            </>
                           )}
                         </Button>
                       </div>
@@ -177,18 +192,23 @@ export default function Autenticidade() {
               </Card>
 
               {isValidating && (
-                <div className="flex flex-col items-center justify-center p-12 space-y-4">
-                  <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                  <p className="text-muted-foreground font-medium">Consultando base de dados oficial...</p>
+                <div className="flex flex-col items-center justify-center p-12 space-y-6 animate-in fade-in duration-500">
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                    <Loader2 className="w-12 h-12 text-primary animate-spin relative" />
+                  </div>
+                  <p className="text-muted-foreground font-medium text-lg animate-pulse">Consultando base de dados oficial...</p>
                 </div>
               )}
 
               {error && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-8 flex items-start gap-5 animate-in fade-in slide-in-from-top-4">
-                  <XCircle className="w-8 h-8 text-destructive shrink-0" />
+                <div className="bg-destructive/5 border-2 border-destructive/20 rounded-2xl p-8 flex items-start gap-6 animate-in zoom-in-95 duration-500 shadow-lg shadow-destructive/5">
+                  <div className="bg-destructive/10 p-3 rounded-xl">
+                    <XCircle className="w-8 h-8 text-destructive shrink-0" />
+                  </div>
                   <div>
-                    <h3 className="text-lg font-bold text-destructive">Documento não autenticado</h3>
-                    <p className="text-destructive/80 mt-1 leading-relaxed">
+                    <h3 className="text-xl font-bold text-destructive">Documento não autenticado</h3>
+                    <p className="text-destructive/80 mt-2 leading-relaxed text-lg">
                       {error} Verifique se o código foi digitado corretamente. Caso o erro persista, este documento pode não ter sido emitido pela nossa plataforma oficial.
                     </p>
                   </div>
@@ -196,72 +216,81 @@ export default function Autenticidade() {
               )}
 
               {occurrence && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 space-y-8 animate-in fade-in slide-in-from-top-4 shadow-sm">
-                  <div className="flex items-start gap-5">
-                    <div className="bg-emerald-100 p-2 rounded-full">
-                      <CheckCircle2 className="w-10 h-10 text-emerald-600 shrink-0" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-emerald-900 leading-tight">Documento Autêntico</h3>
-                      <p className="text-emerald-700 mt-1">Este documento foi emitido e registrado em nossa plataforma NotificaCondo sob total conformidade.</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-emerald-200/50">
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-emerald-100/50 rounded-lg">
-                        <FileText className="w-5 h-5 text-emerald-600" />
+                <div className="bg-card border-2 border-emerald-500/20 rounded-2xl overflow-hidden animate-in zoom-in-95 duration-700 shadow-2xl shadow-emerald-500/10">
+                  <div className="bg-emerald-500/10 p-8 border-b border-emerald-500/10">
+                    <div className="flex items-start gap-6">
+                      <div className="bg-emerald-500 p-3 rounded-2xl shadow-lg shadow-emerald-500/20 animate-bounce-subtle">
+                        <CheckCircle2 className="w-10 h-10 text-white shrink-0" />
                       </div>
                       <div>
-                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Título</p>
-                        <p className="font-semibold text-emerald-950">{occurrence.title}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-emerald-100/50 rounded-lg">
-                        <Building2 className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Condomínio</p>
-                        <p className="font-semibold text-emerald-950">{occurrence.condominium?.name}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-emerald-100/50 rounded-lg">
-                        <Calendar className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Data de Registro</p>
-                        <p className="font-semibold text-emerald-950">
-                          {format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-emerald-100/50 rounded-lg">
-                        <User className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Registrado por</p>
-                        <p className="font-semibold text-emerald-950">
-                          {profile?.full_name || "Sistema"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 md:col-span-2">
-                      <div className="p-2 bg-emerald-100/50 rounded-lg">
-                        <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider">Protocolo de Verificação</p>
-                        <p className="font-mono font-bold text-emerald-900 text-lg">{occurrence.protocol || occurrence.id}</p>
+                        <h3 className="text-3xl font-black text-emerald-900 leading-tight tracking-tight">Documento Autêntico</h3>
+                        <p className="text-emerald-700 mt-2 text-lg font-medium opacity-90">Este documento foi emitido e registrado em nossa plataforma NotificaCondo sob total conformidade.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-white/60 p-6 rounded-lg border border-emerald-100">
-                    <p className="text-xs text-emerald-600 uppercase font-bold tracking-wider mb-2">Conteúdo do Documento</p>
-                    <p className="text-emerald-950 leading-relaxed whitespace-pre-wrap">{occurrence.description}</p>
+                  <div className="p-8 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="flex items-center gap-5 group transition-transform duration-300 hover:translate-x-1">
+                        <div className="p-3 bg-secondary rounded-xl group-hover:bg-primary/10 transition-colors">
+                          <FileText className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mb-0.5">Título</p>
+                          <p className="font-bold text-foreground text-lg">{occurrence.title}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-5 group transition-transform duration-300 hover:translate-x-1">
+                        <div className="p-3 bg-secondary rounded-xl group-hover:bg-primary/10 transition-colors">
+                          <Building2 className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mb-0.5">Condomínio</p>
+                          <p className="font-bold text-foreground text-lg">{occurrence.condominium?.name}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-5 group transition-transform duration-300 hover:translate-x-1">
+                        <div className="p-3 bg-secondary rounded-xl group-hover:bg-primary/10 transition-colors">
+                          <Calendar className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mb-0.5">Data de Registro</p>
+                          <p className="font-bold text-foreground text-lg">
+                            {format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-5 group transition-transform duration-300 hover:translate-x-1">
+                        <div className="p-3 bg-secondary rounded-xl group-hover:bg-primary/10 transition-colors">
+                          <User className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mb-0.5">Registrado por</p>
+                          <p className="font-bold text-foreground text-lg">
+                            {profile?.full_name || "Sistema"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-5 md:col-span-2 p-5 bg-primary/5 rounded-2xl border border-primary/10 group hover:border-primary/30 transition-all duration-300">
+                        <div className="p-3 bg-primary/10 rounded-xl">
+                          <ShieldCheck className="w-8 h-8 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-primary/70 uppercase font-black tracking-widest mb-0.5">Protocolo de Verificação</p>
+                          <p className="font-mono font-black text-primary text-2xl tracking-tighter">{occurrence.protocol || occurrence.id}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4 border-t border-border/50">
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-6 bg-primary rounded-full" />
+                        <p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Conteúdo do Documento</p>
+                      </div>
+                      <div className="bg-secondary/50 p-6 rounded-2xl border border-border/50 hover:border-primary/20 transition-colors duration-300">
+                        <p className="text-foreground/90 leading-relaxed text-lg whitespace-pre-wrap">{occurrence.description}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
