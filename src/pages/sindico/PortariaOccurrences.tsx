@@ -67,8 +67,7 @@ interface Occurrence {
     address_number: string | null;
     neighborhood: string | null;
     zip_code: string | null;
-    logo_url: string | null;
-  };
+  } | null;
 }
 
 interface Category {
