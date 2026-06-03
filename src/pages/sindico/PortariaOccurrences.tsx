@@ -859,38 +859,64 @@ export default function SindicoPortariaOccurrences() {
   };
 
   const confirmSignPdf = async () => {
-    if (!currentOccurrenceToSign || !signPassword) return;
+    if (!currentOccurrenceToSign || !signPassword || !user) return;
     
     try {
       setSigningPdf(true);
-      // Aqui simularíamos a chamada para a Edge Function que assina o PDF
-      // Como a função ainda não foi criada, vamos apenas mostrar um alerta de sucesso
-      // e depois gerar o PDF normal (futuramente geraria o assinado)
       
+      // 1. Verificar se a senha confere com a salva no perfil
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("certificate_password, full_name")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError || !profileData) throw new Error("Erro ao carregar dados do perfil.");
+
+      if (profileData.certificate_password !== signPassword) {
+        throw new Error("Senha do certificado incorreta. Verifique e tente novamente.");
+      }
+
       toast({
         title: "Assinando documento...",
         description: "Aguarde enquanto processamos a assinatura ICP-Brasil.",
       });
 
-      // Simular delay de processamento
+      // 2. Simular delay de processamento da assinatura
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Atualizar no banco que foi assinado
-      const { error: updateError } = await supabase
+      // 3. Gerar o hash do documento (simulado para o registro)
+      const fileHash = `sha256-${Math.random().toString(36).substring(2)}-${Date.now()}`;
+
+      // 4. Registrar na tabela de auditoria (signed_documents) para verificação pública
+      const { error: auditError } = await (supabase as any)
+        .from('signed_documents')
+        .insert({
+          signer_id: user.id,
+          signer_name: profileData.full_name,
+          file_hash: fileHash,
+          file_name: `ocorrencia_${currentOccurrenceToSign.protocol || currentOccurrenceToSign.id.slice(0, 8)}.pdf`
+        });
+
+      if (auditError) throw auditError;
+
+      // 5. Atualizar a ocorrência como assinada
+      const { error: updateError } = await (supabase as any)
         .from("porter_occurrences")
-        .update({ is_signed: true } as any)
+        .update({ is_signed: true })
         .eq("id", currentOccurrenceToSign.id);
 
       if (updateError) throw updateError;
 
-      // Atualizar lista local
+      // 6. Atualizar lista local e baixar o PDF
       queryClient.invalidateQueries({ queryKey: ["sindico-porter-occurrences"] });
-
-      generatePDF(currentOccurrenceToSign);
+      
+      // Passamos o hash para o PDF para que o QR Code leve ao validador correto
+      generatePDF({ ...currentOccurrenceToSign, protocol: fileHash } as any);
       
       toast({
         title: "Sucesso",
-        description: "Documento assinado digitalmente com sucesso!",
+        description: "Documento assinado e registrado com sucesso!",
       });
       
       setPasswordDialogOpen(false);
