@@ -357,6 +357,7 @@ export default function SindicoPortariaOccurrences() {
         reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
         target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
         target_apartment_number: o.target_apartment_id ? (aptMap[o.target_apartment_id] ?? null) : null,
+        condominium: condoMap[o.condominium_id] || null,
       })) as Occurrence[];
     },
     enabled: !!selectedCondominium,
