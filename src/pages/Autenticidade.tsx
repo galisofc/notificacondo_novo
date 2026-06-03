@@ -74,7 +74,7 @@ export default function Autenticidade() {
           .eq("user_id", data.registered_by)
           .maybeSingle();
         
-        data.registered_by_profile = profileData;
+        setProfile(profileData);
       }
 
       if (fetchError || !data) {
