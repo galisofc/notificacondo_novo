@@ -107,14 +107,15 @@ export default function ShiftHandover() {
       }
 
       // Agora buscamos os vínculos ativos com o condomínio para esses porteiros
-      // Usamos 'as any' porque a coluna 'is_active' foi adicionada mas não está nos tipos gerados
-      const { data: activeLinks, error: linksError } = await supabase
+      // Usamos string na query e casting para evitar erros de tipo em colunas novas
+      const { data: rawLinks, error: linksError } = await supabase
         .from("user_condominiums")
         .select("user_id, is_active")
         .eq("condominium_id", selectedCondominium)
-        .eq("is_active" as any, true)
         .in("user_id", porterUserIds)
-        .neq("user_id", user.id) as any;
+        .neq("user_id", user.id);
+
+      const activeLinks = (rawLinks as any[])?.filter(l => l.is_active !== false);
 
       if (linksError) {
         console.error("Error fetching active links:", linksError);
