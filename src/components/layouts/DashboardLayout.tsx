@@ -56,11 +56,15 @@ import {
   Cog,
   AlertTriangle,
   Megaphone,
+  Search,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import logoImage from "@/assets/logo.webp";
 import logoIcon from "@/assets/logo-icon.png";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -922,6 +926,9 @@ function SidebarNavigation() {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { user, signOut } = useAuth();
+  const { profileInfo } = useUserRole();
+  const navigate = useNavigate();
   const savedState = localStorage.getItem("sidebar-open");
   const initialOpen = savedState !== null ? savedState === "true" : false;
 
@@ -932,16 +939,75 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     localStorage.setItem("sidebar-open", String(newOpen));
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-background font-body">
         <SidebarNavigation />
         <main className="flex-1 flex flex-col min-h-screen overflow-hidden w-full">
-          <header className="sticky top-0 z-40 h-14 border-b border-border bg-card/80 backdrop-blur-lg flex items-center justify-between px-3 md:px-4">
-            <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-            <ThemeToggle />
+          <header className="sticky top-0 z-40 h-16 border-b border-border bg-card/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted p-2 rounded-lg transition-colors" />
+              <div className="hidden md:flex relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Pesquisar..." 
+                  className="pl-9 h-9 bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/20 rounded-full text-sm"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="text-muted-foreground relative rounded-full">
+                  <Bell className="w-5 h-5" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
+                </Button>
+                <ThemeToggle />
+              </div>
+              
+              <div className="h-8 w-px bg-border mx-1 hidden sm:block" />
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 p-1 pl-2 hover:bg-muted rounded-full transition-colors">
+                    <div className="hidden sm:flex flex-col items-end mr-1">
+                      <span className="text-sm font-semibold text-foreground leading-none">{profileInfo?.full_name?.split(" ")[0] || "Usuário"}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">Premium</span>
+                    </div>
+                    <Avatar className="h-8 w-8 border border-border shadow-sm">
+                      <AvatarImage src="" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        {profileInfo?.full_name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl border-border shadow-elevated">
+                  <DropdownMenuLabel className="font-display font-semibold">Minha Conta</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/resident/profile")} className="gap-2 cursor-pointer py-2 rounded-lg m-1">
+                    <User className="w-4 h-4" />
+                    Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/sindico/settings")} className="gap-2 cursor-pointer py-2 rounded-lg m-1">
+                    <Settings className="w-4 h-4" />
+                    Configurações
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="gap-2 cursor-pointer text-destructive focus:text-destructive py-2 rounded-lg m-1">
+                    <LogOut className="w-4 h-4" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </header>
-          <div className="flex-1 overflow-auto p-3 md:p-6">{children}</div>
+          <div className="flex-1 overflow-auto p-4 md:p-8 max-w-[1600px] mx-auto w-full">{children}</div>
         </main>
       </div>
     </SidebarProvider>
