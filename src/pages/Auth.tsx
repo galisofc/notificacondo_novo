@@ -562,7 +562,7 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-purple-500 uppercase tracking-wide">Salão de Festas</h3>
+              <h3 className="text-sm font-semibold text-purple-500 uppercase tracking-wide">Espaços</h3>
               <div className="space-y-2">
                 {["Reservas online com calendário", "Lembretes automáticos", "Checklist de entrada e saída"].map((feature, index) => (
                   <div key={index} className="flex items-center gap-3">

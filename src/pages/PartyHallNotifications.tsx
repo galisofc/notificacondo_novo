@@ -157,7 +157,7 @@ export default function PartyHallNotifications() {
         
         <SindicoBreadcrumbs
           items={[
-            { label: "Salão de Festas", href: "/party-hall" },
+            { label: "Espaços", href: "/party-hall" },
             { label: "Histórico de Notificações" },
           ]}
         />

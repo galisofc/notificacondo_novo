@@ -112,7 +112,7 @@ const featureCategories = [
     ]
   },
   {
-    name: "Módulo Salão de Festas",
+    name: "Módulo Espaços",
     icon: PartyPopper,
     features: [
       { name: "Agenda de reservas", description: "Calendário visual de reservas", all: true },
@@ -290,7 +290,7 @@ const Plans = () => {
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30">
                   <PartyPopper className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Salão de Festas</span>
+                  <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Espaços</span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                   <DoorOpen className="w-4 h-4 text-emerald-500" />
