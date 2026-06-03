@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, FileText, Calendar, Building2 } from "lucide-react";
+import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, FileText, Calendar, Building2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
