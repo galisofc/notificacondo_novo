@@ -114,24 +114,19 @@ export default function ShiftHandover() {
           .eq("condominium_id", selectedCondominium)
           .in("user_id", userIds);
 
-        // Garantimos que apenas vínculos com is_active === true sejam considerados
-        const activeUserIds = new Set(
-          (links as any[])?.filter(l => l.is_active === true).map(l => l.user_id)
-        );
+        const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
 
-        const activePorters = data
-          .filter((p: any) => activeUserIds.has(p.user_id))
-          .map((p: { user_id: string; full_name: string }) => ({
-            id: p.user_id,
-            full_name: p.full_name,
-          }));
+        const allPorters = data.map((p: { user_id: string; full_name: string }) => ({
+          id: p.user_id,
+          full_name: p.full_name,
+          is_active: linkMap.get(p.user_id) !== false
+        }));
 
-        setCondominiumPorters(activePorters);
+        setCondominiumPorters(allPorters);
       }
     };
     
     fetchPorters();
-    
     // Reset incoming porter when condominium changes
     setIncomingPorterName("");
     setIncomingPorterSelectValue("");
@@ -386,9 +381,14 @@ export default function ShiftHandover() {
                             <SelectValue placeholder="Selecione o porteiro..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {condominiumPorters.map((p) => (
+                            {condominiumPorters.map((p: any) => (
                               <SelectItem key={p.id} value={p.full_name}>
-                                {p.full_name}
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{p.full_name}</span>
+                                  {p.is_active === false && (
+                                    <Badge variant="outline" className="ml-2 text-[10px] text-destructive border-destructive">Inativo</Badge>
+                                  )}
+                                </div>
                               </SelectItem>
                             ))}
                             <SelectItem value="__outro__">Outro...</SelectItem>
