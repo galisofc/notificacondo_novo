@@ -106,23 +106,38 @@ export default function ShiftHandover() {
       }
 
       if (data) {
-        // Buscamos os vínculos para verificar o is_active
+        // 1. Buscamos os IDs de todos os usuários retornados pela RPC
         const userIds = data.map((p: any) => p.user_id);
-        const { data: links } = await supabase
+        
+        // 2. Verificamos o status 'is_active' na tabela user_condominiums
+        const { data: links, error: linksError } = await supabase
           .from("user_condominiums")
           .select("user_id, is_active")
           .eq("condominium_id", selectedCondominium)
           .in("user_id", userIds);
 
-        const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
+        if (linksError) {
+          console.error("Error fetching user_condominiums status:", linksError);
+          // Fallback seguro: se houver erro na verificação, não mostramos ninguém inativo por acidente
+          setCondominiumPorters([]);
+          return;
+        }
 
-        const allPorters = data.map((p: { user_id: string; full_name: string }) => ({
-          id: p.user_id,
-          full_name: p.full_name,
-          is_active: linkMap.get(p.user_id) !== false
-        }));
+        // 3. Criamos um conjunto (Set) de IDs que estão explicitamente ativos
+        const activeUserIds = new Set(
+          (links as any[])?.filter(l => l.is_active === true).map(l => l.user_id)
+        );
 
-        setCondominiumPorters(allPorters);
+        // 4. Filtramos a lista original da RPC para manter apenas os ativos
+        const activePorters = data
+          .filter((p: any) => activeUserIds.has(p.user_id))
+          .map((p: { user_id: string; full_name: string }) => ({
+            id: p.user_id,
+            full_name: p.full_name,
+            is_active: true
+          }));
+
+        setCondominiumPorters(activePorters);
       }
     };
     
