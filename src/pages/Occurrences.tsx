@@ -744,13 +744,13 @@ const LivroDeOcorrencias = () => {
       </Helmet>
       <SubscriptionGate condominiumId={condominiumFilter !== "all" ? condominiumFilter : undefined}>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
-        <SindicoBreadcrumbs items={[{ label: "Advertências e Multas" }]} />
+        <SindicoBreadcrumbs items={[{ label: "Livro de Ocorrências" }]} />
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-            Advertências e Multas
+            Livro de Ocorrências
           </h1>
            <p className="text-sm md:text-base text-muted-foreground mt-1">
-            Registre e gerencie as Advertências e Multas do Condomínio
+            Registre e gerencie as Ocorrências do Condomínio
           </p>
         </div>
 
