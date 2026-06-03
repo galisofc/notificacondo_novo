@@ -14,6 +14,7 @@ export default function Autenticidade() {
   const [verificationCode, setVerificationCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
   const [occurrence, setOccurrence] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
