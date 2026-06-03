@@ -21,6 +21,9 @@ import {
   Check,
   ImageIcon,
   Trash2,
+  FileCode,
+  Upload,
+  ShieldCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -46,6 +49,8 @@ interface Profile {
   phone: string | null;
   cpf: string | null;
   avatar_url: string | null;
+  has_certificate?: boolean;
+  certificate_url?: string | null;
 }
 
 const SindicoSettings = () => {
@@ -80,6 +85,11 @@ const SindicoSettings = () => {
   const [imageError, setImageError] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
   const [removingAvatar, setRemovingAvatar] = useState(false);
+
+  // Digital Certificate state
+  const [uploadingCertificate, setUploadingCertificate] = useState(false);
+  const [removingCertificate, setRemovingCertificate] = useState(false);
+  const certificateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
