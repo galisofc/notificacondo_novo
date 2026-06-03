@@ -94,26 +94,29 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      // 1. Buscamos primeiro os vínculos ativos do condomínio selecionado
-      const { data: links, error: linksError } = await supabase
+      // 1. Buscamos primeiro os vínculos do condomínio selecionado
+      // Usamos string literals para as colunas e casting para evitar erros de tipo em colunas novas no schema
+      const { data: rawLinks, error: linksError } = await supabase
         .from("user_condominiums")
         .select("user_id, is_active")
         .eq("condominium_id", selectedCondominium)
-        .eq("is_active" as any, true) // Forçamos a busca apenas por ativos no banco
         .neq("user_id", user.id);
 
       if (linksError) {
-        console.error("Error fetching active user_condominiums:", linksError);
+        console.error("Error fetching user_condominiums:", linksError);
         setCondominiumPorters([]);
         return;
       }
 
-      if (!links || links.length === 0) {
+      // Filtramos por is_active explicitamente no código para garantir segurança máxima
+      const activeLinks = (rawLinks as any[])?.filter(l => l.is_active === true);
+
+      if (!activeLinks || activeLinks.length === 0) {
         setCondominiumPorters([]);
         return;
       }
 
-      const activeUserIds = links.map(l => l.user_id);
+      const activeUserIds = activeLinks.map(l => l.user_id);
 
       // 2. Agora filtramos esses usuários para garantir que tenham o papel de 'porteiro'
       const { data: porterRoles, error: rolesError } = await supabase
