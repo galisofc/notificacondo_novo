@@ -57,6 +57,7 @@ import {
   AlertTriangle,
   Megaphone,
   Search,
+  Menu,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -927,7 +928,7 @@ function SidebarNavigation() {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, signOut } = useAuth();
-  const { profileInfo } = useUserRole();
+  const { profileInfo, role } = useUserRole();
   const navigate = useNavigate();
   const savedState = localStorage.getItem("sidebar-open");
   const initialOpen = savedState !== null ? savedState === "true" : false;
@@ -946,18 +947,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
-      <div className="min-h-screen flex w-full bg-background font-body">
+      <div className="min-h-screen flex w-full bg-background font-body overflow-hidden">
         <SidebarNavigation />
-        <main className="flex-1 flex flex-col min-h-screen overflow-hidden w-full">
+        <main className="flex-1 flex flex-col min-h-screen overflow-hidden w-full min-w-0">
           <header className="sticky top-0 z-40 h-16 border-b border-border bg-card/50 backdrop-blur-xl flex items-center justify-between px-4 md:px-6">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted p-2 rounded-lg transition-colors" />
+              <SidebarTrigger className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-muted p-2 rounded-lg transition-colors" />
+              <MobileSidebarTrigger className="md:hidden" />
               <div className="hidden md:flex relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input 
                   placeholder="Pesquisar..." 
                   className="pl-9 h-9 bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/20 rounded-full text-sm"
                 />
+              </div>
+              <div className="flex items-center gap-2 md:hidden">
+                <img src={logoIcon} alt="Logo" className="w-8 h-8 object-contain" />
               </div>
             </div>
             
@@ -990,7 +995,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl border-border shadow-elevated">
                   <DropdownMenuLabel className="font-display font-semibold">Minha Conta</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/resident/profile")} className="gap-2 cursor-pointer py-2 rounded-lg m-1">
+                  <DropdownMenuItem onClick={() => navigate(role === "morador" ? "/resident/profile" : role === "porteiro" ? "/porteiro/configuracoes" : "/sindico/settings")} className="gap-2 cursor-pointer py-2 rounded-lg m-1">
                     <User className="w-4 h-4" />
                     Perfil
                   </DropdownMenuItem>
@@ -1007,9 +1012,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenu>
             </div>
           </header>
-          <div className="flex-1 overflow-auto p-4 md:p-8 max-w-[1600px] mx-auto w-full">{children}</div>
+          <div className="flex-1 overflow-auto p-4 md:p-8 w-full">
+            <div className="max-w-[1600px] mx-auto w-full">{children}</div>
+          </div>
         </main>
       </div>
     </SidebarProvider>
+  );
+}
+
+function MobileSidebarTrigger({ className }: { className?: string }) {
+  const { setOpenMobile } = useSidebar();
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn("h-10 w-10 text-muted-foreground hover:text-foreground", className)}
+      onClick={() => setOpenMobile(true)}
+    >
+      <Menu className="h-6 w-6" />
+      <span className="sr-only">Toggle Sidebar</span>
+    </Button>
   );
 }
