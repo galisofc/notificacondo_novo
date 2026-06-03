@@ -41,7 +41,8 @@ export default function Autenticidade() {
         .from("porter_occurrences")
         .select(`
           *,
-          condominium:condominiums(name)
+          condominium:condominiums(name),
+          registered_by_profile:profiles!registered_by(full_name)
         `)
         .filter("protocol", "eq", cleanCode)
         .maybeSingle();
