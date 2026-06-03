@@ -121,6 +121,7 @@ const AdvertenciasEMultas = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -171,7 +172,12 @@ const AdvertenciasEMultas = () => {
     const matchesStatus = statusFilter === "all" || occ.status === statusFilter;
     const matchesType = typeFilter === "all" || occ.type === typeFilter;
     const matchesCondominium = condominiumFilter === "all" || occ.condominium_id === condominiumFilter;
-    return matchesStatus && matchesType && matchesCondominium;
+    const matchesSearch = !searchTerm || 
+      occ.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      occ.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      occ.residents?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      occ.apartments?.number?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesType && matchesCondominium && matchesSearch;
   });
 
   const fetchData = async () => {
