@@ -543,6 +543,32 @@ export default function SindicoPortariaOccurrences() {
     return <Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
   };
 
+  const loadImageAsDataUrl = async (
+    url: string
+  ): Promise<{ dataUrl: string; format: "JPEG" | "PNG"; width: number; height: number } | null> => {
+    try {
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const dims: { width: number; height: number } = await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => resolve({ width: 0, height: 0 });
+        img.src = dataUrl;
+      });
+      const isPng = blob.type.includes("png");
+      return { dataUrl, format: isPng ? "PNG" : "JPEG", width: dims.width, height: dims.height };
+    } catch {
+      return null;
+    }
+  };
+
   const generatePDF = async (occurrence: Occurrence) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -562,9 +588,53 @@ export default function SindicoPortariaOccurrences() {
     const addressLine = [fullAddress, cityState].filter(Boolean).join(" – ");
     const cepLine = condo?.zip_code ? `CEP: ${condo.zip_code}` : "";
 
+    const formatFullDate = (date: Date) => {
+      const months = [
+        "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+      ];
+      return `${date.getDate().toString().padStart(2, "0")} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+    };
+
+    // Right-side block: city + date and logo (matches multa/advertência PDF)
+    const rightColX = pageWidth - margin;
+    const headerCity = (city || "").toUpperCase();
+    const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(new Date())}`;
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(33, 33, 33);
+    doc.text(dateLabel, rightColX, yPos, { align: "right" });
+
+    let rightBottomY = yPos;
+    if (condo?.logo_url) {
+      const logoData = await loadImageAsDataUrl(condo.logo_url);
+      if (logoData && logoData.width > 0) {
+        const maxLogoH = 22;
+        const maxLogoW = 55;
+        const ratio = logoData.width / logoData.height;
+        let logoH = maxLogoH;
+        let logoW = logoH * ratio;
+        if (logoW > maxLogoW) {
+          logoW = maxLogoW;
+          logoH = logoW / ratio;
+        }
+        const logoX = rightColX - logoW;
+        const logoY = yPos + 6;
+        try {
+          doc.addImage(logoData.dataUrl, logoData.format, logoX, logoY, logoW, logoH);
+          rightBottomY = logoY + logoH;
+        } catch (e) {
+          console.warn("Failed to add logo to PDF", e);
+        }
+      }
+    }
+
+    yPos = Math.max(yPos + 18, rightBottomY + 6);
+
     // Header
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(33, 33, 33);
     doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
     yPos += 10;
     
