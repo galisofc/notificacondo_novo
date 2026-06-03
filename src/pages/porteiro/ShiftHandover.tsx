@@ -94,22 +94,22 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("user_id, profiles(full_name)")
-        .eq("role", "porteiro");
+      const { data, error } = await supabase.rpc("get_co_porters", {
+        _user_id: user.id,
+        _condominium_id: selectedCondominium,
+      });
 
       if (error) {
-        console.error("Error fetching porters:", error);
+        console.error("Error fetching co-porters:", error);
         setCondominiumPorters([]);
         return;
       }
 
       if (data) {
         setCondominiumPorters(
-          data.map((p: any) => ({
+          data.map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
-            full_name: p.profiles.full_name,
+            full_name: p.full_name,
           }))
         );
       }
@@ -369,13 +369,11 @@ export default function ShiftHandover() {
                             <SelectValue placeholder="Selecione o porteiro..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {condominiumPorters
-                              .filter(p => p.id !== user?.id)
-                              .map((p) => (
-                                <SelectItem key={p.id} value={p.full_name}>
-                                  {p.full_name}
-                                </SelectItem>
-                              ))}
+                            {condominiumPorters.map((p) => (
+                              <SelectItem key={p.id} value={p.full_name}>
+                                {p.full_name}
+                              </SelectItem>
+                            ))}
                             <SelectItem value="__outro__">Outro...</SelectItem>
                           </SelectContent>
                         </Select>
