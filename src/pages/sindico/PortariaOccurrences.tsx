@@ -596,15 +596,15 @@ export default function SindicoPortariaOccurrences() {
       return `${date.getDate().toString().padStart(2, "0")} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
     };
 
-    // Right-side block: city + date and logo (matches multa/advertência PDF)
-    const rightColX = pageWidth - margin;
+    // Left-side block: city + date and logo
+    const leftColX = margin;
     const headerCity = (city || "").toUpperCase();
     const occurrenceDate = new Date(occurrence.created_at);
     const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(occurrenceDate)}`;
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(33, 33, 33);
-    doc.text(dateLabel, rightColX, yPos, { align: "right" });
+    doc.text(dateLabel, leftColX, yPos, { align: "left" });
 
     let rightBottomY = yPos;
     if (condo?.logo_url) {
@@ -619,7 +619,7 @@ export default function SindicoPortariaOccurrences() {
           logoW = maxLogoW;
           logoH = logoW / ratio;
         }
-        const logoX = rightColX - logoW;
+        const logoX = leftColX;
         const logoY = yPos + 6;
         try {
           doc.addImage(logoData.dataUrl, logoData.format, logoX, logoY, logoW, logoH);
