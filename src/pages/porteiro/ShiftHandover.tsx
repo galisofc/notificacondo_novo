@@ -94,63 +94,38 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      // Primeiro, buscamos os IDs de todos os usuários com papel de 'porteiro'
-      const { data: porterRoles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "porteiro");
-      
-      const porterUserIds = porterRoles?.map((r) => r.user_id) || [];
-      if (porterUserIds.length === 0) {
+      const { data, error } = await supabase.rpc("get_co_porters", {
+        _user_id: user.id,
+        _condominium_id: selectedCondominium,
+      });
+
+      if (error) {
+        console.error("Error fetching co-porters:", error);
         setCondominiumPorters([]);
         return;
       }
 
-      // Agora buscamos os vínculos ativos com o condomínio para esses porteiros
-      // Usamos string na query e casting para evitar erros de tipo em colunas novas
-      // Agora buscamos os vínculos com o condomínio para esses porteiros
-      // Usamos 'is_active' para garantir que apenas porteiros ativos apareçam
-      const { data: rawLinks, error: linksError } = await supabase
-        .from("user_condominiums")
-        .select("user_id, is_active")
-        .eq("condominium_id", selectedCondominium)
-        .in("user_id", porterUserIds)
-        .neq("user_id", user.id);
+      if (data) {
+        // Buscamos os vínculos para verificar o is_active
+        const userIds = data.map((p: any) => p.user_id);
+        const { data: links } = await supabase
+          .from("user_condominiums")
+          .select("user_id, is_active")
+          .eq("condominium_id", selectedCondominium)
+          .in("user_id", userIds);
 
-      const activeLinks = (rawLinks as any[])?.filter(l => l.is_active !== false);
+        const activeUserIds = new Set(
+          (links as any[])?.filter(l => l.is_active !== false).map(l => l.user_id)
+        );
 
-      if (linksError) {
-        console.error("Error fetching active links:", linksError);
-        setCondominiumPorters([]);
-        return;
-      }
-
-      if (!activeLinks || activeLinks.length === 0) {
-        setCondominiumPorters([]);
-        return;
-      }
-
-      // Por fim, buscamos os nomes dos perfis
-      const activeUserIds = activeLinks.map(l => l.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", activeUserIds)
-        .order("full_name");
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        setCondominiumPorters([]);
-        return;
-      }
-
-      if (profiles) {
-        setCondominiumPorters(
-          profiles.map((p) => ({
+        const activePorters = data
+          .filter((p: any) => activeUserIds.has(p.user_id))
+          .map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
             full_name: p.full_name,
-          }))
-        );
+          }));
+
+        setCondominiumPorters(activePorters);
       }
     };
     
