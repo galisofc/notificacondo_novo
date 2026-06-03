@@ -1265,9 +1265,9 @@ export default function SindicoPortariaOccurrences() {
                             variant="default"
                             size="sm"
                             className={cn(
-                              "gap-1",
+                              "gap-1 font-semibold",
                               occ.is_signed 
-                                ? "bg-accent text-white hover:bg-accent/90 cursor-default" 
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default" 
                                 : "bg-emerald-600 hover:bg-emerald-700 text-white"
                             )}
                             onClick={() => !occ.is_signed && handleSignPdf(occ)}
