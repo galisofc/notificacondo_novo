@@ -94,22 +94,22 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      const { data, error } = await supabase.rpc("get_co_porters", {
-        _user_id: user.id,
-        _condominium_id: selectedCondominium,
-      });
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("user_id, profiles(full_name)")
+        .eq("role", "porteiro");
 
       if (error) {
-        console.error("Error fetching co-porters:", error);
+        console.error("Error fetching porters:", error);
         setCondominiumPorters([]);
         return;
       }
 
       if (data) {
         setCondominiumPorters(
-          data.map((p: { user_id: string; full_name: string }) => ({
+          data.map((p: any) => ({
             id: p.user_id,
-            full_name: p.full_name,
+            full_name: p.profiles.full_name,
           }))
         );
       }
