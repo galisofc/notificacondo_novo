@@ -257,7 +257,7 @@ const Features = () => {
         </div>
 
         <Tabs defaultValue="ocorrencias" className="w-full">
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-5 mb-12 h-auto">
+          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-3 sm:grid-cols-5 mb-12 h-auto gap-1">
             <TabsTrigger value="ocorrencias" className="flex flex-col gap-1 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Scale className="w-5 h-5" />
               <span className="text-[10px] sm:text-sm font-medium">Ocorrências</span>

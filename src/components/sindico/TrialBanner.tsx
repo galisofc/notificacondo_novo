@@ -89,7 +89,7 @@ const TrialBanner = () => {
               }`} />
             </div>
 
-            <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${
                   isUrgent ? "bg-amber-500/20" : "bg-primary/20"
@@ -131,8 +131,8 @@ const TrialBanner = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
+              <div className="flex items-center justify-between sm:justify-end gap-2">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${
                   isUrgent
                     ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
                     : "bg-primary/20 text-primary"

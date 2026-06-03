@@ -374,14 +374,14 @@ const Dashboard = () => {
         <meta name="description" content="Painel de gestão condominial" />
       </Helmet>
 
-      <div className="space-y-8 animate-fade-up">
+      <div className="space-y-6 md:space-y-8 animate-fade-up">
         <SindicoBreadcrumbs items={[]} />
 
         {/* Trial Banner */}
         <TrialBanner />
 
         {/* Welcome Section */}
-        <div>
+        <div className="px-1">
           <h1 className="font-display text-3xl font-bold text-foreground">
             Olá, {profile?.full_name?.split(" ")[0] || "Síndico"}! 👋
           </h1>
@@ -391,13 +391,13 @@ const Dashboard = () => {
         </div>
 
         {/* Period Filter + Stats Grid */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-4 px-1">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <h2 className="font-display text-lg font-semibold text-foreground flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
               Estatísticas
             </h2>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               {/* Condominium Selector */}
               <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
                 <SelectTrigger className="w-full sm:w-[200px]">
@@ -415,12 +415,12 @@ const Dashboard = () => {
               </Select>
 
               {/* Period Filter */}
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg overflow-x-auto no-scrollbar">
                 {periodOptions.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => setPeriodFilter(option.value)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    className={`flex-1 sm:flex-none px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all whitespace-nowrap ${
                       periodFilter === option.value
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
@@ -446,7 +446,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {statCards.map((stat, index) => (
               <Card
                 key={index}
@@ -454,7 +454,7 @@ const Dashboard = () => {
                 onClick={stat.action}
               >
                 <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${stat.gradient}`} />
-                <CardContent className="p-4 sm:p-6">
+                <CardContent className="p-5">
                   <div className="flex items-center justify-between mb-4">
                     <div
                       className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}

@@ -320,7 +320,7 @@ const Workflow = () => {
         </div>
 
         <Tabs defaultValue="ocorrencias" className="max-w-4xl mx-auto">
-          <TabsList className="grid w-full grid-cols-5 mb-12 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 mb-12 h-auto p-1 gap-1">
             {modules.map((module) => {
               const colors = getColorClasses(module.color);
               return (

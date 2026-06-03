@@ -20,11 +20,11 @@ interface SindicoBreadcrumbsProps {
 
 const SindicoBreadcrumbs = ({ items }: SindicoBreadcrumbsProps) => {
   return (
-    <Breadcrumb className="mb-6">
-      <BreadcrumbList>
-        <BreadcrumbItem>
+    <Breadcrumb className="mb-4 sm:mb-6 overflow-hidden">
+      <BreadcrumbList className="flex-nowrap overflow-x-auto no-scrollbar pb-1">
+        <BreadcrumbItem className="flex-shrink-0">
           <BreadcrumbLink asChild>
-            <Link to="/dashboard" className="flex items-center gap-1.5">
+            <Link to="/dashboard" className="flex items-center gap-1.5 whitespace-nowrap">
               <Home className="w-3.5 h-3.5" />
               Dashboard
             </Link>
