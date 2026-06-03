@@ -787,7 +787,7 @@ export default function SindicoPortariaOccurrences() {
       if (qrDataUrl) {
         const qrSize = 18;
         const qrX = pageWidth - margin - qrSize;
-        const qrY = pageHeight - 50; 
+        const qrY = pageHeight - 56; 
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
         
         doc.setFontSize(7);
