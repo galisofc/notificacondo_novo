@@ -110,7 +110,7 @@ export default function ShiftHandover() {
         const userIds = data.map((p: any) => p.user_id);
         const { data: links } = await supabase
           .from("user_condominiums")
-          .select("user_id, is_active")
+          .select("user_id, is_active, profiles(role)")
           .eq("condominium_id", selectedCondominium)
           .in("user_id", userIds);
 
