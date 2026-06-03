@@ -606,31 +606,7 @@ export default function SindicoPortariaOccurrences() {
     doc.setTextColor(33, 33, 33);
     doc.text(dateLabel, leftColX, yPos, { align: "left" });
 
-    let rightBottomY = yPos;
-    if (condo?.logo_url) {
-      const logoData = await loadImageAsDataUrl(condo.logo_url);
-      if (logoData && logoData.width > 0) {
-        const maxLogoH = 22;
-        const maxLogoW = 55;
-        const ratio = logoData.width / logoData.height;
-        let logoH = maxLogoH;
-        let logoW = logoH * ratio;
-        if (logoW > maxLogoW) {
-          logoW = maxLogoW;
-          logoH = logoW / ratio;
-        }
-        const logoX = leftColX;
-        const logoY = yPos + 6;
-        try {
-          doc.addImage(logoData.dataUrl, logoData.format, logoX, logoY, logoW, logoH);
-          rightBottomY = logoY + logoH;
-        } catch (e) {
-          console.warn("Failed to add logo to PDF", e);
-        }
-      }
-    }
-
-    yPos = Math.max(yPos + 18, rightBottomY + 12);
+    yPos = yPos + 10;
 
     // Header
     doc.setFontSize(16);
