@@ -359,6 +359,12 @@ export default function PortariaOccurrences() {
   const createMutation = useMutation({
     mutationFn: async () => {
       const occurredAt = new Date(`${occurredDate}T${occurredTime}:00`);
+      
+      const reporterBlock = reporterBlockId === "none" ? null : (reporterBlockId || null);
+      const reporterApartment = reporterApartmentId === "none" ? null : (reporterApartmentId || null);
+      const targetBlock = targetBlockId === "none" ? null : (targetBlockId || null);
+      const targetApartment = targetApartmentId === "none" ? null : (targetApartmentId || null);
+
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
@@ -367,10 +373,10 @@ export default function PortariaOccurrences() {
         category: newCategory,
         priority: newPriority,
         occurred_at: isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString(),
-        reporter_block_id: reporterBlockId || null,
-        reporter_apartment_id: reporterApartmentId || null,
-        target_block_id: targetBlockId || null,
-        target_apartment_id: targetApartmentId || null,
+        reporter_block_id: reporterBlock,
+        reporter_apartment_id: reporterApartment,
+        target_block_id: targetBlock,
+        target_apartment_id: targetApartment,
         photos: photos,
       } as any);
       if (error) throw error;
