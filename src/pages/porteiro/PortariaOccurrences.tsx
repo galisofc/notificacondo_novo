@@ -84,7 +84,7 @@ export default function PortariaOccurrences() {
 
   const [condominiums, setCondominiums] = useState<{ id: string; name: string }[]>([]);
   const [selectedCondominium, setSelectedCondominium] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("aberta");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
