@@ -113,13 +113,14 @@ export default function ShiftHandover() {
 
       // Agora filtramos apenas aqueles que têm o papel de 'porteiro'
       const { data: porters, error: pError } = await supabase
-        .from("user_roles")
+        .from("profiles")
         .select(`
           user_id,
-          profiles!inner(full_name)
+          full_name,
+          user_roles!inner(role)
         `)
         .in("user_id", userIds)
-        .eq("role", "porteiro");
+        .eq("user_roles.role", "porteiro");
 
       if (pError) {
         console.error("Error fetching porters:", pError);
