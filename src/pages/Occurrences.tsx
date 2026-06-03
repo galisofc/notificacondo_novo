@@ -105,7 +105,7 @@ const OCCURRENCE_TYPES = [
   { value: "multa", label: "Multa" },
 ];
 
-const Servicos = () => {
+const AdvertenciasEMultas = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -1473,4 +1473,4 @@ const Servicos = () => {
   );
 };
 
-export default Servicos;
+export default AdvertenciasEMultas;
