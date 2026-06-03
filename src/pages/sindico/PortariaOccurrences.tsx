@@ -572,7 +572,7 @@ export default function SindicoPortariaOccurrences() {
       <div className="space-y-8 animate-fade-up">
 
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
               Livro de Ocorrências
@@ -600,7 +600,7 @@ export default function SindicoPortariaOccurrences() {
 
         {/* Stat Cards */}
         {selectedCondominium && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
             {statCards.map((stat, index) => (
               <Card key={index} className="bg-card border-border shadow-card hover:shadow-elevated transition-all duration-300 relative group">
                 <CardContent className="p-3 sm:p-4 md:p-5">

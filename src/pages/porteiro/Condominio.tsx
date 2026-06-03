@@ -505,7 +505,7 @@ export default function PorteiroCondominio() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
@@ -546,7 +546,7 @@ export default function PorteiroCondominio() {
         {/* Search and Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap items-stretch sm:items-center">
               {/* Quick Search */}
               {selectedCondoId && (
                 <QuickBlockApartmentSearch
@@ -574,6 +574,7 @@ export default function PorteiroCondominio() {
               )}
 
               {/* Block Filter */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <Select
                 value={selectedBlockFilter}
                 onValueChange={(v) => {
@@ -582,7 +583,7 @@ export default function PorteiroCondominio() {
                 }}
                 disabled={!selectedCondoId}
               >
-                <SelectTrigger className="w-full md:w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <Building2 className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Bloco" />
                 </SelectTrigger>
@@ -602,7 +603,7 @@ export default function PorteiroCondominio() {
                 onValueChange={setSelectedApartmentFilter}
                 disabled={selectedBlockFilter === "all"}
               >
-                <SelectTrigger className="w-full md:w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Home className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Apto" />
                 </SelectTrigger>
@@ -615,6 +616,7 @@ export default function PorteiroCondominio() {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
 
               {/* Text Search */}
               <div className="relative flex-1 min-w-[200px]">

@@ -639,7 +639,7 @@ export default function PortariaOccurrences() {
 
         {/* Stat Cards */}
         {selectedCondominium && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
             {statCards.map((stat, index) => (
               <Card key={index} className="bg-card border-border shadow-card hover:shadow-elevated transition-all duration-300 relative group">
                 <CardContent className="p-3 sm:p-4 md:p-5">
@@ -680,7 +680,7 @@ export default function PortariaOccurrences() {
                 </Select>
               )}
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
                   {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho-filter", name: "Barulho" }] : [])]
@@ -693,7 +693,7 @@ export default function PortariaOccurrences() {
                 value={filterBlockId}
                 onValueChange={(v) => { setFilterBlockId(v); setFilterApartmentId("all"); }}
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Building2 className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
                   <SelectValue placeholder="Bloco" />
                 </SelectTrigger>

@@ -51,6 +51,7 @@ import {
   Send,
   Trash2,
   Pencil,
+  Search,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -121,6 +122,7 @@ const AdvertenciasEMultas = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -171,7 +173,12 @@ const AdvertenciasEMultas = () => {
     const matchesStatus = statusFilter === "all" || occ.status === statusFilter;
     const matchesType = typeFilter === "all" || occ.type === typeFilter;
     const matchesCondominium = condominiumFilter === "all" || occ.condominium_id === condominiumFilter;
-    return matchesStatus && matchesType && matchesCondominium;
+    const matchesSearch = !searchTerm || 
+      occ.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      occ.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      occ.residents?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      occ.apartments?.number?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesType && matchesCondominium && matchesSearch;
   });
 
   const fetchData = async () => {
@@ -627,7 +634,40 @@ const AdvertenciasEMultas = () => {
       });
     } finally {
       setSendingNotification(null);
+      setConfirmNotifyDialog({ open: false, occurrence: null });
     }
+  };
+
+  const handleOpenDialog = () => {
+    if (condominiums.length === 0) {
+      toast({
+        title: "Atenção",
+        description: "Cadastre um condomínio primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setEditingId(null);
+    setUploadedFiles([]);
+    setExistingEvidences([]);
+    setRemovedEvidenceIds([]);
+    setFormData({
+      condominium_id: condominiumFilter !== "all" ? condominiumFilter : "",
+      block_id: "",
+      apartment_id: "",
+      resident_id: "",
+      type: "advertencia",
+      title: "",
+      description: "",
+      location: "",
+      occurred_at: nowInSaoPauloForInput(),
+      convention_article: "",
+      internal_rules_article: "",
+      civil_code_article: "",
+      legal_basis: "",
+      fine_percentage: "50",
+    });
+    setIsDialogOpen(true);
   };
 
   const handleDelete = async (occurrence: any) => {
@@ -884,7 +924,67 @@ const AdvertenciasEMultas = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-3 md:space-y-4">
+          <>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Pesquisar ocorrências..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9 bg-card"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-full sm:w-[150px] bg-card">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Status</SelectItem>
+                      <SelectItem value="registrada">Registrada</SelectItem>
+                      <SelectItem value="notificado">Notificado</SelectItem>
+                      <SelectItem value="arquivada">Arquivada</SelectItem>
+                      <SelectItem value="advertido">Advertido</SelectItem>
+                      <SelectItem value="em_defesa">Em Defesa</SelectItem>
+                      <SelectItem value="multado">Multado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleOpenDialog} className="w-full sm:w-auto gap-2 shadow-glow">
+                  <Plus className="w-4 h-4" />
+                  Nova Ocorrência
+                </Button>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px] bg-card">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Tipos</SelectItem>
+                    <SelectItem value="advertencia">Advertência</SelectItem>
+                    <SelectItem value="notificacao">Notificação</SelectItem>
+                    <SelectItem value="multa">Multa</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={condominiumFilter} onValueChange={setCondominiumFilter}>
+                  <SelectTrigger className="w-full sm:w-[220px] bg-card">
+                    <SelectValue placeholder="Condomínio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Condomínios</SelectItem>
+                    {condominiums.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-3 md:space-y-4">
             {filteredOccurrences.map((occurrence) => (
               <div
                 key={occurrence.id}
@@ -962,7 +1062,7 @@ const AdvertenciasEMultas = () => {
                       variant="outline" 
                       size="sm" 
                       className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setConfirmDeleteDialog({ open: true, occurrence })}
+                      onClick={() => setConfirmDeleteDialog({ open: true, occurrence: occurrence })}
                       disabled={deleting === occurrence.id}
                     >
                       {deleting === occurrence.id ? (
@@ -976,7 +1076,9 @@ const AdvertenciasEMultas = () => {
               </div>
             ))}
           </div>
-        )}
+        </>
+      )}
+    </TabsContent>
 
         {/* Confirmation Dialog for Notification */}
         <AlertDialog 
@@ -1208,7 +1310,7 @@ const AdvertenciasEMultas = () => {
                   <FileText className="w-4 h-4 text-primary" />
                   Detalhes da Ocorrência
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Tipo *</Label>
                     <Select
@@ -1313,7 +1415,7 @@ const AdvertenciasEMultas = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Artigo da Convenção</Label>
                       <Input
@@ -1375,7 +1477,7 @@ const AdvertenciasEMultas = () => {
                 </div>
 
                 {(uploadedFiles.length > 0 || existingEvidences.length > 0) && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2">
                     {existingEvidences.map((ev) => (
                       <div
                         key={ev.id}
@@ -1461,7 +1563,6 @@ const AdvertenciasEMultas = () => {
           </DialogContent>
         </Dialog>
 
-          </TabsContent>
 
           <TabsContent value="unit-history">
             <UnitHistoryTab />

@@ -59,7 +59,7 @@ export default function ResidentPackages() {
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 md:grid-cols-3">
           <Card className="border-yellow-200 dark:border-yellow-900 bg-gradient-to-br from-yellow-50 to-white dark:from-yellow-950/20 dark:to-background">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
@@ -175,7 +175,7 @@ export default function ResidentPackages() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 lg:grid-cols-3">
                 {packages.map((pkg) => (
                   <div key={pkg.id} className="relative group">
                     <PackageCard

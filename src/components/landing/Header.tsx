@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -80,8 +80,9 @@ const Header = () => {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="md:hidden p-2 text-foreground"
+            className="md:hidden p-2 text-foreground h-10 w-10 flex items-center justify-center rounded-lg hover:bg-secondary/50 transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -89,8 +90,8 @@ const Header = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border/50">
-            <nav className="flex flex-col gap-4">
+          <div className="md:hidden py-6 border-t border-border/50 animate-fade-in">
+            <nav className="flex flex-col gap-5">
               <a 
                 href="#funcionalidades" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -126,31 +127,38 @@ const Header = () => {
               >
                 FAQ
               </a>
-              <div className="flex flex-col gap-2 pt-4">
+              <div className="flex flex-col gap-3 pt-6 border-t border-border/20">
                 {user ? (
                   <Button 
                     variant="hero" 
-                    className="w-full justify-center" 
+                    className="w-full justify-center h-12 text-base font-semibold gap-2" 
                     onClick={() => {
                       setIsMenuOpen(false);
                       navigate("/dashboard");
                     }}
                   >
-                    Painel
+                    <LayoutDashboard className="w-5 h-5" />
+                    Acessar Painel
                   </Button>
                 ) : (
                   <>
                     <Button 
-                      variant="ghost" 
-                      className="w-full justify-center" 
+                      variant="outline" 
+                      className="w-full justify-center h-12 text-base gap-2 border-primary/20 hover:bg-primary/5" 
                       onClick={() => {
                         setIsMenuOpen(false);
                         navigate("/auth");
                       }}
                     >
+                      <LogIn className="w-5 h-5" />
                       Entrar
                     </Button>
-                    <Button variant="hero" className="w-full justify-center" onClick={goToPricing}>
+                    <Button 
+                      variant="hero" 
+                      className="w-full justify-center h-12 text-base font-semibold gap-2 shadow-glow" 
+                      onClick={goToPricing}
+                    >
+                      <UserPlus className="w-5 h-5" />
                       Começar Grátis
                     </Button>
                   </>

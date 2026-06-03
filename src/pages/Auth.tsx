@@ -1143,7 +1143,7 @@ const Auth = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
                     >
-                      <div className="col-span-2 space-y-2">
+                      <div className="col-span-3 sm:col-span-2 space-y-2">
                         <Label htmlFor="city" className="text-foreground">Cidade</Label>
                         <Input
                           id="city"
@@ -1156,7 +1156,7 @@ const Auth = () => {
 
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className="col-span-3 sm:col-span-1 space-y-2">
                         <Label htmlFor="state" className="text-foreground">UF</Label>
                         <select
                           id="state"
@@ -1227,7 +1227,7 @@ const Auth = () => {
                     </motion.div>
 
                     <motion.div 
-                      className="grid grid-cols-2 gap-4"
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.15 }}

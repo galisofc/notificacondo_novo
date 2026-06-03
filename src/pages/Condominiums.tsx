@@ -632,31 +632,33 @@ const Condominiums = () => {
                     Contato
                   </h3>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <MaskedInput
-                      id="phone"
-                      mask="phone"
-                      value={formData.phone}
-                      onChange={(value) => setFormData({ ...formData, phone: value })}
-                      className="bg-secondary/50"
-                      placeholder="(00) 00000-0000"
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Telefone</Label>
+                      <MaskedInput
+                        id="phone"
+                        mask="phone"
+                        value={formData.phone}
+                        onChange={(value) => setFormData({ ...formData, phone: value })}
+                        className="bg-secondary/50"
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="gatehouse_phone">WhatsApp da Portaria</Label>
-                    <MaskedInput
-                      id="gatehouse_phone"
-                      mask="phone"
-                      value={formData.gatehouse_phone}
-                      onChange={(value) => setFormData({ ...formData, gatehouse_phone: value })}
-                      className="bg-secondary/50"
-                      placeholder="(00) 00000-0000"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Número que receberá os avisos do salão de festas no dia da reserva.
-                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="gatehouse_phone">WhatsApp da Portaria</Label>
+                      <MaskedInput
+                        id="gatehouse_phone"
+                        mask="phone"
+                        value={formData.gatehouse_phone}
+                        onChange={(value) => setFormData({ ...formData, gatehouse_phone: value })}
+                        className="bg-secondary/50"
+                        placeholder="(00) 00000-0000"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Número que receberá os avisos do salão de festas no dia da reserva.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -692,7 +694,7 @@ const Condominiums = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="address">Logradouro</Label>
                       <Input
@@ -726,7 +728,7 @@ const Condominiums = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="city">Cidade</Label>
                       <Input

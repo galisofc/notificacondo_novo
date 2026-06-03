@@ -29,13 +29,13 @@ const BlockApartmentDisplay = ({
 
   const formatValue = () => {
     if (hasBlock && hasApartment) {
-      return `${blockName} - APTO ${apartmentNumber}`;
+      return `${blockName} - ${apartmentNumber}`;
     }
     if (hasBlock) {
       return blockName;
     }
     if (hasApartment) {
-      return `APTO ${apartmentNumber}`;
+      return apartmentNumber;
     }
     return "-";
   };
@@ -90,7 +90,7 @@ const BlockApartmentDisplay = ({
         )}
         {hasApartment && (
           <span className="text-xs text-muted-foreground">
-            APTO {apartmentNumber}
+            {apartmentNumber}
           </span>
         )}
       </div>

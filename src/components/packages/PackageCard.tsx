@@ -117,7 +117,7 @@ export function PackageCard({
                     <PackageStatusBadge status={status} />
                   </div>
                   <p className="text-sm text-muted-foreground truncate uppercase">
-                    {blockName} - APTO {apartmentNumber}
+                    {blockName} - {apartmentNumber}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {formattedDate}
@@ -209,7 +209,7 @@ export function PackageCard({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Building2 className="w-4 h-4" />
                 <span className="uppercase">
-                  {blockName} - APTO {apartmentNumber}
+                  {blockName} - {apartmentNumber}
                 </span>
                 {showCondominium && condominiumName && <span> • {condominiumName}</span>}
               </div>
