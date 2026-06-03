@@ -747,10 +747,10 @@ const Occurrences = () => {
         <SindicoBreadcrumbs items={[{ label: "Ocorrências" }]} />
         <div>
           <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-            Advertências e Multas
+            Livro de Ocorrências
           </h1>
            <p className="text-sm md:text-base text-muted-foreground mt-1">
-            Registre e gerencie as Advertências e Multas do Condomínio
+            Registre e gerencie o Livro de Ocorrências do Condomínio
           </p>
         </div>
 
