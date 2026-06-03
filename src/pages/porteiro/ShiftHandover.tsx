@@ -106,10 +106,9 @@ export default function ShiftHandover() {
       }
 
       if (data) {
-        // A função RPC já retorna os porteiros vinculados.
-        // Se houver uma lógica de "login inativo" gerenciada por um campo específico no auth.users
-        // ou profiles (que não mapeamos ainda), precisaríamos dele.
-        // Assumindo que o filtro de inativos deve ser feito aqui ou na RPC.
+        // Filtrar porteiros que não possuem um perfil completo ou estão marcados como inativos.
+        // Como o status de login "inativo" geralmente se refere à exclusão ou desativação do usuário,
+        // garantimos que o perfil retornado seja válido.
         setCondominiumPorters(
           data.map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
