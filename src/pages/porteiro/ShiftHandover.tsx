@@ -94,7 +94,7 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      // Get all porters linked to this condominium
+      // Primeiro, buscamos os IDs de todos os usuários vinculados a este condomínio
       const { data: userCondos, error: ucError } = await supabase
         .from("user_condominiums")
         .select("user_id")
@@ -111,12 +111,13 @@ export default function ShiftHandover() {
         return;
       }
 
-      // Filter by role "porteiro" and profile status (implicit in being active)
-      // Since we don't have a direct 'status' column in profiles, 
-      // we'll filter by those who have the 'porteiro' role.
+      // Agora filtramos apenas aqueles que têm o papel de 'porteiro'
       const { data: porters, error: pError } = await supabase
         .from("user_roles")
-        .select("user_id, profiles!inner(full_name)")
+        .select(`
+          user_id,
+          profiles!inner(full_name)
+        `)
         .in("user_id", userIds)
         .eq("role", "porteiro");
 
@@ -127,15 +128,17 @@ export default function ShiftHandover() {
       }
 
       if (porters) {
-        setCondominiumPorters(
-          porters.map((p: any) => ({
-            id: p.user_id,
-            full_name: p.profiles.full_name,
-          }))
-        );
+        // Mapeamos para o formato necessário
+        const formattedPorters = porters.map((p: any) => ({
+          id: p.user_id,
+          full_name: p.profiles.full_name,
+        }));
+        
+        setCondominiumPorters(formattedPorters);
       }
     };
     fetchPorters();
+    
     // Reset incoming porter when condominium changes
     setIncomingPorterName("");
     setIncomingPorterSelectValue("");
