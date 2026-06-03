@@ -94,18 +94,10 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      const { data, error } = await supabase
-        .from("user_condominiums")
-        .select(`
-          user_id,
-          profiles!inner (
-            full_name,
-            is_active
-          )
-        `)
-        .eq("condominium_id", selectedCondominium)
-        .neq("user_id", user.id)
-        .returns<any[]>();
+      const { data, error } = await supabase.rpc("get_co_porters", {
+        _user_id: user.id,
+        _condominium_id: selectedCondominium,
+      });
 
       if (error) {
         console.error("Error fetching co-porters:", error);
@@ -114,16 +106,12 @@ export default function ShiftHandover() {
       }
 
       if (data) {
-        // Filter only active porters and map to required format
-        const activePorters = data
-          .filter(item => item.profiles?.is_active !== false) // Handle null/true as active
-          .map(item => ({
-            id: item.user_id,
-            full_name: item.profiles?.full_name || "Desconhecido"
+        setCondominiumPorters(
+          data.map((p: { user_id: string; full_name: string }) => ({
+            id: p.user_id,
+            full_name: p.full_name,
           }))
-          .sort((a, b) => a.full_name.localeCompare(b.full_name));
-
-        setCondominiumPorters(activePorters);
+        );
       }
     };
     fetchPorters();
