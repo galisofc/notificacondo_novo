@@ -865,7 +865,7 @@ export default function SindicoPortariaOccurrences() {
       setSigningPdf(true);
       
       // 1. Verificar se a senha confere com a salva no perfil
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await (supabase as any)
         .from("profiles")
         .select("certificate_password, full_name")
         .eq("user_id", user.id)
