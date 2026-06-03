@@ -992,12 +992,13 @@ const PorteiroPackagesHistory = () => {
                     setSelectedApartment(apartmentId);
                     setCurrentPage(1);
                   }}
-                  className="w-full md:w-[200px]"
+                  className="w-full sm:w-[200px]"
                   placeholder="Ex: 0344, AF"
                 />
               )}
 
               {/* Block Select */}
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full sm:w-auto">
               <Select
                 value={selectedBlock}
                 onValueChange={(v) => {
@@ -1043,6 +1044,7 @@ const PorteiroPackagesHistory = () => {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
 
               {/* Status Select */}
               <Select
