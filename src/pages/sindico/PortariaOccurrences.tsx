@@ -313,7 +313,7 @@ export default function SindicoPortariaOccurrences() {
     queryKey: ["sindico-porter-occurrences", selectedCondominium, filterStatus, filterCategory],
     queryFn: async () => {
       if (!selectedCondominium) return [];
-      let query = supabase
+      let query = (supabase as any)
         .from("porter_occurrences")
         .select("*, is_signed")
         .eq("condominium_id", selectedCondominium)
