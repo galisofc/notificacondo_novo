@@ -680,7 +680,7 @@ export default function PortariaOccurrences() {
                 </Select>
               )}
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
                   {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho-filter", name: "Barulho" }] : [])]
@@ -693,7 +693,7 @@ export default function PortariaOccurrences() {
                 value={filterBlockId}
                 onValueChange={(v) => { setFilterBlockId(v); setFilterApartmentId("all"); }}
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Building2 className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
                   <SelectValue placeholder="Bloco" />
                 </SelectTrigger>

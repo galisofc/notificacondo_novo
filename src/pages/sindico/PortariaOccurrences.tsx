@@ -572,7 +572,7 @@ export default function SindicoPortariaOccurrences() {
       <div className="space-y-8 animate-fade-up">
 
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
               Livro de Ocorrências

@@ -1007,7 +1007,7 @@ const PorteiroPackagesHistory = () => {
                 }}
                 disabled={!selectedCondominium}
               >
-                <SelectTrigger className="w-full md:w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <Building2 className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Bloco" />
                 </SelectTrigger>
@@ -1030,7 +1030,7 @@ const PorteiroPackagesHistory = () => {
                 }}
                 disabled={selectedBlock === "all"}
               >
-                <SelectTrigger className="w-full md:w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Home className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Apto" />
                 </SelectTrigger>
@@ -1052,7 +1052,7 @@ const PorteiroPackagesHistory = () => {
                   setCurrentPage(1);
                 }}
               >
-                <SelectTrigger className="w-full md:w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
