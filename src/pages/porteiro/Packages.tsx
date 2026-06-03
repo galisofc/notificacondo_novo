@@ -431,10 +431,10 @@ export default function PorteiroPackages() {
           <>
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-              <TabsList>
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="pendente" className="gap-2">
                   <Package className="w-4 h-4" />
-                  Pendentes
+                  <span className="hidden sm:inline">Pendentes</span>
                   {pendingCount > 0 && (
                     <span className="ml-1 px-2 py-0.5 rounded-full bg-warning/20 text-warning-foreground text-xs font-medium">
                       {pendingCount}
@@ -472,7 +472,7 @@ export default function PorteiroPackages() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 lg:grid-cols-3">
                     {filteredPackages.map((pkg) => (
                       <PackageCard
                         key={pkg.id}

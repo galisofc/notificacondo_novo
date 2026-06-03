@@ -411,7 +411,7 @@ export default function PorteiroDashboard() {
         {/* Quick Actions */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Ações Rápidas</h2>
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
+          <div className="grid gap-4 grid-cols-1 xs:grid-cols-2 md:grid-cols-5">
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => navigate("/porteiro/registrar")}>
