@@ -890,7 +890,7 @@ const AdvertenciasEMultas = () => {
             )}
           </div>
         ) : (
-          <>
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
@@ -1041,8 +1041,7 @@ const AdvertenciasEMultas = () => {
                 </div>
               </div>
             ))}
-          </div>
-        )}
+        </div>
       </TabsContent>
 
         {/* Confirmation Dialog for Notification */}
