@@ -160,7 +160,7 @@ export default function Autenticidade() {
                           id="verificationCode"
                           placeholder="Ex: 2026/0029"
                           value={verificationCode}
-                          onChange={(e) => setVerificationCode(e.target.value)}
+                          onChange={(e) => handleCodeChange(e.target.value)}
                           className="uppercase font-mono h-12 text-lg"
                         />
                         <Button type="submit" size="lg" disabled={isValidating} className="px-6">
