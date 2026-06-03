@@ -18,11 +18,11 @@ const sections = [
   {
     id: "servicos",
     icon: Users,
-    title: "2. Descrição dos Serviços",
+    title: "2. Descrição dos Livro de Ocorrências",
     content: [
       "A CondoMaster é uma plataforma de gestão condominial que oferece ferramentas para síndicos e administradores gerenciarem ocorrências, notificações, multas e comunicações com moradores.",
-      "Nossos serviços incluem: registro e acompanhamento de ocorrências, envio de notificações via WhatsApp, gestão de multas e advertências, reserva de salão de festas, e geração de relatórios.",
-      "Os serviços estão sujeitos a disponibilidade e podem ser modificados, suspensos ou descontinuados a qualquer momento, mediante aviso prévio quando possível."
+      "Nossos Livro de Ocorrências incluem: registro e acompanhamento de ocorrências, envio de notificações via WhatsApp, gestão de multas e advertências, reserva de salão de festas, e geração de relatórios.",
+      "Os Livro de Ocorrências estão sujeitos a disponibilidade e podem ser modificados, suspensos ou descontinuados a qualquer momento, mediante aviso prévio quando possível."
     ]
   },
   {
