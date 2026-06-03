@@ -1042,7 +1042,7 @@ export default function SindicoPortariaOccurrences() {
                           {getPriorityBadge(occ.priority)}
                           <Badge variant="outline">{occ.category}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{occ.description}</p>
+                        <p className="text-sm text-muted-foreground text-justify break-words hyphens-auto">{occ.description}</p>
 
                         {/* Photos */}
                         {occ.photos && occ.photos.length > 0 && (
@@ -1094,7 +1094,7 @@ export default function SindicoPortariaOccurrences() {
                           {format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </p>
                         {occ.status === "resolvida" && occ.resolution_notes && (
-                          <p className="text-sm text-muted-foreground mt-1.5">
+                          <p className="text-sm text-muted-foreground mt-1.5 text-justify break-words hyphens-auto">
                             Resolução: <span className="font-medium text-foreground">{occ.resolution_notes}</span>
                           </p>
                         )}
