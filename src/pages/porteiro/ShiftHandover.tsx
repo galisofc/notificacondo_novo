@@ -459,12 +459,14 @@ export default function ShiftHandover() {
                                   )}
                                 </div>
                                 {!item.is_ok && (
-                                  <Input
-                                    placeholder="Observação sobre o problema..."
-                                    value={item.observation}
-                                    onChange={(e) => updateItem(realIdx, "observation", e.target.value)}
-                                    className="ml-7"
-                                  />
+                                  <div className="mt-2 pl-7 w-full">
+                                    <Input
+                                      placeholder="Observação sobre o problema..."
+                                      value={item.observation}
+                                      onChange={(e) => updateItem(realIdx, "observation", e.target.value)}
+                                      className="w-full"
+                                    />
+                                  </div>
                                 )}
                               </div>
                             );
