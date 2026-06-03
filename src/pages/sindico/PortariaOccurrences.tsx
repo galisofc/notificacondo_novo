@@ -690,7 +690,7 @@ export default function SindicoPortariaOccurrences() {
     yPos += 6;
     doc.setFont("helvetica", "normal");
 
-    const lineHeight = 5 * 1.5;
+    const lineHeight = 5 * 1.0;
     const renderJustifiedText = (text: string) => {
       const paragraphs = text.split(/\n+/);
       paragraphs.forEach((para, pIdx) => {
