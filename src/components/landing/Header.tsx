@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -131,29 +131,34 @@ const Header = () => {
                 {user ? (
                   <Button 
                     variant="hero" 
-                    className="w-full justify-center h-12 text-base font-semibold" 
-
+                    className="w-full justify-center h-12 text-base font-semibold gap-2" 
                     onClick={() => {
                       setIsMenuOpen(false);
                       navigate("/dashboard");
                     }}
                   >
-                    Painel
+                    <LayoutDashboard className="w-5 h-5" />
+                    Acessar Painel
                   </Button>
                 ) : (
                   <>
                     <Button 
-                      variant="ghost" 
-                      className="w-full justify-center h-12 text-base" 
-
+                      variant="outline" 
+                      className="w-full justify-center h-12 text-base gap-2 border-primary/20 hover:bg-primary/5" 
                       onClick={() => {
                         setIsMenuOpen(false);
                         navigate("/auth");
                       }}
                     >
+                      <LogIn className="w-5 h-5" />
                       Entrar
                     </Button>
-                    <Button variant="hero" className="w-full justify-center h-12 text-base font-semibold" onClick={goToPricing}>
+                    <Button 
+                      variant="hero" 
+                      className="w-full justify-center h-12 text-base font-semibold gap-2 shadow-glow" 
+                      onClick={goToPricing}
+                    >
+                      <UserPlus className="w-5 h-5" />
                       Começar Grátis
                     </Button>
                   </>
