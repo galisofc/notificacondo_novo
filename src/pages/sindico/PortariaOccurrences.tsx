@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
