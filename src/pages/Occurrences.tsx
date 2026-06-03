@@ -634,7 +634,40 @@ const AdvertenciasEMultas = () => {
       });
     } finally {
       setSendingNotification(null);
+      setConfirmNotifyDialog({ open: false, occurrence: null });
     }
+  };
+
+  const handleOpenDialog = () => {
+    if (condominiums.length === 0) {
+      toast({
+        title: "Atenção",
+        description: "Cadastre um condomínio primeiro.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setEditingId(null);
+    setUploadedFiles([]);
+    setExistingEvidences([]);
+    setRemovedEvidenceIds([]);
+    setFormData({
+      condominium_id: condominiumFilter !== "all" ? condominiumFilter : "",
+      block_id: "",
+      apartment_id: "",
+      resident_id: "",
+      type: "advertencia",
+      title: "",
+      description: "",
+      location: "",
+      occurred_at: nowInSaoPauloForInput(),
+      convention_article: "",
+      internal_rules_article: "",
+      civil_code_article: "",
+      legal_basis: "",
+      fine_percentage: "50",
+    });
+    setIsDialogOpen(true);
   };
 
   const handleDelete = async (occurrence: any) => {
