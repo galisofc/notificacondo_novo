@@ -760,15 +760,23 @@ export default function SindicoPortariaOccurrences() {
       if (qrDataUrl) {
         const qrSize = 18;
         const qrX = pageWidth - margin - qrSize;
-        const qrY = pageHeight - 48; // Positioned above the footer line (which is at pageHeight - 25)
+        const qrY = pageHeight - 50; 
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+        
         doc.setFontSize(7);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(33, 33, 33);
         doc.text("Autenticação", qrX + qrSize / 2, qrY + qrSize + 3, { align: "center" });
+        
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6);
         doc.text("notificacondo.com.br/autenticidade", qrX + qrSize / 2, qrY + qrSize + 5.5, { align: "center" });
+        
+        // Show the unique validation code
+        const validationCode = occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.text(`CÓDIGO: ${validationCode}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: "center" });
       }
 
       doc.setFontSize(9);
