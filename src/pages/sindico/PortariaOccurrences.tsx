@@ -1221,7 +1221,17 @@ export default function SindicoPortariaOccurrences() {
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                        {(profile as any)?.has_certificate && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                            onClick={() => handleSignPdf(occ)}
+                          >
+                            <Settings className="w-4 h-4" /> Assinar ICP
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
