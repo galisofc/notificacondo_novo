@@ -491,7 +491,7 @@ export default function PortariaOccurrences() {
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 shrink-0" disabled={!selectedCondominium}>
-                <Plus className="w-4 h-4" /> Registrar Advertencia/Multa
+                <Plus className="w-4 h-4" /> Registrar Ocorrência
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
