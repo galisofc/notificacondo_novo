@@ -42,7 +42,7 @@ export default function Autenticidade() {
           *,
           condominium:condominiums(name)
         `)
-        .eq("protocol", cleanCode as any)
+        .filter("protocol", "eq", cleanCode)
         .maybeSingle();
 
       if (fetchError || !data) {
