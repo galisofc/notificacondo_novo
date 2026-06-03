@@ -386,12 +386,7 @@ export default function ShiftHandover() {
                           <SelectContent>
                             {condominiumPorters.map((p: any) => (
                               <SelectItem key={p.id} value={p.full_name}>
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{p.full_name}</span>
-                                  {p.is_active === false && (
-                                    <Badge variant="outline" className="ml-2 text-[10px] text-destructive border-destructive">Inativo</Badge>
-                                  )}
-                                </div>
+                                {p.full_name}
                               </SelectItem>
                             ))}
                             <SelectItem value="__outro__">Outro...</SelectItem>
