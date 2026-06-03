@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, FileText, Calendar, Building2 } from "lucide-react";
+import { ShieldCheck, Search, Loader2, CheckCircle2, XCircle, FileText, Calendar, Building2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -41,7 +41,8 @@ export default function Autenticidade() {
         .from("porter_occurrences")
         .select(`
           *,
-          condominium:condominiums(name)
+          condominium:condominiums(name),
+          registered_by_profile:profiles!registered_by(full_name)
         `)
         .filter("protocol", "eq", cleanCode)
         .maybeSingle();
@@ -53,7 +54,8 @@ export default function Autenticidade() {
           .from("porter_occurrences")
           .select(`
             *,
-            condominium:condominiums(name)
+            condominium:condominiums(name),
+            registered_by_profile:profiles!registered_by(full_name)
           `)
           .eq("id", cleanCode.toLowerCase())
           .maybeSingle();
@@ -185,6 +187,15 @@ export default function Autenticidade() {
                   <p className="text-xs text-emerald-600 uppercase font-bold">Data de Registro</p>
                   <p className="font-medium text-emerald-900">
                     {format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <p className="text-xs text-emerald-600 uppercase font-bold">Registrado por</p>
+                  <p className="font-medium text-emerald-900">
+                    {occurrence.registered_by_profile?.full_name || "Sistema"}
                   </p>
                 </div>
               </div>
