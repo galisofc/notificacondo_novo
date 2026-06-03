@@ -575,7 +575,7 @@ export default function SindicoPortariaOccurrences() {
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="font-display text-3xl font-bold text-foreground flex items-center gap-3">
-              Advertencias e Multas
+              Livro de Ocorrências (Portaria)
               {openCount > 0 && (
                 <Badge variant="destructive" className="text-xs">
                   {openCount} em aberto
