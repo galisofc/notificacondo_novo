@@ -494,11 +494,11 @@ export default function PortariaOccurrences() {
                 <Plus className="w-4 h-4" /> Registrar Ocorrência
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle>Registrar Ocorrência</DialogTitle>
+                <DialogTitle className="text-left">Registrar Ocorrência</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 text-justify">
                 <div>
                   <Label>Título</Label>
                   <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Ex: Visitante suspeito no estacionamento" />
