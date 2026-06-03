@@ -418,9 +418,26 @@ const SindicoSettings = () => {
     try {
       setUploadingCertificate(true);
       
+      // Chamada para garantir que o bucket existe antes do upload
+      try {
+        await supabase.functions.invoke("setup-certificate-storage");
+      } catch (err) {
+        console.warn("Falha ao rodar setup-certificate-storage, tentando upload direto:", err);
+      }
+
+      
       // Sanitização básica do nome do arquivo
       const safeExtension = extension === 'pfx' ? 'pfx' : 'p12';
       const fileName = `${user.id}/certificate.${safeExtension}`;
+
+      console.log("Tentando criar bucket (just in case)...");
+      // Tentativa de garantir que o bucket existe via RPC ou apenas tentando listar (isso falhará se não existir)
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(b => b.name === 'certificates');
+      
+      if (!bucketExists) {
+        console.warn("Bucket 'certificates' não encontrado na listagem inicial.");
+      }
 
       console.log("Caminho do arquivo no storage:", fileName);
 
@@ -433,6 +450,10 @@ const SindicoSettings = () => {
 
       if (uploadError) {
         console.error("Erro detalhado do upload storage:", uploadError);
+        // Se o erro for "Bucket not found", tentamos dar uma mensagem mais clara
+        if (uploadError.message?.includes("Bucket not found")) {
+          throw new Error("O repositório de certificados ainda não foi ativado. Por favor, aguarde alguns minutos enquanto o sistema completa a configuração automática.");
+        }
         throw uploadError;
       }
 
@@ -461,7 +482,7 @@ const SindicoSettings = () => {
       console.error("Erro capturado no processo de certificado:", error);
       toast({
         title: "Erro no Upload",
-        description: error.message || "Não foi possível enviar o certificado. Verifique as permissões do sistema.",
+        description: error.message || "Não foi possível enviar o certificado.",
         variant: "destructive",
       });
     } finally {
