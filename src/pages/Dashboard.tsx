@@ -297,7 +297,7 @@ const Dashboard = () => {
       action: () => navigate("/condominiums"),
     },
     {
-      title: "Serviços",
+      title: "Advertências e Multas",
       value: stats.occurrences,
       icon: FileText,
       gradient: "from-amber-500 to-orange-500",
