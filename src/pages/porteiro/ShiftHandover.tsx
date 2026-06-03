@@ -116,13 +116,16 @@ export default function ShiftHandover() {
 
         const linkMap = new Map((links as any[])?.map(l => [l.user_id, l.is_active]));
 
-        const allPorters = data.map((p: { user_id: string; full_name: string }) => ({
-          id: p.user_id,
-          full_name: p.full_name,
-          is_active: linkMap.get(p.user_id) !== false
-        }));
+        // Filtramos para exibir APENAS os porteiros que estão ativos (is_active !== false)
+        const activePorters = data
+          .filter((p: any) => linkMap.get(p.user_id) !== false)
+          .map((p: { user_id: string; full_name: string }) => ({
+            id: p.user_id,
+            full_name: p.full_name,
+            is_active: true
+          }));
 
-        setCondominiumPorters(allPorters);
+        setCondominiumPorters(activePorters);
       }
     };
     
@@ -383,12 +386,7 @@ export default function ShiftHandover() {
                           <SelectContent>
                             {condominiumPorters.map((p: any) => (
                               <SelectItem key={p.id} value={p.full_name}>
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{p.full_name}</span>
-                                  {p.is_active === false && (
-                                    <Badge variant="outline" className="ml-2 text-[10px] text-destructive border-destructive">Inativo</Badge>
-                                  )}
-                                </div>
+                                {p.full_name}
                               </SelectItem>
                             ))}
                             <SelectItem value="__outro__">Outro...</SelectItem>
