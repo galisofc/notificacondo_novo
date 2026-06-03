@@ -270,7 +270,47 @@ const Features = () => {
               <PartyPopper className="w-5 h-5" />
               <span className="text-[10px] sm:text-sm font-medium">Espaços</span>
             </TabsTrigger>
-...
+            <TabsTrigger value="portaria" className="flex flex-col gap-1 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <DoorOpen className="w-5 h-5" />
+              <span className="text-[10px] sm:text-sm font-medium">Portaria</span>
+            </TabsTrigger>
+            <TabsTrigger value="manutencao" className="flex flex-col gap-1 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Wrench className="w-5 h-5" />
+              <span className="text-[10px] sm:text-sm font-medium">Manutenção</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="ocorrencias" className="mt-0">
+            <div className="text-center mb-8">
+              <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+                Advertências e Multas
+              </h3>
+              <p className="text-muted-foreground">
+                Sistema completo com validade jurídica, contraditório e ampla defesa garantidos.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {moduloOcorrencias.map((feature, index) => (
+                <FeatureCard key={index} feature={feature} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="encomendas" className="mt-0">
+            <div className="text-center mb-8">
+              <h3 className="font-display text-2xl font-bold text-foreground mb-2">
+                Gestão de Encomendas
+              </h3>
+              <p className="text-muted-foreground">
+                Controle total desde a chegada até a retirada, com notificação instantânea ao morador.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {moduloEncomendas.map((feature, index) => (
+                <FeatureCard key={index} feature={feature} />
+              ))}
+            </div>
+          </TabsContent>
           <TabsContent value="salao" className="mt-0">
             <div className="text-center mb-8">
               <h3 className="font-display text-2xl font-bold text-foreground mb-2">
