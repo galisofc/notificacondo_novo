@@ -16,13 +16,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const DEFAULT_CATEGORIES = ["Visitante", "Entrega", "Manutenção", "Segurança", "Outros"];
 
@@ -57,6 +59,15 @@ interface Occurrence {
   target_apartment_number?: string | null;
   photos?: string[] | null;
   protocol?: string | null;
+  condominium?: {
+    name: string;
+    city: string | null;
+    state: string | null;
+    address: string | null;
+    address_number: string | null;
+    neighborhood: string | null;
+    zip_code: string | null;
+  } | null;
 }
 
 interface Category {
@@ -304,6 +315,14 @@ export default function SindicoPortariaOccurrences() {
       const { data, error } = await query;
       if (error) throw error;
 
+      // Fetch condominium details for PDF
+      const { data: condoDetails } = await supabase
+        .from("condominiums")
+        .select("id, name, city, state, address, address_number, neighborhood, zip_code")
+        .in("id", (data || []).map(o => o.condominium_id));
+      
+      const condoMap = Object.fromEntries((condoDetails || []).map(c => [c.id, c]));
+
       const resolvedByIds = [...new Set((data || []).map((o) => o.resolved_by).filter(Boolean))] as string[];
       let profileMap: Record<string, string> = {};
       if (resolvedByIds.length > 0) {
@@ -337,7 +356,8 @@ export default function SindicoPortariaOccurrences() {
         reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
         target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
         target_apartment_number: o.target_apartment_id ? (aptMap[o.target_apartment_id] ?? null) : null,
-      })) as Occurrence[];
+        condominium: condoMap[o.condominium_id] || null,
+      })) as any as Occurrence[];
     },
     enabled: !!selectedCondominium,
   });
@@ -520,6 +540,164 @@ export default function SindicoPortariaOccurrences() {
   const getPriorityBadge = (priority: string) => {
     const p = PRIORITIES.find((pr) => pr.value === priority);
     return <Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
+  };
+
+  const generatePDF = async (occurrence: Occurrence) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+    let yPos = margin;
+
+    const condo = occurrence.condominium;
+    const condominiumName = condo?.name || "Condomínio";
+    const city = condo?.city || "";
+    const stateUf = condo?.state || "";
+    const cityState = [city, stateUf].filter(Boolean).join("/");
+    const fullAddress = [
+      [condo?.address, condo?.address_number].filter(Boolean).join(", "),
+      condo?.neighborhood,
+    ].filter(Boolean).join(" – ");
+    const addressLine = [fullAddress, cityState].filter(Boolean).join(" – ");
+    const cepLine = condo?.zip_code ? `CEP: ${condo.zip_code}` : "";
+
+    // Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
+    yPos += 10;
+    
+    doc.setFontSize(12);
+    doc.text(condominiumName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+    yPos += 8;
+
+    if (addressLine) {
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(addressLine, pageWidth / 2, yPos, { align: "center" });
+      yPos += 5;
+    }
+    if (cepLine) {
+      doc.text(cepLine, pageWidth / 2, yPos, { align: "center" });
+      yPos += 10;
+    }
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 10;
+
+    // Occurrence Details
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(occurrence.title, margin, yPos);
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    
+    const details = [
+      { label: "Protocolo:", value: occurrence.protocol || "-" },
+      { label: "Data:", value: format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
+      { label: "Categoria:", value: occurrence.category },
+      { label: "Prioridade:", value: PRIORITIES.find(p => p.value === occurrence.priority)?.label || occurrence.priority },
+      { label: "Status:", value: occurrence.status === "aberta" ? "Aberta" : "Resolvida" },
+    ];
+
+    details.forEach(detail => {
+      doc.setFont("helvetica", "bold");
+      doc.text(detail.label, margin, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(detail.value, margin + 25, yPos);
+      yPos += 6;
+    });
+
+    if (occurrence.reporter_block_name) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Registrado por:", margin, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${occurrence.reporter_block_name} - APTO ${occurrence.reporter_apartment_number || "-"}`, margin + 35, yPos);
+      yPos += 6;
+    }
+
+    if (occurrence.target_block_name) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Sobre:", margin, yPos);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${occurrence.target_block_name} - APTO ${occurrence.target_apartment_number || "-"}`, margin + 35, yPos);
+      yPos += 6;
+    }
+
+    yPos += 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("Descrição:", margin, yPos);
+    yPos += 6;
+    doc.setFont("helvetica", "normal");
+    const descLines = doc.splitTextToSize(occurrence.description, contentWidth);
+    doc.text(descLines, margin, yPos);
+    yPos += descLines.length * 5 + 8;
+
+    if (occurrence.status === "resolvida" && occurrence.resolution_notes) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Resolução:", margin, yPos);
+      yPos += 6;
+      doc.setFont("helvetica", "normal");
+      const resLines = doc.splitTextToSize(occurrence.resolution_notes, contentWidth);
+      doc.text(resLines, margin, yPos);
+      yPos += resLines.length * 5 + 8;
+    }
+
+    // Photos
+    if (occurrence.photos && occurrence.photos.length > 0) {
+      if (yPos > 200) {
+        doc.addPage();
+        yPos = margin;
+      }
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("EVIDÊNCIAS FOTOGRÁFICAS", margin, yPos);
+      yPos += 10;
+
+      for (const photoUrl of occurrence.photos) {
+        try {
+          const img = new Image();
+          img.src = photoUrl;
+          await new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
+          
+          if (img.complete && img.naturalWidth > 0) {
+            const ratio = img.naturalWidth / img.naturalHeight;
+            let drawW = contentWidth / 2 - 5;
+            let drawH = drawW / ratio;
+            
+            if (yPos + drawH > 270) {
+              doc.addPage();
+              yPos = margin;
+            }
+            
+            doc.addImage(photoUrl, "JPEG", margin, yPos, drawW, drawH);
+            yPos += drawH + 10;
+          }
+        } catch (e) {
+          console.error("Error adding photo to PDF", e);
+        }
+      }
+    }
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(
+        `Documento gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")} - Página ${i} de ${pageCount}`,
+        pageWidth / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: "center" }
+      );
+    }
+
+    doc.save(`ocorrencia_${occurrence.protocol || occurrence.id.slice(0, 8)}.pdf`);
+    toast({ title: "PDF gerado com sucesso!" });
   };
 
   const openCount = occurrences.filter((o) => o.status === "aberta").length;
@@ -849,6 +1027,13 @@ export default function SindicoPortariaOccurrences() {
                         )}
                       </div>
                       <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generatePDF(occ)}
+                        >
+                          <FileDown className="w-4 h-4 mr-1" /> PDF
+                        </Button>
                         {occ.status === "aberta" && (
                           <Button
                             variant="outline"
