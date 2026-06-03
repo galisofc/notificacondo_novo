@@ -41,8 +41,7 @@ export default function Autenticidade() {
         .from("porter_occurrences")
         .select(`
           *,
-          condominium:condominiums(name),
-          registered_by_profile:profiles!registered_by(full_name)
+          condominium:condominiums(name)
         `)
         .filter("protocol", "eq", cleanCode)
         .maybeSingle();
@@ -54,8 +53,7 @@ export default function Autenticidade() {
           .from("porter_occurrences")
           .select(`
             *,
-            condominium:condominiums(name),
-            registered_by_profile:profiles!registered_by(full_name)
+            condominium:condominiums(name)
           `)
           .eq("id", cleanCode.toLowerCase())
           .maybeSingle();
@@ -64,6 +62,17 @@ export default function Autenticidade() {
           data = idData;
           fetchError = idError;
         }
+      }
+
+      // If data was found, fetch the profile separately to avoid RLS/Join issues on public page
+      if (data && data.registered_by) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", data.registered_by)
+          .maybeSingle();
+        
+        data.registered_by_profile = profileData;
       }
 
       if (fetchError || !data) {
