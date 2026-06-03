@@ -546,7 +546,7 @@ export default function PorteiroCondominio() {
         {/* Search and Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-3 flex-wrap">
+            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
               {/* Quick Search */}
               {selectedCondoId && (
                 <QuickBlockApartmentSearch
