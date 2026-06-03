@@ -482,7 +482,6 @@ function SidebarNavigation() {
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
-        { title: "Livro de Ocorrências", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Salão de Festas", url: "/party-hall", icon: PartyPopper },
       ],
@@ -495,6 +494,13 @@ function SidebarNavigation() {
         { title: "Passagens de Plantão", url: "/sindico/portaria/plantoes", icon: ClipboardCheck },
         { title: "Checklist Portaria", url: "/sindico/portaria/checklist", icon: Cog },
         { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },
+      ],
+    },
+    {
+      title: "Livro de Ocorrências",
+      icon: FileText,
+      items: [
+        { title: "Gerenciar Ocorrências", url: "/occurrences", icon: FileText },
       ],
     },
     {
