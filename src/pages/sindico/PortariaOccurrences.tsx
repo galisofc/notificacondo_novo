@@ -609,9 +609,11 @@ export default function SindicoPortariaOccurrences() {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(33, 33, 33);
     doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
-    yPos += 8;
+    
+    // Space for location and date (approx 3 lines)
+    yPos += 25;
 
-    // Date below title, right aligned
+    // Date/City label (right aligned as previously requested, but now with more space)
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(dateLabel, pageWidth - margin, yPos, { align: "right" });
