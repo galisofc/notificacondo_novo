@@ -110,19 +110,26 @@ export default function ShiftHandover() {
         const userIds = data.map((p: any) => p.user_id);
         const { data: links } = await supabase
           .from("user_condominiums")
-          .select("user_id, is_active, profiles(role)")
+          .select(`
+            user_id, 
+            is_active, 
+            profiles:user_id (role)
+          `)
           .eq("condominium_id", selectedCondominium)
           .in("user_id", userIds);
 
         const linkData = (links as any[]) || [];
         
-        // Filtramos para exibir APENAS os porteiros que estão ativos (is_active !== false)
-        // E que possuem o cargo de 'porteiro'
+        // Filtramos para exibir APENAS os usuários que:
+        // 1. Estão ativos (is_active !== false)
+        // 2. Possuem o cargo de 'porteiro'
         const activePorters = data
           .filter((p: any) => {
             const link = linkData.find(l => l.user_id === p.user_id);
             const isActive = link?.is_active !== false;
-            const isPorter = link?.profiles?.role === 'porteiro';
+            // Acessa o cargo através do objeto profiles retornado
+            const role = link?.profiles?.role;
+            const isPorter = role === 'porteiro';
             return isActive && isPorter;
           })
           .map((p: { user_id: string; full_name: string }) => ({
