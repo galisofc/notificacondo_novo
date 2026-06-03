@@ -23,7 +23,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 
-const DEFAULT_CATEGORIES = ["Visitante", "Entrega", "Manutenção", "Segurança", "Barulho", "Outros"];
+const DEFAULT_CATEGORIES = ["Barulho", "Entrega", "Manutenção", "Outros", "Segurança", "Visitante"];
 
 const PRIORITIES = [
   { value: "baixa", label: "Baixa", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
@@ -524,10 +524,10 @@ export default function PortariaOccurrences() {
                     <Select value={newCategory} onValueChange={setNewCategory}>
                     <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
                     <SelectContent>
-                      {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                      {!categories.some(c => c.name === "Barulho") && (
-                        <SelectItem value="Barulho">Barulho</SelectItem>
-                      )}
+                      {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                      }
                     </SelectContent>
                     </Select>
                   </div>
