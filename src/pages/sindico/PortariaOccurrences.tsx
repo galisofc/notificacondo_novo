@@ -1027,6 +1027,13 @@ export default function SindicoPortariaOccurrences() {
                         )}
                       </div>
                       <div className="flex gap-2 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generatePDF(occ)}
+                        >
+                          <FileDown className="w-4 h-4 mr-1" /> PDF
+                        </Button>
                         {occ.status === "aberta" && (
                           <Button
                             variant="outline"
