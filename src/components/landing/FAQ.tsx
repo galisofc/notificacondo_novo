@@ -60,13 +60,13 @@ const faqCategories = [
   },
   {
     id: "salao",
-    title: "Salão de Festas",
+    title: "Espaços",
     icon: PartyPopper,
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
     questions: [
       {
-        question: "Como faço para reservar o salão de festas?",
+        question: "Como faço para reservar os espaços?",
         answer: "O morador acessa o sistema e visualiza o calendário de disponibilidade. Seleciona a data desejada, informa o número de convidados e observações. A reserva fica pendente até aprovação do síndico, se configurado assim."
       },
       {

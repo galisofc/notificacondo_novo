@@ -137,7 +137,7 @@ const formatAuditAction = (tableName: string, action: string, newData: any): str
     packages: { name: "Encomenda", feminine: true },
     package_types: { name: "Tipo de Encomenda", feminine: false },
     party_hall_bookings: { name: "Reserva de Salão", feminine: true },
-    party_hall_settings: { name: "Config Salão de Festas", feminine: true },
+    party_hall_settings: { name: "Config Espaços", feminine: true },
     contact_messages: { name: "Mensagem de Contato", feminine: true },
   };
 

@@ -39,7 +39,7 @@ const Hero = () => {
 
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-up" style={{ animationDelay: '0.2s' }}>
             Ocorrências com validade jurídica, encomendas com notificação instantânea, 
-            salão de festas, portaria inteligente e manutenção preventiva — tudo integrado via WhatsApp.
+            espaços, portaria inteligente e manutenção preventiva — tudo integrado via WhatsApp.
           </p>
 
           {/* Module Pills */}
@@ -54,7 +54,7 @@ const Hero = () => {
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30">
               <PartyPopper className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Salão de Festas</span>
+              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">Espaços</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30">
               <DoorOpen className="w-4 h-4 text-emerald-500" />

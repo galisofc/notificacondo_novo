@@ -455,12 +455,12 @@ export default function PartyHall() {
     <DashboardLayout>
       <SubscriptionGate condominiumId={selectedCondominium !== "all" ? selectedCondominium : undefined}>
       <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6">
-        <SindicoBreadcrumbs items={[{ label: "Salão de Festas" }]} />
+        <SindicoBreadcrumbs items={[{ label: "Espaços" }]} />
         <TrialBanner />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Salão de Festas</h2>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Espaços</h2>
             <p className="text-muted-foreground">
               Gerencie reservas e checklists dos espaços
             </p>

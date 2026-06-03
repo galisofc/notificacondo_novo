@@ -175,14 +175,14 @@ export default function PartyHallSettings() {
       <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6">
         <SindicoBreadcrumbs 
           items={[
-            { label: "Salão de Festas", href: "/party-hall" },
+            { label: "Espaços", href: "/party-hall" },
             { label: "Configurações" }
           ]}
         />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Configurações do Salão</h2>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Configurações de Espaços</h2>
             <p className="text-muted-foreground">
               Configure espaços e templates de checklist
             </p>
@@ -233,7 +233,7 @@ export default function PartyHallSettings() {
                         id="name"
                         value={newSpace.name}
                         onChange={(e) => setNewSpace({ ...newSpace, name: e.target.value })}
-                        placeholder="Ex: Salão de Festas"
+                        placeholder="Ex: Espaços"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">

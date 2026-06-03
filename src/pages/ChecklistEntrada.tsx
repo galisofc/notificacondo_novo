@@ -273,7 +273,7 @@ export default function ChecklistEntrada() {
         <div className="text-center pt-4">
           <PartyPopper className="h-10 w-10 text-primary mx-auto mb-2" />
           <h1 className="text-2xl font-bold">Checklist de Entrada</h1>
-          <p className="text-muted-foreground">Salão de Festas</p>
+          <p className="text-muted-foreground">Espaços</p>
           {bookingInfo && (
             <Badge variant="outline" className="mt-2">
               {bookingInfo.booking_date} • {bookingInfo.start_time} - {bookingInfo.end_time}
