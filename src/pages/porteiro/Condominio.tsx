@@ -574,6 +574,7 @@ export default function PorteiroCondominio() {
               )}
 
               {/* Block Filter */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
               <Select
                 value={selectedBlockFilter}
                 onValueChange={(v) => {
@@ -615,6 +616,7 @@ export default function PorteiroCondominio() {
                   ))}
                 </SelectContent>
               </Select>
+              </div>
 
               {/* Text Search */}
               <div className="relative flex-1 min-w-[200px]">
