@@ -59,6 +59,7 @@ interface Occurrence {
   target_block_name?: string | null;
   target_apartment_number?: string | null;
   photos?: string[] | null;
+  is_signed?: boolean;
   protocol?: string | null;
   condominium?: {
     name: string;
@@ -314,7 +315,7 @@ export default function SindicoPortariaOccurrences() {
       if (!selectedCondominium) return [];
       let query = supabase
         .from("porter_occurrences")
-        .select("*")
+        .select("*, is_signed")
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
@@ -874,6 +875,17 @@ export default function SindicoPortariaOccurrences() {
       // Simular delay de processamento
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      // Atualizar no banco que foi assinado
+      const { error: updateError } = await supabase
+        .from("porter_occurrences")
+        .update({ is_signed: true } as any)
+        .eq("id", currentOccurrenceToSign.id);
+
+      if (updateError) throw updateError;
+
+      // Atualizar lista local
+      queryClient.invalidateQueries({ queryKey: ["sindico-porter-occurrences"] });
+
       generatePDF(currentOccurrenceToSign);
       
       toast({
@@ -1226,10 +1238,23 @@ export default function SindicoPortariaOccurrences() {
                           <Button
                             variant="default"
                             size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                            onClick={() => handleSignPdf(occ)}
+                            className={cn(
+                              "gap-1",
+                              occ.is_signed 
+                                ? "bg-accent text-white hover:bg-accent/90 cursor-default" 
+                                : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                            )}
+                            onClick={() => !occ.is_signed && handleSignPdf(occ)}
                           >
-                            <Settings className="w-4 h-4" /> Assinar ICP
+                            {occ.is_signed ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4" /> Assinado
+                              </>
+                            ) : (
+                              <>
+                                <Settings className="w-4 h-4" /> Assinar ICP
+                              </>
+                            )}
                           </Button>
                         )}
                         <Button
