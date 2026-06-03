@@ -704,17 +704,22 @@ export default function SindicoPortariaOccurrences() {
     yPos += 6;
     doc.setFont("helvetica", "normal");
     const descLines = doc.splitTextToSize(occurrence.description, contentWidth);
-    doc.text(descLines, margin, yPos);
-    yPos += descLines.length * 5 + 8;
+    // Usando lineheightfactor de 1.5 para espaçamento entre linhas e alinhamento justify
+    doc.text(descLines, margin, yPos, { align: "justify", maxWidth: contentWidth, lineHeightFactor: 1.5 });
+    yPos += descLines.length * (5 * 1.5) + 8;
 
     if (occurrence.status === "resolvida" && occurrence.resolution_notes) {
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = margin + 10;
+      }
       doc.setFont("helvetica", "bold");
       doc.text("Resolução:", margin, yPos);
       yPos += 6;
       doc.setFont("helvetica", "normal");
       const resLines = doc.splitTextToSize(occurrence.resolution_notes, contentWidth);
-      doc.text(resLines, margin, yPos);
-      yPos += resLines.length * 5 + 8;
+      doc.text(resLines, margin, yPos, { align: "justify", maxWidth: contentWidth, lineHeightFactor: 1.5 });
+      yPos += resLines.length * (5 * 1.5) + 8;
     }
 
     // Photos
