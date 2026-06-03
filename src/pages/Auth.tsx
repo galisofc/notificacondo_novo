@@ -1003,7 +1003,8 @@ const Auth = () => {
                           mask="cnpj"
                           value={formData.cnpj}
                           onChange={handleCnpjChange}
-                          className="pl-10 bg-secondary/50 border-border"
+                          className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                         {isSearchingCnpj && (
                           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary" />
@@ -1032,7 +1033,8 @@ const Auth = () => {
                           placeholder="Ex: Residencial das Flores"
                           value={formData.condominiumName}
                           onChange={handleChange}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       {errors.condominiumName && (
@@ -1055,7 +1057,8 @@ const Auth = () => {
                           mask="phone"
                           value={formData.condominiumPhone}
                           onChange={handleMaskedChange('condominiumPhone')}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                     </motion.div>
@@ -1075,7 +1078,8 @@ const Auth = () => {
                           mask="cep"
                           value={formData.zipCode}
                           onChange={handleMaskedChange('zipCode')}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                     </motion.div>
@@ -1095,7 +1099,8 @@ const Auth = () => {
                           placeholder="Rua, Avenida..."
                           value={formData.address}
                           onChange={handleChange}
-                          className="bg-secondary/50 border-border"
+                           className="bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       <div className="space-y-2">
@@ -1107,7 +1112,8 @@ const Auth = () => {
                           placeholder="123"
                           value={formData.addressNumber}
                           onChange={handleChange}
-                          className="bg-secondary/50 border-border"
+                           className="bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                     </motion.div>
@@ -1126,7 +1132,8 @@ const Auth = () => {
                         placeholder="Nome do bairro"
                         value={formData.neighborhood}
                         onChange={handleChange}
-                        className="bg-secondary/50 border-border"
+                         className="bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                       />
                     </motion.div>
 
@@ -1145,7 +1152,8 @@ const Auth = () => {
                           placeholder="Nome da cidade"
                           value={formData.city}
                           onChange={handleChange}
-                          className="bg-secondary/50 border-border"
+                           className="bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       <div className="space-y-2">
@@ -1155,7 +1163,7 @@ const Auth = () => {
                           name="state"
                           value={formData.state}
                           onChange={handleChange}
-                          className="flex h-10 w-full rounded-md border border-border bg-secondary/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="flex h-11 w-full rounded-lg border border-border bg-background shadow-sm px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all duration-300 hover:border-primary/50"
                         >
                           <option value="">UF</option>
                           {BRAZILIAN_STATES.map((state) => (
@@ -1209,7 +1217,8 @@ const Auth = () => {
                           placeholder="Seu nome completo"
                           value={formData.fullName}
                           onChange={handleChange}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       {errors.fullName && (
@@ -1231,7 +1240,7 @@ const Auth = () => {
                           mask="cpf"
                           value={formData.cpf}
                           onChange={handleMaskedChange('cpf')}
-                          className="bg-secondary/50 border-border"
+                          className="bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1244,7 +1253,8 @@ const Auth = () => {
                             mask="phone"
                             value={formData.phone}
                             onChange={handleMaskedChange('phone')}
-                            className="pl-10 bg-secondary/50 border-border"
+                             className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                           />
                         </div>
                       </div>
@@ -1268,7 +1278,8 @@ const Auth = () => {
                           placeholder="seu@email.com"
                           value={formData.email}
                           onChange={handleChange}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       {errors.email && (
@@ -1294,7 +1305,8 @@ const Auth = () => {
                           placeholder="••••••••"
                           value={formData.password}
                           onChange={handleChange}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       {errors.password && (
@@ -1320,7 +1332,8 @@ const Auth = () => {
                           placeholder="••••••••"
                           value={formData.confirmPassword}
                           onChange={handleChange}
-                          className="pl-10 bg-secondary/50 border-border"
+                           className="pl-10 bg-background border-border shadow-sm focus:border-primary/50 transition-all duration-300"
+
                         />
                       </div>
                       {errors.confirmPassword && (
