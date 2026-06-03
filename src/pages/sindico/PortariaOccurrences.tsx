@@ -601,19 +601,21 @@ export default function SindicoPortariaOccurrences() {
     const headerCity = (city || "").toUpperCase();
     const occurrenceDate = new Date(occurrence.created_at);
     const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(occurrenceDate)}`;
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(33, 33, 33);
-    doc.text(dateLabel, leftColX, yPos, { align: "left" });
-
-    yPos = yPos + 10;
+    
+    yPos += 5;
 
     // Header
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(33, 33, 33);
     doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
-    yPos += 15;
+    yPos += 8;
+
+    // Date below title, right aligned
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(dateLabel, pageWidth - margin, yPos, { align: "right" });
+    yPos += 10;
 
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos, pageWidth - margin, yPos);
