@@ -430,7 +430,7 @@ const SindicoSettings = () => {
         .update({ 
           has_certificate: true,
           certificate_url: fileName 
-        })
+        } as any)
         .eq("user_id", user.id);
 
       if (updateError) throw updateError;
@@ -466,7 +466,7 @@ const SindicoSettings = () => {
         .update({ 
           has_certificate: false, 
           certificate_url: null 
-        })
+        } as any)
         .eq("user_id", user.id);
 
       if (updateError) throw updateError;
@@ -789,6 +789,90 @@ const SindicoSettings = () => {
                 </>
               )}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Digital Certificate Section */}
+        <Card className="bg-gradient-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+              Certificado Digital (ICP-Brasil)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Faça o upload do seu certificado digital (.pfx ou .p12) para assinar documentos PDFs diretamente pelo sistema.
+              </p>
+              
+              <div className="flex items-center gap-4 py-4">
+                {profile?.has_certificate ? (
+                  <div className="flex flex-1 items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <Check className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Certificado Configurado</p>
+                        <p className="text-xs text-muted-foreground">Seu certificado está pronto para uso.</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveCertificate}
+                      disabled={removingCertificate}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      {removingCertificate ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                      Remover
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex flex-1 flex-col items-center justify-center p-8 border-2 border-dashed border-muted-foreground/20 rounded-lg bg-muted/5">
+                    <FileCode className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                    <p className="text-sm font-medium mb-1">Nenhum certificado enviado</p>
+                    <p className="text-xs text-muted-foreground mb-4 text-center max-w-xs">
+                      O certificado é necessário para dar validade jurídica aos relatórios gerados.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => certificateInputRef.current?.click()}
+                      disabled={uploadingCertificate}
+                      className="gap-2"
+                    >
+                      {uploadingCertificate ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      Selecionar Arquivo (.pfx, .p12)
+                    </Button>
+                    <input
+                      ref={certificateInputRef}
+                      type="file"
+                      accept=".pfx,.p12"
+                      onChange={handleCertificateUpload}
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-amber-500/10 p-3 rounded-lg flex items-start gap-3 border border-amber-500/20">
+                <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-800 space-y-1">
+                  <p className="font-semibold">Segurança dos Dados</p>
+                  <p>Seu arquivo de certificado é armazenado em um ambiente seguro e criptografado. Ele será utilizado apenas no momento da assinatura digital sob sua autorização.</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
