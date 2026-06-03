@@ -119,7 +119,7 @@ export default function Autenticidade() {
                 <div className="flex gap-2">
                   <Input
                     id="verificationCode"
-                    placeholder="Ex: 3XRB - 98RTG"
+                    placeholder="Ex: 2026/0029"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
                     className="uppercase font-mono"
