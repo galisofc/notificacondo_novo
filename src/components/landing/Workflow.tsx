@@ -345,11 +345,11 @@ const Workflow = () => {
                 <div className="max-w-4xl mx-auto">
                   {module.steps.map((step, index) => (
                     <div key={index} className="relative">
-                      <div className="flex gap-6 mb-8">
+                      <div className="flex gap-4 sm:gap-6 mb-8">
                         {/* Step Number */}
                         <div className="flex-shrink-0">
-                          <div className={`w-16 h-16 rounded-2xl ${colors.gradient} flex items-center justify-center shadow-lg ${colors.glow} relative z-10`}>
-                            <span className="font-display text-xl font-bold text-white">
+                          <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl ${colors.gradient} flex items-center justify-center shadow-lg ${colors.glow} relative z-10`}>
+                            <span className="font-display text-lg sm:text-xl font-bold text-white">
                               {step.number}
                             </span>
                           </div>
@@ -361,7 +361,7 @@ const Workflow = () => {
                             <h3 className="font-display text-xl font-semibold mb-2 text-foreground">
                               {step.title}
                             </h3>
-                            <p className="text-muted-foreground mb-4">
+                            <p className="text-sm sm:text-base text-muted-foreground mb-4">
                               {step.description}
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -381,7 +381,7 @@ const Workflow = () => {
 
                       {/* Connector Line */}
                       {index < module.steps.length - 1 && (
-                        <div className="absolute left-8 top-16 w-px h-8 bg-border" />
+                        <div className="absolute left-6 sm:left-8 top-12 sm:top-16 w-px h-8 bg-border" />
                       )}
                     </div>
                   ))}
