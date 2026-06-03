@@ -14,6 +14,7 @@ export default function Autenticidade() {
   const [verificationCode, setVerificationCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
   const [occurrence, setOccurrence] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -32,6 +33,7 @@ export default function Autenticidade() {
     setIsValidating(true);
     setError(null);
     setOccurrence(null);
+    setProfile(null);
 
     try {
       const cleanCode = code.trim().toUpperCase();
@@ -41,8 +43,7 @@ export default function Autenticidade() {
         .from("porter_occurrences")
         .select(`
           *,
-          condominium:condominiums(name),
-          registered_by_profile:profiles!registered_by(full_name)
+          condominium:condominiums(name)
         `)
         .filter("protocol", "eq", cleanCode)
         .maybeSingle();
@@ -54,8 +55,7 @@ export default function Autenticidade() {
           .from("porter_occurrences")
           .select(`
             *,
-            condominium:condominiums(name),
-            registered_by_profile:profiles!registered_by(full_name)
+            condominium:condominiums(name)
           `)
           .eq("id", cleanCode.toLowerCase())
           .maybeSingle();
@@ -64,6 +64,17 @@ export default function Autenticidade() {
           data = idData;
           fetchError = idError;
         }
+      }
+
+      // If data was found, fetch the profile separately to avoid RLS/Join issues on public page
+      if (data && data.registered_by) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", data.registered_by)
+          .maybeSingle();
+        
+        setProfile(profileData);
       }
 
       if (fetchError || !data) {
@@ -195,7 +206,7 @@ export default function Autenticidade() {
                 <div>
                   <p className="text-xs text-emerald-600 uppercase font-bold">Registrado por</p>
                   <p className="font-medium text-emerald-900">
-                    {occurrence.registered_by_profile?.full_name || "Sistema"}
+                    {profile?.full_name || "Sistema"}
                   </p>
                 </div>
               </div>
