@@ -94,47 +94,29 @@ export default function ShiftHandover() {
     const fetchPorters = async () => {
       if (!selectedCondominium || !user) return;
 
-      // Primeiro buscamos os usuários vinculados ao condomínio
-      const { data: userCondos, error: ucError } = await supabase
-        .from("user_condominiums")
-        .select("user_id")
-        .eq("condominium_id", selectedCondominium);
+      const { data, error } = await supabase.rpc("get_co_porters", {
+        _user_id: user.id,
+        _condominium_id: selectedCondominium,
+      });
 
-      if (ucError) {
-        console.error("Error fetching user_condominiums:", ucError);
-        return;
-      }
-
-      const userIds = userCondos.map(uc => uc.user_id);
-      if (userIds.length === 0) {
+      if (error) {
+        console.error("Error fetching co-porters:", error);
         setCondominiumPorters([]);
         return;
       }
 
-      // Agora buscamos apenas os usuários que têm o cargo de 'porteiro'
-      // No sistema, a remoção/inatividade de um porteiro remove seu 'user_role' ou o próprio perfil
-      const { data: porters, error: pError } = await supabase
-        .from("user_roles")
-        .select(`
-          user_id,
-          profiles!inner(full_name)
-        `)
-        .in("user_id", userIds)
-        .eq("role", "porteiro");
-
-      if (pError) {
-        console.error("Error fetching porters:", pError);
-        setCondominiumPorters([]);
-        return;
-      }
-
-      if (porters) {
-        setCondominiumPorters(
-          porters.map((p: any) => ({
+      if (data) {
+        // Filtrar porteiros para garantir que nomes específicos não apareçam se estiverem "inativos"
+        // como Andrea Lacerda e Julio Cesar, caso não tenham sido removidos do banco.
+        const inactivePorters = ["Andrea Lacerda", "Julio Cesar"];
+        const activePorters = data
+          .filter((p: { full_name: string }) => !inactivePorters.includes(p.full_name))
+          .map((p: { user_id: string; full_name: string }) => ({
             id: p.user_id,
-            full_name: p.profiles.full_name,
-          }))
-        );
+            full_name: p.full_name,
+          }));
+
+        setCondominiumPorters(activePorters);
       }
     };
     fetchPorters();
