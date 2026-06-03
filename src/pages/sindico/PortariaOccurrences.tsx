@@ -884,7 +884,7 @@ export default function SindicoPortariaOccurrences() {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Registrar Nova Ocorrência</DialogTitle>
+              <DialogTitle className="text-left">Registrar Ocorrência</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
