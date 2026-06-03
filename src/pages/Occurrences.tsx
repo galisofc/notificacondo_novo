@@ -962,7 +962,7 @@ const AdvertenciasEMultas = () => {
                       variant="outline" 
                       size="sm" 
                       className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setConfirmDeleteDialog({ open: true, occurrence })}
+                      onClick={() => setConfirmDeleteDialog({ open: true, occurrence: occurrence })}
                       disabled={deleting === occurrence.id}
                     >
                       {deleting === occurrence.id ? (
