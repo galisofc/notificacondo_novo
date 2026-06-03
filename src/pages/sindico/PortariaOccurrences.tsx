@@ -703,10 +703,26 @@ export default function SindicoPortariaOccurrences() {
     doc.text("Descrição:", margin, yPos);
     yPos += 6;
     doc.setFont("helvetica", "normal");
-    const descLines = doc.splitTextToSize(occurrence.description, contentWidth);
-    // Usando lineheightfactor de 1.5 para espaçamento entre linhas e alinhamento justify
-    doc.text(descLines, margin, yPos, { align: "justify", maxWidth: contentWidth, lineHeightFactor: 1.5 });
-    yPos += (descLines.length * 5 * 1.5) + 5;
+
+    const lineHeight = 5 * 1.5;
+    const renderJustifiedText = (text: string) => {
+      const paragraphs = text.split(/\n+/);
+      paragraphs.forEach((para, pIdx) => {
+        const lines: string[] = doc.splitTextToSize(para, contentWidth);
+        lines.forEach((line, idx) => {
+          const isLast = idx === lines.length - 1;
+          doc.text(line, margin, yPos, {
+            align: isLast ? "left" : "justify",
+            maxWidth: contentWidth,
+          });
+          yPos += lineHeight;
+        });
+        if (pIdx < paragraphs.length - 1) yPos += 2;
+      });
+    };
+
+    renderJustifiedText(occurrence.description);
+    yPos += 5;
 
     if (occurrence.status === "resolvida" && occurrence.resolution_notes) {
       if (yPos > 250) {
@@ -717,9 +733,8 @@ export default function SindicoPortariaOccurrences() {
       doc.text("Resolução:", margin, yPos);
       yPos += 6;
       doc.setFont("helvetica", "normal");
-      const resLines = doc.splitTextToSize(occurrence.resolution_notes, contentWidth);
-      doc.text(resLines, margin, yPos, { align: "justify", maxWidth: contentWidth, lineHeightFactor: 1.5 });
-      yPos += (resLines.length * 5 * 1.5) + 5;
+      renderJustifiedText(occurrence.resolution_notes);
+      yPos += 5;
     }
 
     // Photos
