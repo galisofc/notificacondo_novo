@@ -756,11 +756,11 @@ export default function SindicoPortariaOccurrences() {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
       
-      // QR Code and Authentication Text
+      // QR Code and Authentication Text - Now on the right, above the footer line
       if (qrDataUrl) {
         const qrSize = 18;
-        const qrX = margin;
-        const qrY = pageHeight - 23;
+        const qrX = pageWidth - margin - qrSize;
+        const qrY = pageHeight - 48; // Positioned above the footer line (which is at pageHeight - 25)
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
         doc.setFontSize(7);
         doc.setFont("helvetica", "bold");
