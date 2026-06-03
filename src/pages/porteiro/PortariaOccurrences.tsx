@@ -522,10 +522,13 @@ export default function PortariaOccurrences() {
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <Select value={newCategory} onValueChange={setNewCategory}>
-                      <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                      <SelectContent>
-                        {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                      </SelectContent>
+                    <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                      {!categories.some(c => c.name === "Barulho") && (
+                        <SelectItem value="Barulho">Barulho</SelectItem>
+                      )}
+                    </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
