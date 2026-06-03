@@ -62,7 +62,7 @@ const sections = [
     content: [
       "Todo o conteúdo da plataforma, incluindo marca, logotipos, textos, imagens, código-fonte e design, é de propriedade exclusiva da CondoMaster ou de seus licenciadores.",
       "É proibido copiar, modificar, distribuir, vender ou explorar comercialmente qualquer conteúdo da plataforma sem autorização prévia por escrito.",
-      "O uso da plataforma não transfere a você nenhum direito de propriedade intelectual sobre nossos serviços ou conteúdo."
+      "O uso da plataforma não transfere a você nenhum direito de propriedade intelectual sobre nossos Livro de Ocorrências ou conteúdo."
     ]
   },
   {
