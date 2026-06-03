@@ -399,6 +399,97 @@ const SindicoSettings = () => {
     }
   };
 
+  const handleCertificateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (extension !== 'pfx' && extension !== 'p12') {
+      toast({
+        title: "Formato inválido",
+        description: "Apenas arquivos .pfx ou .p12 são permitidos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadingCertificate(true);
+      const fileName = `${user.id}/certificate.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("certificates")
+        .upload(fileName, file, { 
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ 
+          has_certificate: true,
+          certificate_url: fileName 
+        })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev) => prev ? { ...prev, has_certificate: true, certificate_url: fileName } : null);
+
+      toast({
+        title: "Sucesso",
+        description: "Certificado digital enviado com sucesso!",
+      });
+    } catch (error: any) {
+      console.error("Error uploading certificate:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível enviar o certificado.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingCertificate(false);
+      if (certificateInputRef.current) certificateInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveCertificate = async () => {
+    if (!user || !profile?.certificate_url) return;
+
+    try {
+      setRemovingCertificate(true);
+      await supabase.storage.from("certificates").remove([profile.certificate_url]);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ 
+          has_certificate: false, 
+          certificate_url: null 
+        })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile((prev) => prev ? { ...prev, has_certificate: false, certificate_url: null } : null);
+
+      toast({
+        title: "Sucesso",
+        description: "Certificado digital removido!",
+      });
+    } catch (error: any) {
+      console.error("Error removing certificate:", error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível remover o certificado.",
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingCertificate(false);
+    }
+  };
+
+
   if (loading) {
     return (
       <DashboardLayout>
