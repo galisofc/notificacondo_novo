@@ -488,11 +488,10 @@ export default function ShiftHandover() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-foreground flex items-center gap-1 flex-wrap">
-                              {h.outgoing_porter_name && (
-                                <span className="text-muted-foreground">{h.outgoing_porter_name}</span>
-                              )}
-                              <span className="text-muted-foreground">→</span>
-                              <span className="text-primary">{h.incoming_porter_name}</span>
+                              <span className="text-muted-foreground">De: </span>
+                              <span className="font-semibold">{h.outgoing_porter_name || "Desconhecido"}</span>
+                              <span className="text-muted-foreground ml-1">Para: </span>
+                              <span className="font-semibold text-primary">{h.incoming_porter_name}</span>
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {format(new Date(h.shift_ended_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
