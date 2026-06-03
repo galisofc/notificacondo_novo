@@ -23,7 +23,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 
-const DEFAULT_CATEGORIES = ["Visitante", "Entrega", "Manutenção", "Segurança", "Outros"];
+const DEFAULT_CATEGORIES = ["Visitante", "Entrega", "Manutenção", "Segurança", "Barulho", "Outros"];
 
 const PRIORITIES = [
   { value: "baixa", label: "Baixa", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
