@@ -629,29 +629,14 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
-    yPos = Math.max(yPos + 18, rightBottomY + 6);
+    yPos = Math.max(yPos + 18, rightBottomY + 12);
 
     // Header
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(33, 33, 33);
     doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
-    yPos += 10;
-    
-    doc.setFontSize(12);
-    doc.text(condominiumName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
-    yPos += 8;
-
-    if (addressLine) {
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text(addressLine, pageWidth / 2, yPos, { align: "center" });
-      yPos += 5;
-    }
-    if (cepLine) {
-      doc.text(cepLine, pageWidth / 2, yPos, { align: "center" });
-      yPos += 10;
-    }
+    yPos += 15;
 
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos, pageWidth - margin, yPos);
