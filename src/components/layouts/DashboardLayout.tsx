@@ -147,7 +147,7 @@ const getPorteiroNavItems = (pendingPackages: number, openPorterOccs: number): N
     ],
   },
   { title: "Passagem de Plantão", url: "/porteiro/portaria/plantao", icon: ClipboardCheck },
-  { title: "Livro de Ocorrências", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
+  { title: "Serviços", url: "/porteiro/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccs },
   { title: "Configurações", url: "/porteiro/configuracoes", icon: Settings },
 ];
 
@@ -472,11 +472,11 @@ function SidebarNavigation() {
       ],
     },
     {
-      title: "Livro de Ocorrências",
+      title: "Serviços",
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
-        { title: "Livro de Ocorrências", url: "/occurrences", icon: FileText },
+        { title: "Serviços", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Espaços", url: "/party-hall", icon: PartyPopper },
       ],
@@ -485,7 +485,7 @@ function SidebarNavigation() {
       title: "Portaria",
       icon: DoorOpen,
       items: [
-        { title: "Livro de Ocorrências", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
+        { title: "Serviços", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
         { title: "Passagens de Plantão", url: "/sindico/portaria/plantoes", icon: ClipboardCheck },
         { title: "Checklist Portaria", url: "/sindico/portaria/checklist", icon: Cog },
         { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },

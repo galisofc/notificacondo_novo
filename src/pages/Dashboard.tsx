@@ -297,7 +297,7 @@ const Dashboard = () => {
       action: () => navigate("/condominiums"),
     },
     {
-      title: "Livro de Ocorrências",
+      title: "Serviços",
       value: stats.occurrences,
       icon: FileText,
       gradient: "from-amber-500 to-orange-500",
