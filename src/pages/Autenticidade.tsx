@@ -93,6 +93,19 @@ export default function Autenticidade() {
     }
   };
 
+  const handleCodeChange = (value: string) => {
+    // Remove everything that is not a number or /
+    let cleanValue = value.replace(/[^\d/]/g, "");
+    
+    // Automatically add / after 4 digits if not present
+    if (cleanValue.length > 4 && !cleanValue.includes("/")) {
+      cleanValue = cleanValue.slice(0, 4) + "/" + cleanValue.slice(4);
+    }
+    
+    // Limit size if necessary (YYYY/XXXX is usually 9 chars)
+    setVerificationCode(cleanValue.toUpperCase());
+  };
+
   const handleValidate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!verificationCode.trim()) {
@@ -147,7 +160,7 @@ export default function Autenticidade() {
                           id="verificationCode"
                           placeholder="Ex: 2026/0029"
                           value={verificationCode}
-                          onChange={(e) => setVerificationCode(e.target.value)}
+                          onChange={(e) => handleCodeChange(e.target.value)}
                           className="uppercase font-mono h-12 text-lg"
                         />
                         <Button type="submit" size="lg" disabled={isValidating} className="px-6">
