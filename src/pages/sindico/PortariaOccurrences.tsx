@@ -16,13 +16,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const DEFAULT_CATEGORIES = ["Visitante", "Entrega", "Manutenção", "Segurança", "Outros"];
 
@@ -57,6 +59,16 @@ interface Occurrence {
   target_apartment_number?: string | null;
   photos?: string[] | null;
   protocol?: string | null;
+  condominium?: {
+    name: string;
+    city: string | null;
+    state: string | null;
+    address: string | null;
+    address_number: string | null;
+    neighborhood: string | null;
+    zip_code: string | null;
+    logo_url: string | null;
+  };
 }
 
 interface Category {
