@@ -60,6 +60,7 @@ interface Occurrence {
   target_apartment_number?: string | null;
   photos?: string[] | null;
   is_signed?: boolean;
+  signature_hash?: string | null;
   protocol?: string | null;
   condominium?: {
     name: string;
