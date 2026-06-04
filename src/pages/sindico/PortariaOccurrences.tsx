@@ -327,18 +327,23 @@ export default function SindicoPortariaOccurrences() {
       // Fetch condominium details for PDF
       const { data: condoDetails } = await (supabase as any)
         .from("condominiums")
-        .select("id, name, city, state, address, address_number, neighborhood, zip_code, logo_url")
+        .select("id, name, city, state, address, address_number, neighborhood, zip_code, logo_url, owner_id")
         .in("id", (data || []).map(o => o.condominium_id));
       
       const condoMap = Object.fromEntries(((condoDetails as any[]) || []).map((c: any) => [c.id, c]));
 
       const resolvedByIds = [...new Set((data || []).map((o) => o.resolved_by).filter(Boolean))] as string[];
+      const registeredByIds = [...new Set((data || []).map((o) => o.registered_by).filter(Boolean))] as string[];
+      const ownerIds = [...new Set((condoDetails || []).map((c: any) => c.owner_id).filter(Boolean))] as string[];
+      
+      const allUserIds = [...new Set([...resolvedByIds, ...registeredByIds, ...ownerIds])];
+      
       let profileMap: Record<string, string> = {};
-      if (resolvedByIds.length > 0) {
+      if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name")
-          .in("user_id", resolvedByIds);
+          .in("user_id", allUserIds);
         profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
       }
 
@@ -358,15 +363,22 @@ export default function SindicoPortariaOccurrences() {
         aptMap = Object.fromEntries((aptsData || []).map((a) => [a.id, a.number]));
       }
 
-      return (data || []).map((o) => ({
-        ...o,
-        resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
-        reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
-        reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
-        target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
-        target_apartment_number: o.target_apartment_id ? (aptMap[o.target_apartment_id] ?? null) : null,
-        condominium: condoMap[o.condominium_id] || null,
-      })) as any as Occurrence[];
+      return (data || []).map((o) => {
+        const condo = condoMap[o.condominium_id] || null;
+        return {
+          ...o,
+          resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
+          registered_by_name: o.registered_by ? (profileMap[o.registered_by] ?? null) : null,
+          reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
+          reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
+          target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
+          target_apartment_number: o.target_apartment_id ? (aptMap[o.target_apartment_id] ?? null) : null,
+          condominium: condo ? {
+            ...condo,
+            owner_name: condo.owner_id ? (profileMap[condo.owner_id] ?? null) : null
+          } : null,
+        };
+      }) as any as Occurrence[];
     },
     enabled: !!selectedCondominium,
   });
