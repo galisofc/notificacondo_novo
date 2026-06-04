@@ -60,6 +60,7 @@ interface Occurrence {
   target_apartment_number?: string | null;
   photos?: string[] | null;
   is_signed?: boolean;
+  signature_hash?: string | null;
   protocol?: string | null;
   condominium?: {
     name: string;
@@ -315,7 +316,7 @@ export default function SindicoPortariaOccurrences() {
       if (!selectedCondominium) return [];
       let query = (supabase as any)
         .from("porter_occurrences")
-        .select("*, is_signed")
+        .select("*, signature_hash, is_signed")
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
@@ -792,7 +793,8 @@ export default function SindicoPortariaOccurrences() {
     // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageCount = doc.getNumberOfPages();
-    const authUrl = `https://notificacondo.com.br/autenticidade?code=${occurrence.protocol || occurrence.id}`;
+    const authCode = occurrence.is_signed ? (occurrence.signature_hash || occurrence.id) : (occurrence.protocol || occurrence.id);
+    const authUrl = `https://notificacondo.com.br/autenticidade?code=${authCode}`;
     let qrDataUrl = "";
     try {
       qrDataUrl = await QRCode.toDataURL(authUrl, { margin: 1, width: 100 });
@@ -822,10 +824,10 @@ export default function SindicoPortariaOccurrences() {
         doc.text("notificacondo.com.br/autenticidade", qrX + qrSize / 2, qrY + qrSize + 5.5, { align: "center" });
         
         // Show the unique validation code
-        const validationCode = occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase();
+        const validationCode = occurrence.is_signed ? (occurrence.signature_hash || "-") : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7);
-        doc.text(`CÓDIGO: ${validationCode}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: "center" });
+        doc.text(occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: "center" });
       }
 
       doc.setFontSize(9);
@@ -888,8 +890,12 @@ export default function SindicoPortariaOccurrences() {
       // 2. Simular delay de processamento da assinatura
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // 3. Gerar o hash do documento (simulado para o registro)
-      const fileHash = `sha256-${Math.random().toString(36).substring(2)}-${Date.now()}`;
+      // 3. Gerar o hash de assinatura de 9 caracteres (alfanumérico)
+      const generateSignatureHash = () => {
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed confusing characters
+        return Array.from({ length: 9 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      };
+      const signatureHash = generateSignatureHash();
 
       // 4. Registrar na tabela de auditoria (signed_documents) para verificação pública
       const { error: auditError } = await (supabase as any)
@@ -897,16 +903,19 @@ export default function SindicoPortariaOccurrences() {
         .insert({
           signer_id: user.id,
           signer_name: profileData.full_name,
-          file_hash: fileHash,
+          file_hash: signatureHash,
           file_name: `ocorrencia_${currentOccurrenceToSign.protocol || currentOccurrenceToSign.id.slice(0, 8)}.pdf`
         });
 
       if (auditError) throw auditError;
 
-      // 5. Atualizar a ocorrência como assinada
+      // 5. Atualizar a ocorrência como assinada e salvar o hash
       const { error: updateError } = await (supabase as any)
         .from("porter_occurrences")
-        .update({ is_signed: true })
+        .update({ 
+          is_signed: true,
+          signature_hash: signatureHash
+        })
         .eq("id", currentOccurrenceToSign.id);
 
       if (updateError) throw updateError;
