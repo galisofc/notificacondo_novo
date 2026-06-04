@@ -51,13 +51,16 @@ const Autenticidade = () => {
             reporter_block:blocks!porter_occurrences_reporter_block_id_fkey(name),
             reporter_apartment:apartments!porter_occurrences_reporter_apartment_id_fkey(number),
             target_block:blocks!porter_occurrences_target_block_id_fkey(name),
-            target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
+            target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number),
+            profiles:profiles!porter_occurrences_created_by_fkey(full_name)
           `)
           .eq('signature_hash', hash)
           .maybeSingle();
 
         let creatorName = "Não informado";
-        if (occurrence?.created_by) {
+        if (occurrence?.profiles?.full_name) {
+          creatorName = occurrence.profiles.full_name;
+        } else if (occurrence?.created_by) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
