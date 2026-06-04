@@ -726,7 +726,7 @@ export default function PortariaOccurrences() {
                   {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+              <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar">
                 {[
                   { value: "all", label: "Todas" },
                   { value: "aberta", label: "Abertas" },
@@ -735,10 +735,10 @@ export default function PortariaOccurrences() {
                   <button
                     key={opt.value}
                     onClick={() => setFilterStatus(opt.value)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 whitespace-nowrap ${
                       filterStatus === opt.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-primary shadow-md transform scale-[1.02]"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                     }`}
                   >
                     {opt.label}
