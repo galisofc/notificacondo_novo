@@ -1290,7 +1290,7 @@ export default function SindicoPortariaOccurrences() {
                         )}
 
                         {/* Block/Apartment info */}
-                        {(occ.reporter_block_name || occ.target_block_name) && (
+                        {(occ.reporter_block_name || occ.target_block_name || occ.registered_by_name) && (
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.reporter_block_name && (
                               <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
@@ -1302,6 +1302,12 @@ export default function SindicoPortariaOccurrences() {
                                   showIcons
                                   valueClassName="font-bold text-slate-700"
                                 />
+                              </div>
+                            )}
+                            {occ.registered_by_name && (
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Registrado por:</span>
+                                <span className="font-bold text-slate-700">{occ.registered_by_name}</span>
                               </div>
                             )}
                             {occ.target_block_name && (
@@ -1318,6 +1324,7 @@ export default function SindicoPortariaOccurrences() {
                             )}
                           </div>
                         )}
+
 
                         <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
                           <div className="flex flex-col gap-1">
