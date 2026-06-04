@@ -715,9 +715,9 @@ export default function SindicoPortariaOccurrences() {
     // Responsável pela abertura
     const openedBy = occurrence.registered_by_name || "Portaria";
     doc.setFont("helvetica", "bold");
-    doc.text("Aberto por:", margin, yPos);
+    doc.text("Sistema:", margin, yPos);
     doc.setFont("helvetica", "normal");
-    doc.text(openedBy, margin + 25, yPos);
+    doc.text(`Aberto por ${openedBy}`, margin + 25, yPos);
     yPos += 6;
 
     if (occurrence.reporter_block_name) {
