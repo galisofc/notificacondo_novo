@@ -17,7 +17,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown, ShieldCheck, UserCheck } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -123,6 +124,7 @@ export default function SindicoPortariaOccurrences() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
   const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
+  const [identifySelf, setIdentifySelf] = useState<string>("nao");
 
   // Digital Signature state
   const [signingPdf, setSigningPdf] = useState(false);
@@ -462,8 +464,8 @@ export default function SindicoPortariaOccurrences() {
         category: newCategory,
         priority: newPriority,
         occurred_at: isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString(),
-        reporter_block_id: reporterBlock,
-        reporter_apartment_id: reporterApartment,
+        reporter_block_id: identifySelf === "sim" ? reporterBlock : null,
+        reporter_apartment_id: identifySelf === "sim" ? reporterApartment : null,
         target_block_id: targetBlock,
         target_apartment_id: targetApartment,
         photos: photos,
@@ -1459,36 +1461,68 @@ export default function SindicoPortariaOccurrences() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Data da Ocorrência</Label>
-                  <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Data da Ocorrência</Label>
+                    <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Horário</Label>
+                    <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Horário</Label>
-                  <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+
+                {/* Target unit */}
+                <div className="animate-fade-down">
+                  {renderBlockApartmentSelectors(
+                    "Ocorrência sobre (Unidade)",
+                    targetBlockId,
+                    setTargetBlockId,
+                    targetApartmentId,
+                    setTargetApartmentId,
+                    targetApartments
+                  )}
                 </div>
-              </div>
 
-              {/* Reporter unit */}
-              {renderBlockApartmentSelectors(
-                "Registrado por (Unidade)",
-                reporterBlockId,
-                setReporterBlockId,
-                reporterApartmentId,
-                setReporterApartmentId,
-                reporterApartments
-              )}
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <Label className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-primary" />
+                    Identificar solicitante (Unidade)?
+                  </Label>
+                  <RadioGroup 
+                    value={identifySelf} 
+                    onValueChange={(v) => {
+                      setIdentifySelf(v);
+                      if (v === "nao") {
+                        setReporterBlockId("");
+                        setReporterApartmentId("");
+                      }
+                    }}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="sim" id="identify-sim" />
+                      <Label htmlFor="identify-sim" className="cursor-pointer font-medium">Sim</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="nao" id="identify-nao" />
+                      <Label htmlFor="identify-nao" className="cursor-pointer font-medium">Não</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
 
-              {/* Target unit */}
-              {renderBlockApartmentSelectors(
-                "Ocorrência sobre (Unidade)",
-                targetBlockId,
-                setTargetBlockId,
-                targetApartmentId,
-                setTargetApartmentId,
-                targetApartments
-              )}
+                {identifySelf === "sim" && (
+                  <div className="animate-fade-down">
+                    {renderBlockApartmentSelectors(
+                      "Registrado por (Unidade)",
+                      reporterBlockId,
+                      setReporterBlockId,
+                      reporterApartmentId,
+                      setReporterApartmentId,
+                      reporterApartments
+                    )}
+                  </div>
+                )}
 
               {/* Photo upload */}
               <div className="space-y-2">
