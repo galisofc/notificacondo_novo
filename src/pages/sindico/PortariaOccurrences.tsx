@@ -1233,7 +1233,7 @@ export default function SindicoPortariaOccurrences() {
                         <div className="flex items-center gap-2 flex-wrap mb-1.5">
                           {occ.protocol && (
                             <Badge variant="secondary" className="font-mono text-xs">
-                              Protocolo {occ.protocol}
+                              Protocolo: {occ.protocol}
                             </Badge>
                           )}
                           <h3 className="font-semibold text-foreground break-words">{occ.title}</h3>
