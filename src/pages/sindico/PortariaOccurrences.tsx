@@ -398,6 +398,8 @@ export default function SindicoPortariaOccurrences() {
   });
 
   const filteredOccurrences = occurrences.filter((o) => {
+    if (filterStatus !== "all" && o.status !== filterStatus) return false;
+    if (filterCategory !== "all" && o.category !== filterCategory) return false;
     if (searchTerm && !o.title.toLowerCase().includes(searchTerm.toLowerCase()) && !o.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (dateRange?.from) {
       const date = new Date(o.created_at);
