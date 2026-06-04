@@ -383,9 +383,19 @@ export default function PortariaOccurrences() {
       };
       const protocol = await generateProtocol();
 
+      // Captura o nome do porteiro para denormalização (evita problemas de RLS de profiles)
+      let registeredByName: string | null = null;
+      const { data: ownProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      registeredByName = ownProfile?.full_name || user?.user_metadata?.full_name || user?.email || null;
+
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
         registered_by: user!.id,
+        registered_by_name: registeredByName,
         title: newTitle,
         description: newDescription,
         category: newCategory,
@@ -399,6 +409,7 @@ export default function PortariaOccurrences() {
         protocol: protocol,
       } as any);
       if (error) throw error;
+
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["porter-occurrences"] });
