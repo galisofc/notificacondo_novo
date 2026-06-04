@@ -39,6 +39,7 @@ interface Occurrence {
   id: string;
   condominium_id: string;
   registered_by: string;
+  registered_by_name?: string | null;
   title: string;
   description: string;
   category: string;
@@ -71,6 +72,7 @@ interface Occurrence {
     neighborhood: string | null;
     zip_code: string | null;
     logo_url?: string | null;
+    owner_id?: string;
   } | null;
 }
 
@@ -325,18 +327,23 @@ export default function SindicoPortariaOccurrences() {
       // Fetch condominium details for PDF
       const { data: condoDetails } = await (supabase as any)
         .from("condominiums")
-        .select("id, name, city, state, address, address_number, neighborhood, zip_code, logo_url")
+        .select("id, name, city, state, address, address_number, neighborhood, zip_code, logo_url, owner_id")
         .in("id", (data || []).map(o => o.condominium_id));
       
       const condoMap = Object.fromEntries(((condoDetails as any[]) || []).map((c: any) => [c.id, c]));
 
       const resolvedByIds = [...new Set((data || []).map((o) => o.resolved_by).filter(Boolean))] as string[];
+      const registeredByIds = [...new Set((data || []).map((o) => o.registered_by).filter(Boolean))] as string[];
+      const ownerIds = [...new Set((condoDetails || []).map((c: any) => c.owner_id).filter(Boolean))] as string[];
+      
+      const allUserIds = [...new Set([...resolvedByIds, ...registeredByIds, ...ownerIds])];
+      
       let profileMap: Record<string, string> = {};
-      if (resolvedByIds.length > 0) {
+      if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
           .select("user_id, full_name")
-          .in("user_id", resolvedByIds);
+          .in("user_id", allUserIds);
         profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
       }
 
@@ -356,15 +363,22 @@ export default function SindicoPortariaOccurrences() {
         aptMap = Object.fromEntries((aptsData || []).map((a) => [a.id, a.number]));
       }
 
-      return (data || []).map((o) => ({
-        ...o,
-        resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
-        reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
-        reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
-        target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
-        target_apartment_number: o.target_apartment_id ? (aptMap[o.target_apartment_id] ?? null) : null,
-        condominium: condoMap[o.condominium_id] || null,
-      })) as any as Occurrence[];
+      return (data || []).map((o) => {
+        const condo = condoMap[o.condominium_id] || null;
+        return {
+          ...o,
+          resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
+          registered_by_name: o.registered_by ? (profileMap[o.registered_by] ?? null) : null,
+          reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
+          reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
+          target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
+          target_apartment_number: o.target_apartment_id ? (aptMap[o.target_apartment_id] ?? null) : null,
+          condominium: condo ? {
+            ...condo,
+            owner_name: condo.owner_id ? (profileMap[condo.owner_id] ?? null) : null
+          } : null,
+        };
+      }) as any as Occurrence[];
     },
     enabled: !!selectedCondominium,
   });
@@ -698,6 +712,14 @@ export default function SindicoPortariaOccurrences() {
       yPos += 6;
     });
 
+    // Responsável pela abertura
+    const openedBy = occurrence.registered_by_name || "Portaria";
+    doc.setFont("helvetica", "bold");
+    doc.text("Aberto por:", margin, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(openedBy, margin + 25, yPos);
+    yPos += 6;
+
     if (occurrence.reporter_block_name) {
       doc.setFont("helvetica", "bold");
       doc.text("Registrado por:", margin, yPos);
@@ -789,6 +811,26 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
+    // Síndico Responsável (Signature area or info)
+    const sindicoName = (occurrence.condominium as any)?.owner_name || "Síndico Responsável";
+    if (yPos > 240) {
+      doc.addPage();
+      yPos = margin + 10;
+    } else {
+      yPos += 15;
+    }
+    
+    doc.setDrawColor(150, 150, 150);
+    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+    yPos += 5;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(sindicoName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+    yPos += 4;
+    doc.setFont("helvetica", "normal");
+    doc.text("Síndico Responsável", pageWidth / 2, yPos, { align: "center" });
+    yPos += 15;
+
     // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageCount = doc.getNumberOfPages();
@@ -806,27 +848,27 @@ export default function SindicoPortariaOccurrences() {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
       
-      // QR Code and Authentication Text - Now on the right, above the footer line
+      // QR Code and Authentication Text - Now centered at the bottom of the content
       if (qrDataUrl) {
-        const qrSize = 18;
-        const qrX = pageWidth - margin - qrSize;
-        const qrY = pageHeight - 56; 
+        const qrSize = 25;
+        const qrX = (pageWidth - qrSize) / 2;
+        const qrY = pageHeight - 65; 
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
         
         doc.setFontSize(7);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(33, 33, 33);
-        doc.text("Autenticação", qrX + qrSize / 2, qrY + qrSize + 3, { align: "center" });
+        doc.text("Autenticação", pageWidth / 2, qrY + qrSize + 3, { align: "center" });
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6);
-        doc.text("notificacondo.com.br/autenticidade", qrX + qrSize / 2, qrY + qrSize + 5.5, { align: "center" });
+        doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, qrY + qrSize + 5.5, { align: "center" });
         
         // Show the unique validation code
         const validationCode = occurrence.is_signed ? (occurrence.signature_hash || "-") : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7);
-        doc.text(occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: "center" });
+        doc.text(occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`, pageWidth / 2, qrY + qrSize + 9, { align: "center" });
       }
 
       doc.setFontSize(9);
