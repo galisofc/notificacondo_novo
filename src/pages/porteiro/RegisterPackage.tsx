@@ -136,7 +136,6 @@ export default function RegisterPackage() {
         ]);
 
         const residents = residentsRes.data || [];
-        const responsibleResident = residents.find(r => r.phone) || residents[0];
         const hasResidents = residents.length > 0;
 
         if (condoRes.data && blockRes.data && aptRes.data) {
@@ -144,8 +143,10 @@ export default function RegisterPackage() {
             condominiumName: condoRes.data.name,
             blockName: blockRes.data.name,
             apartmentNumber: aptRes.data.number,
-            residentName: responsibleResident?.full_name || undefined,
-            residentPhone: responsibleResident?.phone || undefined,
+            residents: residents.map(r => ({
+              full_name: r.full_name,
+              phone: r.phone || undefined
+            })),
             hasResidents,
           });
 
