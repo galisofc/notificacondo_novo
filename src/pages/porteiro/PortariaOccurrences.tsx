@@ -857,21 +857,39 @@ export default function PortariaOccurrences() {
                           </div>
                         )}
 
-                        {/* Target unit info (Sobre) */}
-                        {occ.target_block_name && (
-                          <div className="mt-3">
-                            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
-                              <span className="text-slate-500 font-medium text-xs">Sobre:</span>
-                              <BlockApartmentDisplay
-                                blockName={occ.target_block_name}
-                                apartmentNumber={occ.target_apartment_number}
-                                variant="inline"
-                                showIcons
-                                valueClassName="font-bold text-slate-700 text-xs"
-                              />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                          {/* Reporter unit info (Unidade) */}
+                          {(occ.reporter_block_name || occ.reporter_apartment_number) && (
+                            <div>
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100 w-full">
+                                <span className="text-slate-500 font-medium text-[10px] uppercase tracking-wider">Registrado por:</span>
+                                <BlockApartmentDisplay
+                                  blockName={occ.reporter_block_name}
+                                  apartmentNumber={occ.reporter_apartment_number}
+                                  variant="inline"
+                                  showIcons
+                                  valueClassName="font-bold text-slate-700 text-xs"
+                                />
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
+
+                          {/* Target unit info (Sobre) */}
+                          {(occ.target_block_name || occ.target_apartment_number) && (
+                            <div>
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100 w-full">
+                                <span className="text-slate-500 font-medium text-[10px] uppercase tracking-wider">Sobre:</span>
+                                <BlockApartmentDisplay
+                                  blockName={occ.target_block_name}
+                                  apartmentNumber={occ.target_apartment_number}
+                                  variant="inline"
+                                  showIcons
+                                  valueClassName="font-bold text-slate-700 text-xs"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 gap-4">
                           <div className="flex flex-col gap-1">
