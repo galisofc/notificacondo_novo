@@ -277,8 +277,9 @@ export default function PortariaOccurrences() {
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
-      if (filterStatus !== "all") query = query.eq("status", filterStatus);
-      if (filterCategory !== "all") query = query.eq("category", filterCategory);
+      // We no longer filter by status/category at the database level to ensure stat cards are correct
+      // but we still fetch everything for the selected condominium.
+
 
       const { data, error } = await query;
       if (error) throw error;
