@@ -479,16 +479,15 @@ export default function SindicoPortariaOccurrences() {
       setCreateDialogOpen(false);
       setNewTitle("");
       setNewDescription("");
-      setNewCategory(categories[0]?.name || "");
-      setNewPriority("media");
+      setNewCategory("");
+      setNewPriority("");
       setReporterBlockId("");
       setReporterApartmentId("");
       setTargetBlockId("");
       setTargetApartmentId("");
       setPhotos([]);
-      const now = new Date();
-      setOccurredDate(format(now, "yyyy-MM-dd"));
-      setOccurredTime(format(now, "HH:mm"));
+      setOccurredDate("");
+      setOccurredTime("");
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
