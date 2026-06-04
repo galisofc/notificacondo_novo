@@ -186,23 +186,23 @@ const Autenticidade = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm flex items-center gap-4">
-                      <div className="bg-muted p-3 rounded-xl text-muted-foreground">
-                        <FileText className="w-6 h-6" />
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5 transition-all hover:bg-white group">
+                      <div className="bg-slate-200 p-4 rounded-2xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <FileText className="w-7 h-7" />
                       </div>
                       <div className="truncate flex-1">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Nome do Arquivo Original</p>
-                        <p className="font-mono text-sm truncate text-foreground font-medium">{verificationResult.fileName}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Nome do Arquivo Original</p>
+                        <p className="font-mono text-base truncate text-slate-900 font-bold">{verificationResult.fileName}</p>
                       </div>
                     </div>
                     
-                    <div className="p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm flex items-center gap-4">
-                      <div className="bg-muted p-3 rounded-xl text-muted-foreground">
-                        <ShieldCheck className="w-6 h-6" />
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5 transition-all hover:bg-white group">
+                      <div className="bg-slate-200 p-4 rounded-2xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <ShieldCheck className="w-7 h-7" />
                       </div>
                       <div className="truncate flex-1">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Hash de Verificação</p>
-                        <p className="font-mono text-sm truncate text-muted-foreground">{fileHash}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Hash de Verificação</p>
+                        <p className="font-mono text-base truncate text-slate-500 font-bold">{fileHash}</p>
                       </div>
                     </div>
                   </div>

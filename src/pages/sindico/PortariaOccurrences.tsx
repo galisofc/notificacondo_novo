@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown } from "lucide-react";
+import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown, ShieldCheck } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -1136,7 +1136,7 @@ export default function SindicoPortariaOccurrences() {
                   {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg w-full sm:w-auto overflow-x-auto no-scrollbar">
+              <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar">
                 {[
                   { value: "all", label: "Todas" },
                   { value: "aberta", label: "Abertas" },
@@ -1145,10 +1145,10 @@ export default function SindicoPortariaOccurrences() {
                   <button
                     key={opt.value}
                     onClick={() => setFilterStatus(opt.value)}
-                    className={`flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${
+                    className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 whitespace-nowrap ${
                       filterStatus === opt.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-primary shadow-md transform scale-[1.02]"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                     }`}
                   >
                     {opt.label}
