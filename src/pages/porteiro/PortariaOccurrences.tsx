@@ -889,31 +889,41 @@ export default function PortariaOccurrences() {
                           </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                          {/* Registered by (Responsável pelo Cadastro) */}
-                          <div>
-                            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100 w-full">
-                              <span className="text-slate-500 font-medium text-[10px] uppercase tracking-wider">Responsável pelo Cadastro:</span>
-                              <span className="font-bold text-slate-700 text-xs uppercase">{occ.registered_by_name || "Não informado"}</span>
-                            </div>
-                          </div>
-
-                          {/* Target unit info (Sobre) */}
-                          {(occ.target_block_name || occ.target_apartment_number) && (
-                            <div>
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1.5 rounded-md border border-slate-100 w-full">
-                                <span className="text-slate-500 font-medium text-[10px] uppercase tracking-wider">Sobre:</span>
+                        {/* Block/Apartment info */}
+                        {(occ.reporter_block_name || occ.target_block_name || occ.registered_by_name) && (
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
+                            {occ.registered_by_name && (
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Registrado por:</span>
+                                <span className="font-bold text-slate-700">{occ.registered_by_name}</span>
+                              </div>
+                            )}
+                            {occ.reporter_block_name && (
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Solicitante:</span>
+                                <BlockApartmentDisplay
+                                  blockName={occ.reporter_block_name}
+                                  apartmentNumber={occ.reporter_apartment_number}
+                                  variant="inline"
+                                  showIcons
+                                  valueClassName="font-bold text-slate-700"
+                                />
+                              </div>
+                            )}
+                            {occ.target_block_name && (
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Sobre:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.target_block_name}
                                   apartmentNumber={occ.target_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-bold text-slate-700 text-xs"
+                                  valueClassName="font-bold text-slate-700"
                                 />
                               </div>
-                            </div>
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        )}
 
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 gap-4">
                           <div className="flex flex-col gap-1">
