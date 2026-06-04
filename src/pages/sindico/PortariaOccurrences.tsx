@@ -1294,7 +1294,7 @@ export default function SindicoPortariaOccurrences() {
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.reporter_block_name && (
                               <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Registrado por:</span>
+                                <span className="text-slate-500 font-medium">Solicitante:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.reporter_block_name}
                                   apartmentNumber={occ.reporter_apartment_number}
