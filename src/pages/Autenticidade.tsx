@@ -12,6 +12,17 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+const parseValidDate = (dateValue: unknown): Date | null => {
+  if (!dateValue || typeof dateValue !== "string") return null;
+  const parsedDate = new Date(dateValue);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatDateTime = (dateValue: unknown) => {
+  const parsedDate = parseValidDate(dateValue);
+  return parsedDate ? format(parsedDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado";
+};
+
 const Autenticidade = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const fileHash = searchParams.get("hash") || searchParams.get("code");
@@ -51,20 +62,21 @@ const Autenticidade = () => {
             reporter_block:blocks!porter_occurrences_reporter_block_id_fkey(name),
             reporter_apartment:apartments!porter_occurrences_reporter_apartment_id_fkey(number),
             target_block:blocks!porter_occurrences_target_block_id_fkey(name),
-            target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number),
-            profiles:profiles!porter_occurrences_created_by_fkey(full_name)
+            target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
           `)
           .eq('signature_hash', hash)
           .maybeSingle();
 
+        if (occError) {
+          console.error("Erro ao buscar ocorrência assinada:", occError);
+        }
+
         let creatorName = "Não informado";
-        if (occurrence?.profiles?.full_name) {
-          creatorName = occurrence.profiles.full_name;
-        } else if (occurrence?.created_by) {
+        if (occurrence?.registered_by) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
-            .eq('user_id', occurrence.created_by)
+            .eq('user_id', occurrence.registered_by)
             .maybeSingle();
           
           if (profile?.full_name) {
@@ -75,12 +87,12 @@ const Autenticidade = () => {
         setVerificationResult({
           isValid: true,
           signerName: signedDoc.signer_name,
-          signedAt: signedDoc.created_at && !isNaN(new Date(signedDoc.created_at).getTime()) ? format(new Date(signedDoc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado",
+          signedAt: formatDateTime(signedDoc.created_at),
           fileName: signedDoc.file_name,
-          occurrence: {
+          occurrence: occurrence ? {
             ...occurrence,
             creatorName: creatorName
-          }
+          } : null
         });
       } else {
         setVerificationResult({ isValid: false });
