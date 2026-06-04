@@ -1579,7 +1579,7 @@ export default function SindicoPortariaOccurrences() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || createMutation.isPending}>
+              <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || !newPriority || !occurredDate || !occurredTime || createMutation.isPending}>
                 {createMutation.isPending ? "Registrando..." : "Registrar"}
               </Button>
             </DialogFooter>
