@@ -114,7 +114,7 @@ export default function SindicoPortariaOccurrences() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newPriority, setNewPriority] = useState("media");
+  const [newPriority, setNewPriority] = useState("");
   const [reporterBlockId, setReporterBlockId] = useState<string>("");
   const [reporterApartmentId, setReporterApartmentId] = useState<string>("");
   const [targetBlockId, setTargetBlockId] = useState<string>("");
