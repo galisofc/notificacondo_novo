@@ -933,13 +933,13 @@ export default function SindicoPortariaOccurrences() {
   };
 
 
-  const openCount = occurrences.filter((o) => o.status === "aberta").length;
-  const resolvedCount = occurrences.filter((o) => o.status === "resolvida").length;
+  const openCount = filteredOccurrences.filter((o) => o.status === "aberta").length;
+  const resolvedCount = filteredOccurrences.filter((o) => o.status === "resolvida").length;
 
   const statCards = [
     { title: "Em Aberto", value: openCount, icon: Clock, gradient: "from-amber-500 to-orange-500" },
     { title: "Resolvidas", value: resolvedCount, icon: CheckCircle2, gradient: "from-accent to-emerald-600" },
-    { title: "Total", value: occurrences.length, icon: ClipboardList, gradient: "from-primary to-blue-600" },
+    { title: "Total", value: filteredOccurrences.length, icon: ClipboardList, gradient: "from-primary to-blue-600" },
   ];
 
   const renderBlockApartmentSelectors = (
