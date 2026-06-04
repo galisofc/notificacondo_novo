@@ -586,30 +586,7 @@ export default function PortariaOccurrences() {
                   <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descreva o ocorrido..." rows={4} />
                 </div>
 
-                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                  <Label className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-primary" />
-                    Deseja se identificar para registrar a ocorrência?
-                  </Label>
-                  <RadioGroup 
-                    value={identifySelf} 
-                    onValueChange={setIdentifySelf}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
-                      <RadioGroupItem value="sim" id="identify-sim" />
-                      <Label htmlFor="identify-sim" className="cursor-pointer font-medium">Sim</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
-                      <RadioGroupItem value="nao" id="identify-nao" />
-                      <Label htmlFor="identify-nao" className="cursor-pointer font-medium">Não</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {identifySelf === "sim" && (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-down">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <Select value={newCategory} onValueChange={setNewCategory}>
