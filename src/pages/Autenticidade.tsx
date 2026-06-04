@@ -164,23 +164,23 @@ const Autenticidade = () => {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6 px-6 md:px-10 pb-12">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-emerald-500/10">
-                    <div className="flex items-center gap-4 p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm transition-transform hover:scale-[1.02]">
-                      <div className="bg-primary/10 p-3 rounded-xl">
-                        <User className="w-6 h-6 text-primary" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-slate-100">
+                    <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:bg-white group">
+                      <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                        <User className="w-7 h-7 text-primary group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Assinado por</p>
-                        <p className="font-bold text-foreground text-lg">{verificationResult.signerName}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Assinado por</p>
+                        <p className="font-extrabold text-slate-900 text-xl">{verificationResult.signerName}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm transition-transform hover:scale-[1.02]">
-                      <div className="bg-primary/10 p-3 rounded-xl">
-                        <Calendar className="w-6 h-6 text-primary" />
+                    <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:bg-white group">
+                      <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                        <Calendar className="w-7 h-7 text-primary group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Data da Assinatura</p>
-                        <p className="font-bold text-foreground text-lg">{verificationResult.signedAt}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Data da Assinatura</p>
+                        <p className="font-extrabold text-slate-900 text-xl">{verificationResult.signedAt}</p>
                       </div>
                     </div>
                   </div>

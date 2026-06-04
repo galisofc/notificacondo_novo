@@ -1315,16 +1315,16 @@ export default function SindicoPortariaOccurrences() {
                         )}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2 pt-2 border-t border-border/50">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2.5 pt-4 mt-2 border-t border-slate-100">
                       {(profile as any)?.has_certificate && (
                         <Button
                           variant="default"
                           size="sm"
                           className={cn(
-                            "gap-1 font-semibold w-full sm:w-auto",
+                            "gap-2 font-bold h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 w-full sm:w-auto",
                             occ.is_signed
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default"
-                              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-default shadow-none"
+                              : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50"
                           )}
                           onClick={() => !occ.is_signed && handleSignPdf(occ)}
                         >
@@ -1334,7 +1334,7 @@ export default function SindicoPortariaOccurrences() {
                             </>
                           ) : (
                             <>
-                              <Settings className="w-4 h-4" /> Assinar ICP
+                              <ShieldCheck className="w-4 h-4" /> Assinar ICP
                             </>
                           )}
                         </Button>
@@ -1343,10 +1343,10 @@ export default function SindicoPortariaOccurrences() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full sm:w-auto"
+                          className="h-10 px-4 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-primary transition-all active:scale-95 font-bold w-full sm:w-auto"
                           onClick={() => generatePDF(occ)}
                         >
-                          <FileDown className="w-4 h-4 mr-1" /> PDF
+                          <FileDown className="w-4 h-4 mr-2" /> PDF
                         </Button>
                       )}
                       {occ.status === "aberta" && (
