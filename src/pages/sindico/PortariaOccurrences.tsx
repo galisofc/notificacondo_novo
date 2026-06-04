@@ -712,6 +712,14 @@ export default function SindicoPortariaOccurrences() {
       yPos += 6;
     });
 
+    // Responsável pela abertura
+    const openedBy = occurrence.registered_by_name || "Portaria";
+    doc.setFont("helvetica", "bold");
+    doc.text("Aberto por:", margin, yPos);
+    doc.setFont("helvetica", "normal");
+    doc.text(openedBy, margin + 25, yPos);
+    yPos += 6;
+
     if (occurrence.reporter_block_name) {
       doc.setFont("helvetica", "bold");
       doc.text("Registrado por:", margin, yPos);
@@ -803,6 +811,26 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
+    // Síndico Responsável (Signature area or info)
+    const sindicoName = (occurrence.condominium as any)?.owner_name || "Síndico Responsável";
+    if (yPos > 240) {
+      doc.addPage();
+      yPos = margin + 10;
+    } else {
+      yPos += 15;
+    }
+    
+    doc.setDrawColor(150, 150, 150);
+    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+    yPos += 5;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(sindicoName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
+    yPos += 4;
+    doc.setFont("helvetica", "normal");
+    doc.text("Síndico Responsável", pageWidth / 2, yPos, { align: "center" });
+    yPos += 15;
+
     // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageCount = doc.getNumberOfPages();
@@ -820,28 +848,44 @@ export default function SindicoPortariaOccurrences() {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
       
-      // QR Code and Authentication Text - Now on the right, above the footer line
+      // QR Code and Authentication Text - Now centered at the bottom of the content
       if (qrDataUrl) {
-        const qrSize = 18;
-        const qrX = pageWidth - margin - qrSize;
-        const qrY = pageHeight - 56; 
+        const qrSize = 25;
+        const qrX = (pageWidth - qrSize) / 2;
+        const qrY = pageHeight - 65; 
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
         
         doc.setFontSize(7);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(33, 33, 33);
-        doc.text("Autenticação", qrX + qrSize / 2, qrY + qrSize + 3, { align: "center" });
+        doc.text("Autenticação", pageWidth / 2, qrY + qrSize + 3, { align: "center" });
         
         doc.setFont("helvetica", "normal");
         doc.setFontSize(6);
-        doc.text("notificacondo.com.br/autenticidade", qrX + qrSize / 2, qrY + qrSize + 5.5, { align: "center" });
+        doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, qrY + qrSize + 5.5, { align: "center" });
         
         // Show the unique validation code
         const validationCode = occurrence.is_signed ? (occurrence.signature_hash || "-") : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7);
-        doc.text(occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`, qrX + qrSize / 2, qrY + qrSize + 9, { align: "center" });
+        doc.text(occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`, pageWidth / 2, qrY + qrSize + 9, { align: "center" });
       }
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(33, 33, 33);
+      doc.text(condominiumName.toUpperCase(), pageWidth / 2, pageHeight - 18, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      if (addressLine) {
+        doc.text(addressLine, pageWidth / 2, pageHeight - 13, { align: "center" });
+      }
+      if (cepLine) {
+        doc.text(cepLine, pageWidth / 2, pageHeight - 9, { align: "center" });
+      }
+      doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 5, { align: "right" });
+    }
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
