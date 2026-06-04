@@ -292,7 +292,7 @@ export default function PortariaOccurrences() {
       if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("user_id, full_name")
+          .select("id, user_id, full_name")
           .in("user_id", allUserIds);
         profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
       }
