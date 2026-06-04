@@ -238,11 +238,11 @@ const Autenticidade = () => {
                               </div>
                             </div>
                             <div className="space-y-1">
-                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Localização</p>
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Responsável pelo Cadastro</p>
                               <div className="flex items-center gap-2">
-                                <Building2 className="w-4 h-4 text-muted-foreground" />
+                                <User className="w-4 h-4 text-muted-foreground" />
                                 <span className="font-medium">
-                                  {verificationResult.occurrence.target_block?.name} - {verificationResult.occurrence.target_apartment?.number}
+                                  {verificationResult.occurrence.reporter_name || "Não informado"}
                                 </span>
                               </div>
                             </div>
