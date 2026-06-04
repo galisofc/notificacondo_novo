@@ -729,7 +729,7 @@ export default function PortariaOccurrences() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || (identifySelf === "sim" && !newCategory) || createMutation.isPending}>
+                <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || createMutation.isPending}>
                   {createMutation.isPending ? "Registrando..." : "Registrar"}
                 </Button>
               </DialogFooter>
