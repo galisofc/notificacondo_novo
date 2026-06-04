@@ -82,7 +82,7 @@ const Autenticidade = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50/50">
       <Helmet>
         <title>Autenticidade | NotificaCondo</title>
         <meta name="description" content="Verifique a autenticidade e assinatura digital de documentos gerados pelo sistema NotificaCondo." />
@@ -93,47 +93,47 @@ const Autenticidade = () => {
       <main className="pt-32 pb-20">
         <div className="container mx-auto max-w-3xl px-4 space-y-8">
           <div className="text-center space-y-4 animate-fade-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider border border-primary/20 shadow-sm">
               <ShieldCheck className="w-4 h-4" />
               Verificador ICP-Brasil
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-foreground">
-              Verificação de Autenticidade
+            <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-slate-900 leading-tight">
+              Verificação de <span className="text-primary italic">Autenticidade</span>
             </h1>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            <p className="text-slate-600 text-lg max-w-xl mx-auto font-medium">
               Valide a integridade e a assinatura digital de advertências, multas e relatórios gerados por nossa plataforma.
             </p>
           </div>
 
-          <Card className="bg-card border-border shadow-lg overflow-hidden animate-fade-up">
-            <CardContent className="p-6">
-              <form onSubmit={handleManualSearch} className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Card className="bg-white border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden animate-fade-up border-b-4 border-b-primary/40">
+            <CardContent className="p-8">
+              <form onSubmit={handleManualSearch} className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1 group">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                   <Input 
                     placeholder="Digite o código hash ou protocolo..." 
-                    className="pl-10"
+                    className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-primary/20 transition-all text-base"
                     value={inputHash}
                     onChange={(e) => setInputHash(e.target.value)}
                   />
                 </div>
-                <Button type="submit" disabled={loading || !inputHash.trim()}>
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verificar"}
+                <Button type="submit" size="lg" disabled={loading || !inputHash.trim()} className="h-12 px-8 font-bold text-base shadow-lg shadow-primary/20 active:scale-95 transition-all">
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verificar Documento"}
                 </Button>
               </form>
             </CardContent>
           </Card>
 
           {!fileHash ? (
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50 shadow-xl animate-fade-up delay-100">
-              <CardContent className="pt-16 pb-16 text-center space-y-6">
-                <div className="mx-auto bg-muted w-24 h-24 rounded-full flex items-center justify-center mb-4">
-                  <FileText className="w-12 h-12 text-muted-foreground/30" />
+            <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-2xl shadow-slate-200/40 animate-fade-up delay-100 border-dashed border-2">
+              <CardContent className="pt-20 pb-20 text-center space-y-6">
+                <div className="mx-auto bg-slate-100 w-28 h-28 rounded-3xl rotate-3 flex items-center justify-center mb-4 shadow-inner">
+                  <FileText className="w-14 h-14 text-slate-400/50 -rotate-3" />
                 </div>
                 <div className="space-y-3">
-                  <p className="text-xl font-semibold text-foreground">Aguardando Documento</p>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
-                    Para verificar um documento, utilize o QR Code impresso no rodapé do arquivo ou digite o código de validação acima.
+                  <p className="text-2xl font-bold text-slate-800">Aguardando Documento</p>
+                  <p className="text-slate-500 max-w-sm mx-auto font-medium">
+                    Para verificar um documento, utilize o <span className="text-primary font-bold">QR Code</span> impresso no rodapé do arquivo ou digite o código de validação acima.
                   </p>
                 </div>
               </CardContent>
@@ -141,64 +141,68 @@ const Autenticidade = () => {
           ) : loading ? (
             <div className="flex flex-col items-center justify-center py-24 space-y-6 animate-fade-in">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl animate-pulse"></div>
-                <Loader2 className="w-16 h-16 animate-spin text-primary relative z-10" />
+                <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl animate-pulse"></div>
+                <Loader2 className="w-20 h-20 animate-spin text-primary relative z-10" />
               </div>
-              <p className="text-muted-foreground font-medium animate-pulse">Consultando base de assinaturas digitais...</p>
+              <div className="text-center space-y-2">
+                <p className="text-slate-900 font-bold text-xl">Processando Verificação</p>
+                <p className="text-slate-500 font-medium animate-pulse">Consultando base de assinaturas digitais ICP-Brasil...</p>
+              </div>
             </div>
           ) : verificationResult?.isValid ? (
-            <div className="space-y-6 animate-fade-up">
-              <Card className="border-emerald-500/30 bg-emerald-500/5 overflow-hidden shadow-2xl">
-                <div className="h-3 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                <CardHeader className="text-center pb-4 pt-10">
-                  <div className="mx-auto bg-emerald-500/10 w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-glow-emerald">
-                    <CheckCircle2 className="w-14 h-14 text-emerald-600" />
+            <div className="space-y-8 animate-fade-up">
+              <Card className="border-emerald-200 bg-white overflow-hidden shadow-2xl shadow-emerald-200/30">
+                <div className="h-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500 animate-gradient-x" />
+                <CardHeader className="text-center pb-6 pt-12">
+                  <div className="mx-auto bg-emerald-100 w-28 h-28 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-200/50 animate-bounce-subtle">
+                    <CheckCircle2 className="w-16 h-16 text-emerald-600" />
                   </div>
-                  <CardTitle className="text-emerald-900 text-3xl font-display font-bold">Documento Autêntico</CardTitle>
-                  <p className="text-emerald-700/80 font-medium px-6">
-                    Este arquivo possui uma assinatura digital ICP-Brasil válida e registrada em nossa plataforma.
+                  <CardTitle className="text-slate-900 text-4xl font-display font-black tracking-tight mb-2">Documento Autêntico</CardTitle>
+                  <p className="text-emerald-700/90 font-bold text-lg px-6 flex items-center justify-center gap-2">
+                    <ShieldCheck className="w-5 h-5" />
+                    Assinatura Digital Válida ICP-Brasil
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6 px-6 md:px-10 pb-12">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-emerald-500/10">
-                    <div className="flex items-center gap-4 p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm transition-transform hover:scale-[1.02]">
-                      <div className="bg-primary/10 p-3 rounded-xl">
-                        <User className="w-6 h-6 text-primary" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-8 border-t border-slate-100">
+                    <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:bg-white group">
+                      <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                        <User className="w-7 h-7 text-primary group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Assinado por</p>
-                        <p className="font-bold text-foreground text-lg">{verificationResult.signerName}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Assinado por</p>
+                        <p className="font-extrabold text-slate-900 text-xl">{verificationResult.signerName}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm transition-transform hover:scale-[1.02]">
-                      <div className="bg-primary/10 p-3 rounded-xl">
-                        <Calendar className="w-6 h-6 text-primary" />
+                    <div className="flex items-center gap-5 p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:bg-white group">
+                      <div className="bg-primary/10 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                        <Calendar className="w-7 h-7 text-primary group-hover:text-white transition-colors" />
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Data da Assinatura</p>
-                        <p className="font-bold text-foreground text-lg">{verificationResult.signedAt}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Data da Assinatura</p>
+                        <p className="font-extrabold text-slate-900 text-xl">{verificationResult.signedAt}</p>
                       </div>
                     </div>
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm flex items-center gap-4">
-                      <div className="bg-muted p-3 rounded-xl text-muted-foreground">
-                        <FileText className="w-6 h-6" />
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5 transition-all hover:bg-white group">
+                      <div className="bg-slate-200 p-4 rounded-2xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <FileText className="w-7 h-7" />
                       </div>
                       <div className="truncate flex-1">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Nome do Arquivo Original</p>
-                        <p className="font-mono text-sm truncate text-foreground font-medium">{verificationResult.fileName}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Nome do Arquivo Original</p>
+                        <p className="font-mono text-base truncate text-slate-900 font-bold">{verificationResult.fileName}</p>
                       </div>
                     </div>
                     
-                    <div className="p-5 bg-background rounded-2xl border border-emerald-500/10 shadow-sm flex items-center gap-4">
-                      <div className="bg-muted p-3 rounded-xl text-muted-foreground">
-                        <ShieldCheck className="w-6 h-6" />
+                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-5 transition-all hover:bg-white group">
+                      <div className="bg-slate-200 p-4 rounded-2xl text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                        <ShieldCheck className="w-7 h-7" />
                       </div>
                       <div className="truncate flex-1">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Hash de Verificação</p>
-                        <p className="font-mono text-sm truncate text-muted-foreground">{fileHash}</p>
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-black mb-1">Hash de Verificação</p>
+                        <p className="font-mono text-base truncate text-slate-500 font-bold">{fileHash}</p>
                       </div>
                     </div>
                   </div>

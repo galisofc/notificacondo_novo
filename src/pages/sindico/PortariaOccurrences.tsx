@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown } from "lucide-react";
+import { CheckCircle2, Clock, Search, Trash2, Settings, Plus, GripVertical, X, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, Building2, Home, ImagePlus, Loader2, FileDown, ShieldCheck } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -1136,7 +1136,7 @@ export default function SindicoPortariaOccurrences() {
                   {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg w-full sm:w-auto overflow-x-auto no-scrollbar">
+              <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar">
                 {[
                   { value: "all", label: "Todas" },
                   { value: "aberta", label: "Abertas" },
@@ -1145,10 +1145,10 @@ export default function SindicoPortariaOccurrences() {
                   <button
                     key={opt.value}
                     onClick={() => setFilterStatus(opt.value)}
-                    className={`flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${
+                    className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 whitespace-nowrap ${
                       filterStatus === opt.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-primary shadow-md transform scale-[1.02]"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                     }`}
                   >
                     {opt.label}
@@ -1216,32 +1216,36 @@ export default function SindicoPortariaOccurrences() {
         ) : (
           <div className="space-y-3">
             {filteredOccurrences.map((occ) => (
-              <Card key={occ.id} className="bg-card border-border shadow-card hover:shadow-elevated transition-all duration-300">
-                <CardContent className="p-4 md:p-5">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              <Card key={occ.id} className="group bg-white border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
+                <div className={cn(
+                  "h-1.5 w-full transition-colors duration-500",
+                  occ.status === "aberta" ? "bg-amber-500 group-hover:bg-amber-400" : "bg-emerald-500 group-hover:bg-emerald-400"
+                )} />
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500 group-hover:scale-110 ${
                         occ.status === "aberta"
-                          ? "bg-gradient-to-br from-amber-500 to-orange-500"
-                          : "bg-gradient-to-br from-accent to-emerald-600"
+                          ? "bg-gradient-to-br from-amber-400 to-orange-600 shadow-amber-200"
+                          : "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-200"
                       }`}>
                         {occ.status === "aberta"
-                          ? <Clock className="w-5 h-5 text-white" />
-                          : <CheckCircle2 className="w-5 h-5 text-white" />
+                          ? <Clock className="w-6 h-6 text-white animate-pulse-subtle" />
+                          : <CheckCircle2 className="w-6 h-6 text-white" />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
                           {occ.protocol && (
-                            <Badge variant="secondary" className="font-mono text-xs">
+                            <Badge variant="secondary" className="font-mono text-[10px] bg-slate-100 text-slate-600 border-slate-200 px-2 py-0.5 rounded-md">
                               Protocolo: {occ.protocol}
                             </Badge>
                           )}
-                          <h3 className="font-semibold text-foreground break-words">{occ.title}</h3>
+                          <h3 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
-                          <Badge variant="outline">{occ.category}</Badge>
+                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50">{occ.category}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground text-justify break-words hyphens-auto">{occ.description}</p>
+                        <p className="text-slate-600 leading-relaxed text-sm md:text-base text-justify break-words hyphens-auto">{occ.description}</p>
 
                         {/* Photos */}
                         {occ.photos && occ.photos.length > 0 && (
@@ -1311,16 +1315,16 @@ export default function SindicoPortariaOccurrences() {
                         )}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2 pt-2 border-t border-border/50">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2.5 pt-4 mt-2 border-t border-slate-100">
                       {(profile as any)?.has_certificate && (
                         <Button
                           variant="default"
                           size="sm"
                           className={cn(
-                            "gap-1 font-semibold w-full sm:w-auto",
+                            "gap-2 font-bold h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 w-full sm:w-auto",
                             occ.is_signed
-                              ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default"
-                              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-default shadow-none"
+                              : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50"
                           )}
                           onClick={() => !occ.is_signed && handleSignPdf(occ)}
                         >
@@ -1330,7 +1334,7 @@ export default function SindicoPortariaOccurrences() {
                             </>
                           ) : (
                             <>
-                              <Settings className="w-4 h-4" /> Assinar ICP
+                              <ShieldCheck className="w-4 h-4" /> Assinar ICP
                             </>
                           )}
                         </Button>
@@ -1339,10 +1343,10 @@ export default function SindicoPortariaOccurrences() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full sm:w-auto"
+                          className="h-10 px-4 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-primary transition-all active:scale-95 font-bold w-full sm:w-auto"
                           onClick={() => generatePDF(occ)}
                         >
-                          <FileDown className="w-4 h-4 mr-1" /> PDF
+                          <FileDown className="w-4 h-4 mr-2" /> PDF
                         </Button>
                       )}
                       {occ.status === "aberta" && (
