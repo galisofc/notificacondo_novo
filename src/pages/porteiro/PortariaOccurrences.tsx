@@ -371,18 +371,16 @@ export default function PortariaOccurrences() {
       const targetBlock = targetBlockId === "none" ? null : (targetBlockId || null);
       const targetApartment = targetApartmentId === "none" ? null : (targetApartmentId || null);
 
-      // Generate a protocol like ANO0029
+      // Generate a protocol like ANO0029 (collision-safe)
       const generateProtocol = async () => {
         const year = new Date().getFullYear();
         const { count } = await supabase
           .from("porter_occurrences")
           .select("id", { count: "exact", head: true })
           .eq("condominium_id", selectedCondominium);
-        
         const sequence = (count || 0) + 1;
         return `${year}${sequence.toString().padStart(4, "0")}`;
       };
-      const protocol = await generateProtocol();
 
       // Captura o nome do porteiro para denormalização (evita problemas de RLS de profiles)
       let registeredByName: string | null = null;
@@ -406,15 +404,33 @@ export default function PortariaOccurrences() {
         target_block_id: targetBlock,
         target_apartment_id: targetApartment,
         photos: photos,
-        protocol: protocol,
       };
-      let { error } = await supabase
-        .from("porter_occurrences")
-        .insert({ ...basePayload, registered_by_name: registeredByName } as any);
-      if (error && (error.code === "PGRST204" || error.code === "42703" || /registered_by_name/i.test(error.message))) {
-        ({ error } = await supabase.from("porter_occurrences").insert(basePayload as any));
+
+      let protocol = await generateProtocol();
+      let includeName = true;
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const payload: Record<string, any> = { ...basePayload, protocol };
+        if (includeName) payload.registered_by_name = registeredByName;
+        const { error } = await supabase.from("porter_occurrences").insert(payload as any);
+        if (!error) { lastError = null; break; }
+        lastError = error;
+        // Coluna registered_by_name não existe no schema cache: tenta sem ela
+        if (includeName && (error.code === "PGRST204" || error.code === "42703" || /registered_by_name/i.test(error.message))) {
+          includeName = false;
+          continue;
+        }
+        // Protocolo duplicado: incrementa e tenta novamente
+        if (error.code === "23505" && /protocol/i.test(error.message)) {
+          const year = new Date().getFullYear();
+          const currentSeq = parseInt(protocol.slice(String(year).length), 10) || 0;
+          protocol = `${year}${(currentSeq + 1 + attempt).toString().padStart(4, "0")}`;
+          continue;
+        }
+        break;
       }
-      if (error) throw error;
+      if (lastError) throw lastError;
+
 
     },
     onSuccess: () => {
