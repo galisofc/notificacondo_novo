@@ -68,23 +68,14 @@ const Autenticidade = () => {
           target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
         `;
 
-        const { data: publicOccurrence } = await (supabase as any)
-          .rpc('get_signed_porter_occurrence', { _hash: hash })
+        const directResult = await (supabase as any)
+          .from('porter_occurrences')
+          .select(occurrenceSelect)
+          .eq('signature_hash', hash)
           .maybeSingle();
 
-        let occurrence = publicOccurrence;
-        let occError = null;
-
-        if (!occurrence) {
-          const directResult = await (supabase as any)
-            .from('porter_occurrences')
-            .select(occurrenceSelect)
-            .eq('signature_hash', hash)
-            .maybeSingle();
-
-          occurrence = directResult.data;
-          occError = directResult.error;
-        }
+        let occurrence = directResult.data;
+        let occError = directResult.error;
 
         if (occError) {
           console.error("Erro ao buscar ocorrência assinada:", occError);
@@ -105,6 +96,14 @@ const Autenticidade = () => {
               occurrence = occurrenceByProtocol;
             }
           }
+        }
+
+        if (!occurrence) {
+          const { data: publicOccurrence } = await (supabase as any)
+            .rpc('get_signed_porter_occurrence', { _hash: hash })
+            .maybeSingle();
+
+          occurrence = publicOccurrence;
         }
 
         let creatorName = "Não informado";
