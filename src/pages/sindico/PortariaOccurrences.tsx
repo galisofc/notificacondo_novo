@@ -314,7 +314,7 @@ export default function SindicoPortariaOccurrences() {
     queryFn: async () => {
       if (!selectedCondominium) return [];
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("porter_occurrences")
         .select("*")
         .eq("condominium_id", selectedCondominium)
