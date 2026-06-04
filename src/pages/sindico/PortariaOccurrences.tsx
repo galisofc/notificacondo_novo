@@ -1279,13 +1279,15 @@ export default function SindicoPortariaOccurrences() {
                             )}
                           </Button>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => generatePDF(occ)}
-                        >
-                          <FileDown className="w-4 h-4 mr-1" /> PDF
-                        </Button>
+                        {occ.is_signed && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generatePDF(occ)}
+                          >
+                            <FileDown className="w-4 h-4 mr-1" /> PDF
+                          </Button>
+                        )}
                         {occ.status === "aberta" && (
                           <Button
                             variant="outline"
