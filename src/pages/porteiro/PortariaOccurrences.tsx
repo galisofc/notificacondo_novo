@@ -899,19 +899,6 @@ export default function PortariaOccurrences() {
                           </div>
 
                           <div className="flex gap-2 items-center self-end sm:self-auto">
-                            {occ.status === "aberta" && (
-                              <Button
-                                size="sm"
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 font-bold"
-                                onClick={() => {
-                                  setResolveOccurrenceId(occ.id);
-                                  setResolveDialogOpen(true);
-                                }}
-                              >
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Assinar ICP
-                              </Button>
-                            )}
                           </div>
                         </div>
                       </div>
