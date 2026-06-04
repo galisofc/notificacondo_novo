@@ -912,22 +912,6 @@ export default function PortariaOccurrences() {
                                 Assinar ICP
                               </Button>
                             )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-slate-200 hover:bg-slate-50 font-bold"
-                            >
-                              <FileDown className="w-4 h-4 mr-2" />
-                              PDF
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="font-bold"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
-                            </Button>
                           </div>
                         </div>
                       </div>
