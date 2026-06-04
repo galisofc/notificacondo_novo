@@ -1006,11 +1006,11 @@ export default function SindicoPortariaOccurrences() {
             </p>
           </div>
           {selectedCondominium && (
-            <div className="flex gap-2 shrink-0">
-              <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Button className="flex-1 sm:flex-none gap-2" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4" /> Nova Ocorrência
               </Button>
-              <Button variant="outline" className="gap-2" onClick={() => setCategoriesDialogOpen(true)}>
+              <Button variant="outline" className="flex-1 sm:flex-none gap-2" onClick={() => setCategoriesDialogOpen(true)}>
                 <Settings className="w-4 h-4" /> Categorias
               </Button>
             </div>
