@@ -387,8 +387,13 @@ export default function RegisterPackage() {
       if (destinationPreview) {
         setDestinationPreview({
           ...destinationPreview,
-          residentName: data.full_name,
-          residentPhone: data.phone || undefined,
+          residents: [
+            ...destinationPreview.residents,
+            {
+              full_name: data.full_name,
+              phone: data.phone || undefined
+            }
+          ],
           hasResidents: true,
         });
       }
