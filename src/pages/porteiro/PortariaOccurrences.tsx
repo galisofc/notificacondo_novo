@@ -393,10 +393,9 @@ export default function PortariaOccurrences() {
         .maybeSingle();
       registeredByName = ownProfile?.full_name || user?.user_metadata?.full_name || user?.email || null;
 
-      const { error } = await supabase.from("porter_occurrences").insert({
+      const basePayload: Record<string, any> = {
         condominium_id: selectedCondominium,
         registered_by: user!.id,
-        registered_by_name: registeredByName,
         title: newTitle,
         description: newDescription,
         category: newCategory,
@@ -408,7 +407,13 @@ export default function PortariaOccurrences() {
         target_apartment_id: targetApartment,
         photos: photos,
         protocol: protocol,
-      } as any);
+      };
+      let { error } = await supabase
+        .from("porter_occurrences")
+        .insert({ ...basePayload, registered_by_name: registeredByName } as any);
+      if (error && (error.code === "PGRST204" || error.code === "42703" || /registered_by_name/i.test(error.message))) {
+        ({ error } = await supabase.from("porter_occurrences").insert(basePayload as any));
+      }
       if (error) throw error;
 
     },
@@ -442,16 +447,22 @@ export default function PortariaOccurrences() {
         .maybeSingle();
       const resolvedByName = ownProfile?.full_name || user?.user_metadata?.full_name || user?.email || null;
 
-      const { error } = await supabase
+      const baseUpdate: Record<string, any> = {
+        status: "resolvida",
+        resolved_at: new Date().toISOString(),
+        resolved_by: user!.id,
+        resolution_notes: resolutionNotes || null,
+      };
+      let { error } = await supabase
         .from("porter_occurrences")
-        .update({
-          status: "resolvida",
-          resolved_at: new Date().toISOString(),
-          resolved_by: user!.id,
-          resolved_by_name: resolvedByName,
-          resolution_notes: resolutionNotes || null,
-        } as any)
+        .update({ ...baseUpdate, resolved_by_name: resolvedByName } as any)
         .eq("id", resolveOccurrenceId!);
+      if (error && (error.code === "PGRST204" || error.code === "42703" || /resolved_by_name/i.test(error.message))) {
+        ({ error } = await supabase
+          .from("porter_occurrences")
+          .update(baseUpdate as any)
+          .eq("id", resolveOccurrenceId!));
+      }
       if (error) throw error;
     },
 
