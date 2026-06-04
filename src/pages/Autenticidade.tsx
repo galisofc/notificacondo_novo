@@ -113,10 +113,11 @@ const Autenticidade = () => {
           signerName: signedDoc.signer_name,
           signedAt: formatDateTime(signedDoc.created_at),
           fileName: signedDoc.file_name,
-          occurrence: occurrence ? {
+          occurrence: {
+            protocol: extractOccurrenceProtocol(signedDoc.file_name) || hash,
             ...occurrence,
             creatorName: creatorName
-          } : null
+          }
         });
       } else {
         setVerificationResult({ isValid: false });
