@@ -200,6 +200,10 @@ export default function ShiftHandover() {
       const outgoingIds = [...new Set(data.map((h) => h.outgoing_porter_id).filter(Boolean))];
       const profileMap: Record<string, string> = {};
 
+      // Pre-popula com porteiros conhecidos via RPC e usuário atual
+      condominiumPorters.forEach((p: any) => { profileMap[p.id] = p.full_name; });
+      if (user && porterName) profileMap[user.id] = porterName;
+
       if (outgoingIds.length > 0) {
         const { data: profilesData } = await supabase
           .from("profiles")
