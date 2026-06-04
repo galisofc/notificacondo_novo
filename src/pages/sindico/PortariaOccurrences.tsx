@@ -793,7 +793,8 @@ export default function SindicoPortariaOccurrences() {
     // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageCount = doc.getNumberOfPages();
-    const authUrl = `https://notificacondo.com.br/autenticidade?code=${occurrence.protocol || occurrence.id}`;
+    const authCode = occurrence.is_signed ? (occurrence.signature_hash || occurrence.id) : (occurrence.protocol || occurrence.id);
+    const authUrl = `https://notificacondo.com.br/autenticidade?code=${authCode}`;
     let qrDataUrl = "";
     try {
       qrDataUrl = await QRCode.toDataURL(authUrl, { margin: 1, width: 100 });
