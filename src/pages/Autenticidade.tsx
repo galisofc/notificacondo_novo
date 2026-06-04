@@ -147,8 +147,8 @@ const Autenticidade = () => {
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div className="truncate flex-1">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Hash de Verificação (SHA-256)</p>
-                      <p className="font-mono text-[11px] truncate text-muted-foreground">{fileHash}</p>
+                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Hash de Verificação</p>
+                      <p className="font-mono text-sm truncate text-muted-foreground">{fileHash}</p>
                     </div>
                   </div>
                 </div>
