@@ -320,7 +320,6 @@ export default function SindicoPortariaOccurrences() {
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
-      const { data, error } = await query;
       if (error) throw error;
 
       // Fetch condominium details for PDF
