@@ -268,7 +268,7 @@ export default function PortariaOccurrences() {
 
   // Fetch occurrences with block/apartment names
   const { data: occurrences = [], isLoading } = useQuery({
-    queryKey: ["porter-occurrences", selectedCondominium, filterStatus, filterCategory],
+    queryKey: ["porter-occurrences", selectedCondominium],
     queryFn: async () => {
       if (!selectedCondominium) return [];
       let query = supabase
@@ -277,8 +277,9 @@ export default function PortariaOccurrences() {
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
-      if (filterStatus !== "all") query = query.eq("status", filterStatus);
-      if (filterCategory !== "all") query = query.eq("category", filterCategory);
+      // We no longer filter by status/category at the database level to ensure stat cards are correct
+      // but we still fetch everything for the selected condominium.
+
 
       const { data, error } = await query;
       if (error) throw error;
@@ -345,6 +346,8 @@ export default function PortariaOccurrences() {
   });
 
   const filteredOccurrences = occurrences.filter((o) => {
+    if (filterStatus !== "all" && o.status !== filterStatus) return false;
+    if (filterCategory !== "all" && o.category !== filterCategory) return false;
     if (searchTerm && !o.title.toLowerCase().includes(searchTerm.toLowerCase()) && !o.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (dateRange?.from) {
       const date = new Date(o.created_at);
