@@ -541,21 +541,25 @@ export default function RegisterPackage() {
                       <p className="font-semibold text-lg uppercase">
                         {destinationPreview.blockName} - APTO {destinationPreview.apartmentNumber}
                       </p>
-                      {destinationPreview.residentName ? (
-                        <div className="flex items-center gap-3 mt-1">
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {destinationPreview.residentName}
-                          </p>
-                          {destinationPreview.residentPhone && (
-                            <a 
-                              href={`tel:${destinationPreview.residentPhone}`}
-                              className="text-sm text-primary flex items-center gap-1 hover:underline"
-                            >
-                              <Phone className="w-3 h-3" />
-                              {destinationPreview.residentPhone}
-                            </a>
-                          )}
+                      {destinationPreview.residents.length > 0 ? (
+                        <div className="space-y-2 mt-1">
+                          {destinationPreview.residents.map((resident, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <User className="w-3 h-3" />
+                                {resident.full_name}
+                              </p>
+                              {resident.phone && (
+                                <a 
+                                  href={`tel:${resident.phone}`}
+                                  className="text-sm text-primary flex items-center gap-1 hover:underline"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  {resident.phone}
+                                </a>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <p className="text-sm text-destructive flex items-center gap-1 mt-1">
