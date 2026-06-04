@@ -50,8 +50,10 @@ interface DestinationPreview {
   condominiumName: string;
   blockName: string;
   apartmentNumber: string;
-  residentName?: string;
-  residentPhone?: string;
+  residents: Array<{
+    full_name: string;
+    phone?: string;
+  }>;
   hasResidents: boolean;
 }
 
@@ -134,7 +136,6 @@ export default function RegisterPackage() {
         ]);
 
         const residents = residentsRes.data || [];
-        const responsibleResident = residents.find(r => r.phone) || residents[0];
         const hasResidents = residents.length > 0;
 
         if (condoRes.data && blockRes.data && aptRes.data) {
@@ -142,8 +143,10 @@ export default function RegisterPackage() {
             condominiumName: condoRes.data.name,
             blockName: blockRes.data.name,
             apartmentNumber: aptRes.data.number,
-            residentName: responsibleResident?.full_name || undefined,
-            residentPhone: responsibleResident?.phone || undefined,
+            residents: residents.map(r => ({
+              full_name: r.full_name,
+              phone: r.phone || undefined
+            })),
             hasResidents,
           });
 
@@ -384,8 +387,13 @@ export default function RegisterPackage() {
       if (destinationPreview) {
         setDestinationPreview({
           ...destinationPreview,
-          residentName: data.full_name,
-          residentPhone: data.phone || undefined,
+          residents: [
+            ...destinationPreview.residents,
+            {
+              full_name: data.full_name,
+              phone: data.phone || undefined
+            }
+          ],
           hasResidents: true,
         });
       }
@@ -533,21 +541,25 @@ export default function RegisterPackage() {
                       <p className="font-semibold text-lg uppercase">
                         {destinationPreview.blockName} - APTO {destinationPreview.apartmentNumber}
                       </p>
-                      {destinationPreview.residentName ? (
-                        <div className="flex items-center gap-3 mt-1">
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {destinationPreview.residentName}
-                          </p>
-                          {destinationPreview.residentPhone && (
-                            <a 
-                              href={`tel:${destinationPreview.residentPhone}`}
-                              className="text-sm text-primary flex items-center gap-1 hover:underline"
-                            >
-                              <Phone className="w-3 h-3" />
-                              {destinationPreview.residentPhone}
-                            </a>
-                          )}
+                      {destinationPreview.residents.length > 0 ? (
+                        <div className="space-y-2 mt-1">
+                          {destinationPreview.residents.map((resident, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                <User className="w-3 h-3" />
+                                {resident.full_name}
+                              </p>
+                              {resident.phone && (
+                                <a 
+                                  href={`tel:${resident.phone}`}
+                                  className="text-sm text-primary flex items-center gap-1 hover:underline"
+                                >
+                                  <Phone className="w-3 h-3" />
+                                  {resident.phone}
+                                </a>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <p className="text-sm text-destructive flex items-center gap-1 mt-1">
