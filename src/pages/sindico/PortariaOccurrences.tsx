@@ -426,14 +426,18 @@ export default function SindicoPortariaOccurrences() {
       const targetBlock = targetBlockId === "none" ? null : (targetBlockId || null);
       const targetApartment = targetApartmentId === "none" ? null : (targetApartmentId || null);
 
-      // Generate a random protocol like 3XRB-98RTG
-      const generateProtocol = () => {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        const part1 = Array.from({ length: 4 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
-        const part2 = Array.from({ length: 5 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
-        return `${part1}-${part2}`;
+      // Generate a protocol like ANO0029
+      const generateProtocol = async () => {
+        const year = new Date().getFullYear();
+        const { data, count } = await supabase
+          .from("porter_occurrences")
+          .select("id", { count: "exact", head: true })
+          .eq("condominium_id", selectedCondominium);
+        
+        const sequence = (count || 0) + 1;
+        return `${year}${sequence.toString().padStart(4, "0")}`;
       };
-      const protocol = generateProtocol();
+      const protocol = await generateProtocol();
 
       const { error } = await supabase.from("porter_occurrences").insert({
         condominium_id: selectedCondominium,
