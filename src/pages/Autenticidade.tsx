@@ -56,12 +56,28 @@ const Autenticidade = () => {
           .eq('signature_hash', hash)
           .maybeSingle();
 
+        let creatorName = "Não informado";
+        if (occurrence?.created_by) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', occurrence.created_by)
+            .maybeSingle();
+          
+          if (profile?.full_name) {
+            creatorName = profile.full_name;
+          }
+        }
+
         setVerificationResult({
           isValid: true,
           signerName: signedDoc.signer_name,
           signedAt: format(new Date(signedDoc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
           fileName: signedDoc.file_name,
-          occurrence: occurrence
+          occurrence: {
+            ...occurrence,
+            creatorName: creatorName
+          }
         });
       } else {
         setVerificationResult({ isValid: false });
