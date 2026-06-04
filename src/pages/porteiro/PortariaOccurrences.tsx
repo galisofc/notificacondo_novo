@@ -831,7 +831,7 @@ export default function PortariaOccurrences() {
                               Protocolo: {occ.protocol}
                             </Badge>
                           )}
-                          <h3 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{occ.title}</h3>
+                          <h3 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors uppercase">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
                           <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50">{occ.category}</Badge>
                         </div>
@@ -853,37 +853,23 @@ export default function PortariaOccurrences() {
                           </div>
                         )}
 
-                        {/* Block/Apartment info */}
-                        {(occ.reporter_block_name || occ.target_block_name) && (
-                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
-                            {occ.reporter_block_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Registrado por:</span>
-                                <BlockApartmentDisplay
-                                  blockName={occ.reporter_block_name}
-                                  apartmentNumber={occ.reporter_apartment_number}
-                                  variant="inline"
-                                  showIcons
-                                  valueClassName="font-bold text-slate-700"
-                                />
-                              </div>
-                            )}
-                            {occ.target_block_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Sobre:</span>
-                                <BlockApartmentDisplay
-                                  blockName={occ.target_block_name}
-                                  apartmentNumber={occ.target_apartment_number}
-                                  variant="inline"
-                                  showIcons
-                                  valueClassName="font-bold text-slate-700"
-                                />
-                              </div>
-                            )}
+                        {/* Target unit info (Sobre) */}
+                        {occ.target_block_name && (
+                          <div className="mt-3">
+                            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 w-fit">
+                              <span className="text-slate-500 font-medium text-xs">Sobre:</span>
+                              <BlockApartmentDisplay
+                                blockName={occ.target_block_name}
+                                apartmentNumber={occ.target_apartment_number}
+                                variant="inline"
+                                showIcons
+                                valueClassName="font-bold text-slate-700 text-xs"
+                              />
+                            </div>
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 gap-4">
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <CalendarIcon className="w-3.5 h-3.5 text-primary/60" />
@@ -891,7 +877,7 @@ export default function PortariaOccurrences() {
                               {occ.registered_by_name && (
                                 <>
                                   <span className="text-slate-300">|</span>
-                                  <span>Por: <span className="font-semibold text-slate-700">{occ.registered_by_name}</span></span>
+                                  <span>Por: <span className="font-semibold text-slate-700 uppercase">{occ.registered_by_name}</span></span>
                                 </>
                               )}
                             </div>
@@ -906,26 +892,42 @@ export default function PortariaOccurrences() {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                  <span>Finalizado por {occ.resolved_by_name} {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
+                                  <span>Finalizado por <span className="uppercase">{occ.resolved_by_name}</span> {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
                                 </div>
                               </div>
                             )}
                           </div>
 
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center self-end sm:self-auto">
                             {occ.status === "aberta" && (
                               <Button
                                 size="sm"
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 font-bold"
                                 onClick={() => {
                                   setResolveOccurrenceId(occ.id);
                                   setResolveDialogOpen(true);
                                 }}
                               >
                                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Resolver
+                                Assinar ICP
                               </Button>
                             )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-slate-200 hover:bg-slate-50 font-bold"
+                            >
+                              <FileDown className="w-4 h-4 mr-2" />
+                              PDF
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="font-bold"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Excluir
+                            </Button>
                           </div>
                         </div>
                       </div>
