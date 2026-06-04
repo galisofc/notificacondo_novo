@@ -393,10 +393,9 @@ export default function PortariaOccurrences() {
         .maybeSingle();
       registeredByName = ownProfile?.full_name || user?.user_metadata?.full_name || user?.email || null;
 
-      const { error } = await supabase.from("porter_occurrences").insert({
+      const basePayload: Record<string, any> = {
         condominium_id: selectedCondominium,
         registered_by: user!.id,
-        registered_by_name: registeredByName,
         title: newTitle,
         description: newDescription,
         category: newCategory,
@@ -408,7 +407,13 @@ export default function PortariaOccurrences() {
         target_apartment_id: targetApartment,
         photos: photos,
         protocol: protocol,
-      } as any);
+      };
+      let { error } = await supabase
+        .from("porter_occurrences")
+        .insert({ ...basePayload, registered_by_name: registeredByName } as any);
+      if (error && (error.code === "PGRST204" || error.code === "42703" || /registered_by_name/i.test(error.message))) {
+        ({ error } = await supabase.from("porter_occurrences").insert(basePayload as any));
+      }
       if (error) throw error;
 
     },
