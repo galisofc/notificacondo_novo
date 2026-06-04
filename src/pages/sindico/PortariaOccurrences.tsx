@@ -910,9 +910,6 @@ export default function SindicoPortariaOccurrences() {
       // 6. Atualizar lista local e baixar o PDF
       queryClient.invalidateQueries({ queryKey: ["sindico-porter-occurrences"] });
       
-      // Passamos o hash para o PDF para que o QR Code leve ao validador correto
-      generatePDF({ ...currentOccurrenceToSign, protocol: fileHash } as any);
-      
       toast({
         title: "Sucesso",
         description: "Documento assinado e registrado com sucesso!",
