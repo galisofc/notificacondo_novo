@@ -1267,13 +1267,13 @@ export default function SindicoPortariaOccurrences() {
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                      <div className="flex gap-2 shrink-0 flex-wrap justify-end sm:flex-nowrap sm:flex-col md:flex-row">
                         {(profile as any)?.has_certificate && (
                           <Button
                             variant="default"
                             size="sm"
                             className={cn(
-                              "gap-1 font-semibold",
+                              "gap-1 font-semibold flex-1 sm:flex-none",
                               occ.is_signed 
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default" 
                                 : "bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -1295,6 +1295,7 @@ export default function SindicoPortariaOccurrences() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={() => generatePDF(occ)}
                           >
                             <FileDown className="w-4 h-4 mr-1" /> PDF
@@ -1304,6 +1305,7 @@ export default function SindicoPortariaOccurrences() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={() => {
                               setResolveOccurrenceId(occ.id);
                               setResolveDialogOpen(true);
@@ -1315,6 +1317,7 @@ export default function SindicoPortariaOccurrences() {
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="flex-1 sm:flex-none"
                           onClick={() => {
                             setDeleteOccurrenceId(occ.id);
                             setDeleteDialogOpen(true);
