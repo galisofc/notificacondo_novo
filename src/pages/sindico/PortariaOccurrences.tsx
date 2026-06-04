@@ -1605,7 +1605,7 @@ export default function SindicoPortariaOccurrences() {
                   Assinando...
                 </>
               ) : (
-                "Assinar e Baixar PDF"
+                "Assinar"
               )}
             </Button>
           </DialogFooter>
