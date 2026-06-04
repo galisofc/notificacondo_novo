@@ -75,7 +75,7 @@ const Autenticidade = () => {
         setVerificationResult({
           isValid: true,
           signerName: signedDoc.signer_name,
-          signedAt: format(new Date(signedDoc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }),
+          signedAt: signedDoc.created_at && !isNaN(new Date(signedDoc.created_at).getTime()) ? format(new Date(signedDoc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado",
           fileName: signedDoc.file_name,
           occurrence: {
             ...occurrence,
