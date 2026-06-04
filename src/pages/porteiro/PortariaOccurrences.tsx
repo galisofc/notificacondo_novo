@@ -585,60 +585,90 @@ export default function PortariaOccurrences() {
                   <Label>Descrição</Label>
                   <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descreva o ocorrido..." rows={4} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <Select value={newCategory} onValueChange={setNewCategory}>
-                    <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                    <SelectContent>
-                      {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
-                      }
-                    </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Prioridade</Label>
-                    <Select value={newPriority} onValueChange={setNewPriority}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <Label className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-primary" />
+                    Deseja se identificar para registrar a ocorrência?
+                  </Label>
+                  <RadioGroup 
+                    value={identifySelf} 
+                    onValueChange={setIdentifySelf}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="sim" id="identify-sim" />
+                      <Label htmlFor="identify-sim" className="cursor-pointer font-medium">Sim</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="nao" id="identify-nao" />
+                      <Label htmlFor="identify-nao" className="cursor-pointer font-medium">Não</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Data da Ocorrência</Label>
-                    <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Horário</Label>
-                    <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
-                  </div>
+                {identifySelf === "sim" && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-down">
+                      <div className="space-y-2">
+                        <Label>Categoria</Label>
+                        <Select value={newCategory} onValueChange={setNewCategory}>
+                          <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                          <SelectContent>
+                            {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                            }
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Prioridade</Label>
+                        <Select value={newPriority} onValueChange={setNewPriority}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-down">
+                      <div className="space-y-2">
+                        <Label>Data da Ocorrência</Label>
+                        <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Horário</Label>
+                        <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+                      </div>
+                    </div>
+
+                    {/* Reporter unit (only when identifying) */}
+                    <div className="animate-fade-down">
+                      {renderBlockApartmentSelectors(
+                        "Registrado por (Unidade)",
+                        reporterBlockId,
+                        setReporterBlockId,
+                        reporterApartmentId,
+                        setReporterApartmentId,
+                        reporterApartments
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Always show Target unit for both scenarios as requested (implicitly by Requirements 3 & 4) */}
+                <div className="animate-fade-down">
+                  {renderBlockApartmentSelectors(
+                    "Ocorrência sobre (Unidade)",
+                    targetBlockId,
+                    setTargetBlockId,
+                    targetApartmentId,
+                    setTargetApartmentId,
+                    targetApartments
+                  )}
                 </div>
-
-                {/* Reporter unit */}
-                {renderBlockApartmentSelectors(
-                  "Registrado por (Unidade)",
-                  reporterBlockId,
-                  setReporterBlockId,
-                  reporterApartmentId,
-                  setReporterApartmentId,
-                  reporterApartments
-                )}
-
-                {/* Target unit */}
-                {renderBlockApartmentSelectors(
-                  "Ocorrência sobre (Unidade)",
-                  targetBlockId,
-                  setTargetBlockId,
-                  targetApartmentId,
-                  setTargetApartmentId,
-                  targetApartments
-                )}
 
                 {/* Photo upload */}
                 <div className="space-y-2">
