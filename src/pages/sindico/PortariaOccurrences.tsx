@@ -316,7 +316,7 @@ export default function SindicoPortariaOccurrences() {
       
       const { data, error } = await supabase
         .from("porter_occurrences")
-        .select("*")
+        .select("*, signature_hash")
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
