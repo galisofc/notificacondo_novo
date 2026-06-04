@@ -274,11 +274,11 @@ const Autenticidade = () => {
                         <CardContent className="p-6 space-y-6">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                              <Badge variant="outline" className="mb-2">{verificationResult.occurrence.category}</Badge>
-                              <h4 className="text-2xl font-bold text-foreground">{verificationResult.occurrence.title}</h4>
+                              <Badge variant="outline" className="mb-2">{verificationResult.occurrence.category || "Ocorrência"}</Badge>
+                              <h4 className="text-2xl font-bold text-foreground">{verificationResult.occurrence.title || verificationResult.fileName || "Documento assinado"}</h4>
                               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                                 <Building2 className="w-3 h-3" />
-                                {verificationResult.occurrence.condominium?.name}
+                                {verificationResult.occurrence.condominium?.name || "Condomínio não informado"}
                               </p>
                             </div>
                             {verificationResult.occurrence.protocol && (
@@ -311,7 +311,7 @@ const Autenticidade = () => {
                           <div className="space-y-2">
                             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Descrição da Ocorrência</p>
                             <div className="p-4 bg-background border border-border rounded-xl text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                              {verificationResult.occurrence.description}
+                              {verificationResult.occurrence.description || "Não informado"}
                             </div>
                           </div>
 
