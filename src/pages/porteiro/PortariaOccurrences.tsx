@@ -726,7 +726,7 @@ export default function PortariaOccurrences() {
                   {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+              <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar">
                 {[
                   { value: "all", label: "Todas" },
                   { value: "aberta", label: "Abertas" },
@@ -735,10 +735,10 @@ export default function PortariaOccurrences() {
                   <button
                     key={opt.value}
                     onClick={() => setFilterStatus(opt.value)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 whitespace-nowrap ${
                       filterStatus === opt.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-primary shadow-md transform scale-[1.02]"
+                        : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
                     }`}
                   >
                     {opt.label}
@@ -806,32 +806,36 @@ export default function PortariaOccurrences() {
         ) : (
           <div className="space-y-3">
             {filteredOccurrences.map((occ) => (
-              <Card key={occ.id} className="bg-card border-border shadow-card hover:shadow-elevated transition-all duration-300">
-                <CardContent className="p-4 md:p-5">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              <Card key={occ.id} className="group bg-white border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
+                <div className={cn(
+                  "h-1.5 w-full transition-colors duration-500",
+                  occ.status === "aberta" ? "bg-amber-500 group-hover:bg-amber-400" : "bg-emerald-500 group-hover:bg-emerald-400"
+                )} />
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg transition-transform duration-500 group-hover:scale-110 ${
                         occ.status === "aberta"
-                          ? "bg-gradient-to-br from-amber-500 to-orange-500"
-                          : "bg-gradient-to-br from-accent to-emerald-600"
+                          ? "bg-gradient-to-br from-amber-400 to-orange-600 shadow-amber-200"
+                          : "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-200"
                       }`}>
                         {occ.status === "aberta"
-                          ? <Clock className="w-5 h-5 text-white" />
-                          : <CheckCircle2 className="w-5 h-5 text-white" />
+                          ? <Clock className="w-6 h-6 text-white animate-pulse-subtle" />
+                          : <CheckCircle2 className="w-6 h-6 text-white" />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
                           {occ.protocol && (
-                            <Badge variant="secondary" className="font-mono text-xs">
-                              Protocolo {occ.protocol}
+                            <Badge variant="secondary" className="font-mono text-[10px] bg-slate-100 text-slate-600 border-slate-200 px-2 py-0.5 rounded-md">
+                              Protocolo: {occ.protocol}
                             </Badge>
                           )}
-                          <h3 className="font-semibold text-foreground">{occ.title}</h3>
+                          <h3 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
-                          <Badge variant="outline">{occ.category}</Badge>
+                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50">{occ.category}</Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{occ.description}</p>
+                        <p className="text-slate-600 leading-relaxed text-sm md:text-base text-justify break-words hyphens-auto">{occ.description}</p>
 
                         {/* Photos */}
                         {occ.photos && occ.photos.length > 0 && (
@@ -851,73 +855,80 @@ export default function PortariaOccurrences() {
 
                         {/* Block/Apartment info */}
                         {(occ.reporter_block_name || occ.target_block_name) && (
-                          <div className="flex flex-wrap gap-4 mt-2 text-xs">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.reporter_block_name && (
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-muted-foreground">Registrado por:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Registrado por:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.reporter_block_name}
                                   apartmentNumber={occ.reporter_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-medium text-foreground text-xs"
+                                  valueClassName="font-bold text-slate-700"
                                 />
                               </div>
                             )}
                             {occ.target_block_name && (
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-muted-foreground">Sobre:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Sobre:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.target_block_name}
                                   apartmentNumber={occ.target_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-medium text-foreground text-xs"
+                                  valueClassName="font-bold text-slate-700"
                                 />
                               </div>
                             )}
                           </div>
                         )}
 
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                          {occ.registered_by_name && (
-                            <span className="ml-2">
-                              · Criado por: <span className="font-semibold text-foreground">{occ.registered_by_name}</span>
-                            </span>
-                          )}
-                        </p>
-                        {occ.status === "resolvida" && occ.resolution_notes && (
-                          <p className="text-sm text-muted-foreground mt-1.5">
-                            Resolução: <span className="font-medium text-foreground">{occ.resolution_notes}</span>
-                          </p>
-                        )}
-                        {occ.status === "resolvida" && occ.resolved_by_name && (
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />
-                            <p className="text-xs text-muted-foreground">
-                              Finalizado por:{" "}
-                              <span className="font-semibold text-foreground">{occ.resolved_by_name}</span>
-                              {occ.resolved_at && (
-                                <> · {format(new Date(occ.resolved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</>
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <CalendarIcon className="w-3.5 h-3.5 text-primary/60" />
+                              <span>{format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                              {occ.registered_by_name && (
+                                <>
+                                  <span className="text-slate-300">|</span>
+                                  <span>Por: <span className="font-semibold text-slate-700">{occ.registered_by_name}</span></span>
+                                </>
                               )}
-                            </p>
+                            </div>
+                            
+                            {occ.status === "resolvida" && (
+                              <div className="flex flex-col gap-1.5 mt-2 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                                {occ.resolution_notes && (
+                                  <div className="flex gap-2">
+                                    <ClipboardList className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                    <p className="text-sm text-emerald-800 italic">"{occ.resolution_notes}"</p>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  <span>Finalizado por {occ.resolved_by_name} {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
+
+                          <div className="flex gap-2">
+                            {occ.status === "aberta" && (
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100"
+                                onClick={() => {
+                                  setResolveOccurrenceId(occ.id);
+                                  setResolveDialogOpen(true);
+                                }}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Resolver
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      {occ.status === "aberta" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="shrink-0"
-                          onClick={() => {
-                            setResolveOccurrenceId(occ.id);
-                            setResolveDialogOpen(true);
-                          }}
-                        >
-                          <CheckCircle2 className="w-4 h-4 mr-1" /> Resolver
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </CardContent>
