@@ -316,7 +316,7 @@ export default function SindicoPortariaOccurrences() {
       if (!selectedCondominium) return [];
       let query = (supabase as any)
         .from("porter_occurrences")
-        .select("*, is_signed")
+        .select("*, signature_hash, is_signed")
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
