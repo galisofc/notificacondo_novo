@@ -811,7 +811,7 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
-    // Síndico Responsável (Signature area or info)
+    // Síndico Responsável info
     const sindicoName = (occurrence.condominium as any)?.owner_name || "Síndico Responsável";
     if (yPos > 240) {
       doc.addPage();
@@ -820,16 +820,13 @@ export default function SindicoPortariaOccurrences() {
       yPos += 15;
     }
     
-    doc.setDrawColor(150, 150, 150);
-    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
-    yPos += 5;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(sindicoName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
     yPos += 4;
     doc.setFont("helvetica", "normal");
     doc.text("Síndico Responsável", pageWidth / 2, yPos, { align: "center" });
-    yPos += 15;
+    yPos += 10;
 
     // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
