@@ -292,9 +292,9 @@ export default function PortariaOccurrences() {
       if (allUserIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name")
-          .in("id", allUserIds);
-        profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p.full_name]));
+          .select("user_id, full_name")
+          .in("user_id", allUserIds);
+        profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
       }
 
       // Collect block/apartment IDs for name resolution
