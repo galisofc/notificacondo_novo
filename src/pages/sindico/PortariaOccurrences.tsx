@@ -1006,11 +1006,11 @@ export default function SindicoPortariaOccurrences() {
             </p>
           </div>
           {selectedCondominium && (
-            <div className="flex gap-2 shrink-0">
-              <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
+            <div className="flex flex-wrap gap-2 shrink-0">
+              <Button className="flex-1 sm:flex-none gap-2" onClick={() => setCreateDialogOpen(true)}>
                 <Plus className="w-4 h-4" /> Nova Ocorrência
               </Button>
-              <Button variant="outline" className="gap-2" onClick={() => setCategoriesDialogOpen(true)}>
+              <Button variant="outline" className="flex-1 sm:flex-none gap-2" onClick={() => setCategoriesDialogOpen(true)}>
                 <Settings className="w-4 h-4" /> Categorias
               </Button>
             </div>
@@ -1053,14 +1053,14 @@ export default function SindicoPortariaOccurrences() {
             <div className="flex flex-wrap items-center gap-2">
               {condominiums.length > 1 && (
                 <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
-                  <SelectTrigger className="w-[200px]"><SelectValue placeholder="Selecionar condomínio" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[200px]"><SelectValue placeholder="Selecionar condomínio" /></SelectTrigger>
                   <SelectContent>
                     {condominiums.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
               <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[150px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas categorias</SelectItem>
                   {categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
@@ -1070,7 +1070,7 @@ export default function SindicoPortariaOccurrences() {
                 value={filterBlockId}
                 onValueChange={(v) => { setFilterBlockId(v); setFilterApartmentId("all"); }}
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Building2 className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
                   <SelectValue placeholder="Bloco" />
                 </SelectTrigger>
@@ -1084,7 +1084,7 @@ export default function SindicoPortariaOccurrences() {
                 onValueChange={setFilterApartmentId}
                 disabled={filterBlockId === "all"}
               >
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <Home className="w-3.5 h-3.5 mr-1 text-muted-foreground" />
                   <SelectValue placeholder="Apartamento" />
                 </SelectTrigger>
@@ -1093,7 +1093,7 @@ export default function SindicoPortariaOccurrences() {
                   {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+              <div className="flex items-center gap-1 p-1 bg-muted rounded-lg w-full sm:w-auto overflow-x-auto no-scrollbar">
                 {[
                   { value: "all", label: "Todas" },
                   { value: "aberta", label: "Abertas" },
@@ -1102,7 +1102,7 @@ export default function SindicoPortariaOccurrences() {
                   <button
                     key={opt.value}
                     onClick={() => setFilterStatus(opt.value)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    className={`flex-1 sm:flex-none px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${
                       filterStatus === opt.value
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
@@ -1267,13 +1267,13 @@ export default function SindicoPortariaOccurrences() {
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-2 shrink-0 flex-wrap justify-end">
+                      <div className="flex gap-2 shrink-0 flex-wrap justify-end sm:flex-nowrap sm:flex-col md:flex-row">
                         {(profile as any)?.has_certificate && (
                           <Button
                             variant="default"
                             size="sm"
                             className={cn(
-                              "gap-1 font-semibold",
+                              "gap-1 font-semibold flex-1 sm:flex-none",
                               occ.is_signed 
                                 ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default" 
                                 : "bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -1295,6 +1295,7 @@ export default function SindicoPortariaOccurrences() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={() => generatePDF(occ)}
                           >
                             <FileDown className="w-4 h-4 mr-1" /> PDF
@@ -1304,6 +1305,7 @@ export default function SindicoPortariaOccurrences() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={() => {
                               setResolveOccurrenceId(occ.id);
                               setResolveDialogOpen(true);
@@ -1315,6 +1317,7 @@ export default function SindicoPortariaOccurrences() {
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="flex-1 sm:flex-none"
                           onClick={() => {
                             setDeleteOccurrenceId(occ.id);
                             setDeleteDialogOpen(true);
