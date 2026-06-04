@@ -262,7 +262,7 @@ const Autenticidade = () => {
                               <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-muted-foreground" />
                                 <span className="font-medium">
-                                  {verificationResult.occurrence.reporter_name || "Não informado"}
+                                  {verificationResult.occurrence.creatorName || verificationResult.occurrence.reporter_name || "Não informado"}
                                 </span>
                               </div>
                             </div>
