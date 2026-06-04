@@ -621,6 +621,18 @@ export default function PortariaOccurrences() {
                   </div>
                 </div>
 
+                {/* Target unit */}
+                <div className="animate-fade-down">
+                  {renderBlockApartmentSelectors(
+                    "Ocorrência sobre (Unidade)",
+                    targetBlockId,
+                    setTargetBlockId,
+                    targetApartmentId,
+                    setTargetApartmentId,
+                    targetApartments
+                  )}
+                </div>
+
                 <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                   <Label className="text-sm font-semibold text-slate-900 flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-primary" />
@@ -660,18 +672,6 @@ export default function PortariaOccurrences() {
                     )}
                   </div>
                 )}
-
-                {/* Target unit */}
-                <div className="animate-fade-down">
-                  {renderBlockApartmentSelectors(
-                    "Ocorrência sobre (Unidade)",
-                    targetBlockId,
-                    setTargetBlockId,
-                    targetApartmentId,
-                    setTargetApartmentId,
-                    targetApartments
-                  )}
-                </div>
 
                 {/* Photo upload */}
                 <div className="space-y-2">
