@@ -1277,52 +1277,61 @@ export default function SindicoPortariaOccurrences() {
                         {(occ.reporter_block_name || occ.target_block_name) && (
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.reporter_block_name && (
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-muted-foreground">Registrado por:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Registrado por:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.reporter_block_name}
                                   apartmentNumber={occ.reporter_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-medium text-foreground text-xs"
+                                  valueClassName="font-bold text-slate-700"
                                 />
                               </div>
                             )}
                             {occ.target_block_name && (
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-muted-foreground">Sobre:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                <span className="text-slate-500 font-medium">Sobre:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.target_block_name}
                                   apartmentNumber={occ.target_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-medium text-foreground text-xs"
+                                  valueClassName="font-bold text-slate-700"
                                 />
                               </div>
                             )}
                           </div>
                         )}
 
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                        </p>
-                        {occ.status === "resolvida" && occ.resolution_notes && (
-                          <p className="text-sm text-muted-foreground mt-1.5 text-justify break-words hyphens-auto">
-                            Resolução: <span className="font-medium text-foreground">{occ.resolution_notes}</span>
-                          </p>
-                        )}
-                        {occ.status === "resolvida" && occ.resolved_by_name && (
-                          <div className="flex items-start gap-1.5 mt-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                            <p className="text-xs text-muted-foreground break-words">
-                              Finalizado por:{" "}
-                              <span className="font-semibold text-foreground">{occ.resolved_by_name}</span>
-                              {occ.resolved_at && (
-                                <> · {format(new Date(occ.resolved_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</>
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <CalendarIcon className="w-3.5 h-3.5 text-primary/60" />
+                              <span>{format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                              {occ.registered_by_name && (
+                                <>
+                                  <span className="text-slate-300">|</span>
+                                  <span>Por: <span className="font-semibold text-slate-700">{occ.registered_by_name}</span></span>
+                                </>
                               )}
-                            </p>
+                            </div>
+                            
+                            {occ.status === "resolvida" && (
+                              <div className="flex flex-col gap-1.5 mt-2 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                                {occ.resolution_notes && (
+                                  <div className="flex gap-2">
+                                    <ClipboardList className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                    <p className="text-sm text-emerald-800 italic">"{occ.resolution_notes}"</p>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                  <span>Finalizado por {occ.resolved_by_name} {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2.5 pt-4 mt-2 border-t border-slate-100">
