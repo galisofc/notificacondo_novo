@@ -363,12 +363,12 @@ export default function SindicoPortariaOccurrences() {
         aptMap = Object.fromEntries((aptsData || []).map((a) => [a.id, a.number]));
       }
 
-      return (data || []).map((o) => {
+      return (data || []).map((o: any) => {
         const condo = condoMap[o.condominium_id] || null;
         return {
           ...o,
-          resolved_by_name: o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null,
-          registered_by_name: o.registered_by ? (profileMap[o.registered_by] ?? null) : null,
+          resolved_by_name: o.resolved_by_name ?? (o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null),
+          registered_by_name: o.registered_by_name ?? (o.registered_by ? (profileMap[o.registered_by] ?? null) : null),
           reporter_block_name: o.reporter_block_id ? (blockMap[o.reporter_block_id] ?? null) : null,
           reporter_apartment_number: o.reporter_apartment_id ? (aptMap[o.reporter_apartment_id] ?? null) : null,
           target_block_name: o.target_block_id ? (blockMap[o.target_block_id] ?? null) : null,
@@ -379,6 +379,7 @@ export default function SindicoPortariaOccurrences() {
           } : null,
         };
       }) as any as Occurrence[];
+
     },
     enabled: !!selectedCondominium,
   });
@@ -493,17 +494,26 @@ export default function SindicoPortariaOccurrences() {
   // Resolve occurrence
   const resolveMutation = useMutation({
     mutationFn: async () => {
+      const { data: ownProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      const resolvedByName = ownProfile?.full_name || user?.user_metadata?.full_name || user?.email || null;
+
       const { error } = await supabase
         .from("porter_occurrences")
         .update({
           status: "resolvida",
           resolved_at: new Date().toISOString(),
           resolved_by: user!.id,
+          resolved_by_name: resolvedByName,
           resolution_notes: resolutionNotes || null,
-        })
+        } as any)
         .eq("id", resolveOccurrenceId!);
       if (error) throw error;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sindico-porter-occurrences"] });
       toast({ title: "Ocorrência finalizada com sucesso!" });
