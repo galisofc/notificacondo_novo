@@ -1176,7 +1176,7 @@ export default function SindicoPortariaOccurrences() {
               <Card key={occ.id} className="bg-card border-border shadow-card hover:shadow-elevated transition-all duration-300">
                 <CardContent className="p-4 md:p-5">
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                         occ.status === "aberta"
                           ? "bg-gradient-to-br from-amber-500 to-orange-500"
@@ -1194,7 +1194,7 @@ export default function SindicoPortariaOccurrences() {
                               Protocolo {occ.protocol}
                             </Badge>
                           )}
-                          <h3 className="font-semibold text-foreground">{occ.title}</h3>
+                          <h3 className="font-semibold text-foreground break-words">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
                           <Badge variant="outline">{occ.category}</Badge>
                         </div>
@@ -1218,9 +1218,9 @@ export default function SindicoPortariaOccurrences() {
 
                         {/* Block/Apartment info */}
                         {(occ.reporter_block_name || occ.target_block_name) && (
-                          <div className="flex flex-wrap gap-4 mt-2 text-xs">
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.reporter_block_name && (
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-muted-foreground">Registrado por:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.reporter_block_name}
@@ -1232,7 +1232,7 @@ export default function SindicoPortariaOccurrences() {
                               </div>
                             )}
                             {occ.target_block_name && (
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-muted-foreground">Sobre:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.target_block_name}
@@ -1255,9 +1255,9 @@ export default function SindicoPortariaOccurrences() {
                           </p>
                         )}
                         {occ.status === "resolvida" && occ.resolved_by_name && (
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />
-                            <p className="text-xs text-muted-foreground">
+                          <div className="flex items-start gap-1.5 mt-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                            <p className="text-xs text-muted-foreground break-words">
                               Finalizado por:{" "}
                               <span className="font-semibold text-foreground">{occ.resolved_by_name}</span>
                               {occ.resolved_at && (
@@ -1267,65 +1267,65 @@ export default function SindicoPortariaOccurrences() {
                           </div>
                         )}
                       </div>
-                      <div className="flex gap-2 shrink-0 flex-wrap justify-end sm:flex-nowrap sm:flex-col md:flex-row">
-                        {(profile as any)?.has_certificate && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className={cn(
-                              "gap-1 font-semibold flex-1 sm:flex-none",
-                              occ.is_signed 
-                                ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default" 
-                                : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                            )}
-                            onClick={() => !occ.is_signed && handleSignPdf(occ)}
-                          >
-                            {occ.is_signed ? (
-                              <>
-                                <CheckCircle2 className="w-4 h-4" /> Assinado
-                              </>
-                            ) : (
-                              <>
-                                <Settings className="w-4 h-4" /> Assinar ICP
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        {occ.is_signed && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 sm:flex-none"
-                            onClick={() => generatePDF(occ)}
-                          >
-                            <FileDown className="w-4 h-4 mr-1" /> PDF
-                          </Button>
-                        )}
-                        {occ.status === "aberta" && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 sm:flex-none"
-                            onClick={() => {
-                              setResolveOccurrenceId(occ.id);
-                              setResolveDialogOpen(true);
-                            }}
-                          >
-                            <CheckCircle2 className="w-4 h-4 mr-1" /> Finalizar
-                          </Button>
-                        )}
+                    </div>
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:justify-end gap-2 pt-2 border-t border-border/50">
+                      {(profile as any)?.has_certificate && (
                         <Button
-                          variant="destructive"
+                          variant="default"
                           size="sm"
-                          className="flex-1 sm:flex-none"
+                          className={cn(
+                            "gap-1 font-semibold w-full sm:w-auto",
+                            occ.is_signed
+                              ? "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 cursor-default"
+                              : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                          )}
+                          onClick={() => !occ.is_signed && handleSignPdf(occ)}
+                        >
+                          {occ.is_signed ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4" /> Assinado
+                            </>
+                          ) : (
+                            <>
+                              <Settings className="w-4 h-4" /> Assinar ICP
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      {occ.is_signed && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                          onClick={() => generatePDF(occ)}
+                        >
+                          <FileDown className="w-4 h-4 mr-1" /> PDF
+                        </Button>
+                      )}
+                      {occ.status === "aberta" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
                           onClick={() => {
-                            setDeleteOccurrenceId(occ.id);
-                            setDeleteDialogOpen(true);
+                            setResolveOccurrenceId(occ.id);
+                            setResolveDialogOpen(true);
                           }}
                         >
-                          <Trash2 className="w-4 h-4 mr-1" /> Excluir
+                          <CheckCircle2 className="w-4 h-4 mr-1" /> Finalizar
                         </Button>
-                      </div>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                        onClick={() => {
+                          setDeleteOccurrenceId(occ.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" /> Excluir
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
