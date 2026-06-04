@@ -309,14 +309,14 @@ export default function SindicoPortariaOccurrences() {
     seedIfNeeded();
   }, [selectedCondominium, user, queryClient]);
 
-  // Fetch occurrences with block/apartment names
   const { data: occurrences = [], isLoading } = useQuery({
     queryKey: ["sindico-porter-occurrences", selectedCondominium],
     queryFn: async () => {
       if (!selectedCondominium) return [];
-      let query = (supabase as any)
+      
+      const { data, error } = await supabase
         .from("porter_occurrences")
-        .select("*, signature_hash, is_signed")
+        .select("*")
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false });
 
