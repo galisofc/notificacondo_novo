@@ -269,7 +269,7 @@ const Autenticidade = () => {
                               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Data do Ocorrido</p>
                               <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-muted-foreground" />
-                                <span className="font-medium">{verificationResult.occurrence.occurred_at && !isNaN(new Date(verificationResult.occurrence.occurred_at).getTime()) ? format(new Date(verificationResult.occurrence.occurred_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado"}</span>
+                                <span className="font-medium">{formatDateTime(verificationResult.occurrence.occurred_at)}</span>
                               </div>
                             </div>
                             <div className="space-y-1">
@@ -277,7 +277,7 @@ const Autenticidade = () => {
                               <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-muted-foreground" />
                                 <span className="font-medium">
-                                  {verificationResult.occurrence.creatorName || verificationResult.occurrence.reporter_name || "Não informado"}
+                                  {verificationResult.occurrence.creatorName || "Não informado"}
                                 </span>
                               </div>
                             </div>
