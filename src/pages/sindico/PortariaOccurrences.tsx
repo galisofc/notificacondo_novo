@@ -267,10 +267,10 @@ export default function SindicoPortariaOccurrences() {
     enabled: !!selectedCondominium,
   });
 
-  // Set default category when categories load
+  // Default category is now empty to force selection
   useEffect(() => {
     if (categories.length > 0 && !newCategory) {
-      setNewCategory(categories[0].name);
+      // setNewCategory(categories[0].name); // Removed to keep it empty
     }
   }, [categories, newCategory]);
 
