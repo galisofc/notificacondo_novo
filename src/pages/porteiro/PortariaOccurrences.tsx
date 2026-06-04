@@ -268,7 +268,7 @@ export default function PortariaOccurrences() {
 
   // Fetch occurrences with block/apartment names
   const { data: occurrences = [], isLoading } = useQuery({
-    queryKey: ["porter-occurrences", selectedCondominium, filterStatus, filterCategory],
+    queryKey: ["porter-occurrences", selectedCondominium],
     queryFn: async () => {
       if (!selectedCondominium) return [];
       let query = supabase
