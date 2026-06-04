@@ -1324,9 +1324,12 @@ export default function SindicoPortariaOccurrences() {
                             "gap-2 font-bold h-10 px-4 rounded-xl shadow-md transition-all active:scale-95 w-full sm:w-auto",
                             occ.is_signed
                               ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-default shadow-none"
+                              : occ.status !== "resolvida"
+                              ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none"
                               : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50"
                           )}
-                          onClick={() => !occ.is_signed && handleSignPdf(occ)}
+                          onClick={() => !occ.is_signed && occ.status === "resolvida" && handleSignPdf(occ)}
+                          title={occ.status !== "resolvida" ? "A ocorrência precisa estar finalizada para ser assinada" : ""}
                         >
                           {occ.is_signed ? (
                             <>
