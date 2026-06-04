@@ -1324,12 +1324,6 @@ export default function SindicoPortariaOccurrences() {
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <CalendarIcon className="w-3.5 h-3.5 text-primary/60" />
                               <span>{format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
-                              {occ.registered_by_name && (
-                                <>
-                                  <span className="text-slate-300">|</span>
-                                  <span>Por: <span className="font-semibold text-slate-700">{occ.registered_by_name}</span></span>
-                                </>
-                              )}
                             </div>
                             
                             {occ.status === "resolvida" && (
