@@ -124,6 +124,7 @@ export default function SindicoPortariaOccurrences() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
   const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
+  const [identifySelf, setIdentifySelf] = useState<string>("nao");
 
   // Digital Signature state
   const [signingPdf, setSigningPdf] = useState(false);
