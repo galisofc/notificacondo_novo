@@ -107,6 +107,7 @@ export default function PortariaOccurrences() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
   const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
+  const [identifySelf, setIdentifySelf] = useState<string>("nao");
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
