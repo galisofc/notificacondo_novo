@@ -50,8 +50,10 @@ interface DestinationPreview {
   condominiumName: string;
   blockName: string;
   apartmentNumber: string;
-  residentName?: string;
-  residentPhone?: string;
+  residents: Array<{
+    full_name: string;
+    phone?: string;
+  }>;
   hasResidents: boolean;
 }
 
