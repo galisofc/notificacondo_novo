@@ -99,9 +99,12 @@ const Autenticidade = () => {
         }
 
         if (!occurrence) {
-          const { data: publicOccurrence } = await (supabase as any)
-            .rpc('get_signed_porter_occurrence', { _hash: hash })
-            .maybeSingle();
+          const { data: publicOccurrence, error: publicOccurrenceError } = await (supabase as any)
+            .rpc('get_signed_porter_occurrence', { _hash: hash });
+
+          if (publicOccurrenceError && publicOccurrenceError.code !== "PGRST202") {
+            console.error("Erro ao buscar ocorrência pública assinada:", publicOccurrenceError);
+          }
 
           occurrence = publicOccurrence;
         }
