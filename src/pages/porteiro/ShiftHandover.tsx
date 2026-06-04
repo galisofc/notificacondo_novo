@@ -186,7 +186,7 @@ export default function ShiftHandover() {
 
   // Fetch history
   const { data: history = [], isLoading: loadingHistory } = useQuery({
-    queryKey: ["shift-handovers", selectedCondominium, porterName],
+    queryKey: ["shift-handovers", selectedCondominium, porterName, condominiumPorters.length],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("shift_handovers")
