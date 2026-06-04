@@ -23,6 +23,11 @@ const formatDateTime = (dateValue: unknown) => {
   return parsedDate ? format(parsedDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado";
 };
 
+const extractOccurrenceProtocol = (fileName?: string | null) => {
+  const match = fileName?.match(/ocorrencia[_-]([^./]+)\.pdf/i);
+  return match?.[1] || null;
+};
+
 const Autenticidade = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const fileHash = searchParams.get("hash") || searchParams.get("code");
@@ -54,21 +59,40 @@ const Autenticidade = () => {
 
       if (signedDoc && !docError) {
         // Se encontrou documento assinado, buscar detalhes da ocorrência
-        const { data: occurrence, error: occError } = await (supabase as any)
+        const occurrenceSelect = `
+          *,
+          condominium:condominiums(name, address, city, state),
+          reporter_block:blocks!porter_occurrences_reporter_block_id_fkey(name),
+          reporter_apartment:apartments!porter_occurrences_reporter_apartment_id_fkey(number),
+          target_block:blocks!porter_occurrences_target_block_id_fkey(name),
+          target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
+        `;
+
+        let { data: occurrence, error: occError } = await (supabase as any)
           .from('porter_occurrences')
-          .select(`
-            *,
-            condominium:condominiums(name, address, city, state),
-            reporter_block:blocks!porter_occurrences_reporter_block_id_fkey(name),
-            reporter_apartment:apartments!porter_occurrences_reporter_apartment_id_fkey(number),
-            target_block:blocks!porter_occurrences_target_block_id_fkey(name),
-            target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
-          `)
+          .select(occurrenceSelect)
           .eq('signature_hash', hash)
           .maybeSingle();
 
         if (occError) {
           console.error("Erro ao buscar ocorrência assinada:", occError);
+        }
+
+        if (!occurrence) {
+          const protocol = extractOccurrenceProtocol(signedDoc.file_name);
+          if (protocol) {
+            const { data: occurrenceByProtocol, error: protocolError } = await (supabase as any)
+              .from('porter_occurrences')
+              .select(occurrenceSelect)
+              .eq('protocol', protocol)
+              .maybeSingle();
+
+            if (protocolError) {
+              console.error("Erro ao buscar ocorrência pelo protocolo:", protocolError);
+            } else {
+              occurrence = occurrenceByProtocol;
+            }
+          }
         }
 
         let creatorName = "Não informado";
