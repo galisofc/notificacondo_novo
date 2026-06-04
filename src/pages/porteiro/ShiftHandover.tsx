@@ -186,23 +186,35 @@ export default function ShiftHandover() {
 
   // Fetch history
   const { data: history = [], isLoading: loadingHistory } = useQuery({
-    queryKey: ["shift-handovers", selectedCondominium, porterName],
+    queryKey: ["shift-handovers", selectedCondominium, porterName, condominiumPorters.length],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("shift_handovers")
-        .select(`
-          *,
-          outgoing_profile:profiles!shift_handovers_outgoing_porter_id_fkey(full_name)
-        `)
+        .select("*")
         .eq("condominium_id", selectedCondominium)
         .order("created_at", { ascending: false })
         .limit(20);
       if (error) throw error;
       if (!data || data.length === 0) return [] as HandoverRecord[];
 
+      const outgoingIds = [...new Set(data.map((h) => h.outgoing_porter_id).filter(Boolean))];
+      const profileMap: Record<string, string> = {};
+
+      // Pre-popula com porteiros conhecidos via RPC e usuário atual
+      condominiumPorters.forEach((p: any) => { profileMap[p.id] = p.full_name; });
+      if (user && porterName) profileMap[user.id] = porterName;
+
+      if (outgoingIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", outgoingIds);
+        (profilesData || []).forEach((p: any) => { profileMap[p.user_id] = p.full_name; });
+      }
+
       return data.map((h: any) => ({
         ...h,
-        outgoing_porter_name: h.outgoing_profile?.full_name || "Desconhecido",
+        outgoing_porter_name: profileMap[h.outgoing_porter_id] || "Desconhecido",
       })) as HandoverRecord[];
     },
     enabled: !!selectedCondominium,
