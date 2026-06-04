@@ -958,7 +958,7 @@ export default function PortariaOccurrences() {
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                  <span>Finalizado por <span className="uppercase">{occ.resolved_by_name || "Síndico"}</span> {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
+                                  <span>Finalizado por <span className="uppercase">{occ.resolved_by_name}</span> {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
                                 </div>
                               </div>
                             )}
