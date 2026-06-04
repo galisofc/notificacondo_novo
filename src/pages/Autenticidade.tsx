@@ -12,6 +12,22 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+const parseValidDate = (dateValue: unknown): Date | null => {
+  if (!dateValue || typeof dateValue !== "string") return null;
+  const parsedDate = new Date(dateValue);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const formatDateTime = (dateValue: unknown) => {
+  const parsedDate = parseValidDate(dateValue);
+  return parsedDate ? format(parsedDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado";
+};
+
+const extractOccurrenceProtocol = (fileName?: string | null) => {
+  const match = fileName?.match(/ocorrencia[_-]([^./]+)\.pdf/i);
+  return match?.[1] || null;
+};
+
 const Autenticidade = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const fileHash = searchParams.get("hash") || searchParams.get("code");
@@ -43,28 +59,64 @@ const Autenticidade = () => {
 
       if (signedDoc && !docError) {
         // Se encontrou documento assinado, buscar detalhes da ocorrência
-        const { data: occurrence, error: occError } = await (supabase as any)
+        const occurrenceSelect = `
+          *,
+          condominium:condominiums(name, address, city, state),
+          reporter_block:blocks!porter_occurrences_reporter_block_id_fkey(name),
+          reporter_apartment:apartments!porter_occurrences_reporter_apartment_id_fkey(number),
+          target_block:blocks!porter_occurrences_target_block_id_fkey(name),
+          target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
+        `;
+
+        const directResult = await (supabase as any)
           .from('porter_occurrences')
-          .select(`
-            *,
-            condominium:condominiums(name, address, city, state),
-            reporter_block:blocks!porter_occurrences_reporter_block_id_fkey(name),
-            reporter_apartment:apartments!porter_occurrences_reporter_apartment_id_fkey(number),
-            target_block:blocks!porter_occurrences_target_block_id_fkey(name),
-            target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number),
-            profiles:profiles!porter_occurrences_created_by_fkey(full_name)
-          `)
+          .select(occurrenceSelect)
           .eq('signature_hash', hash)
           .maybeSingle();
 
+        let occurrence = directResult.data;
+        let occError = directResult.error;
+
+        if (occError) {
+          console.error("Erro ao buscar ocorrência assinada:", occError);
+        }
+
+        if (!occurrence) {
+          const protocol = extractOccurrenceProtocol(signedDoc.file_name);
+          if (protocol) {
+            const { data: occurrenceByProtocol, error: protocolError } = await (supabase as any)
+              .from('porter_occurrences')
+              .select(occurrenceSelect)
+              .eq('protocol', protocol)
+              .maybeSingle();
+
+            if (protocolError) {
+              console.error("Erro ao buscar ocorrência pelo protocolo:", protocolError);
+            } else {
+              occurrence = occurrenceByProtocol;
+            }
+          }
+        }
+
+        if (!occurrence) {
+          const { data: publicOccurrence, error: publicOccurrenceError } = await (supabase as any)
+            .rpc('get_signed_porter_occurrence', { _hash: hash });
+
+          if (publicOccurrenceError && publicOccurrenceError.code !== "PGRST202") {
+            console.error("Erro ao buscar ocorrência pública assinada:", publicOccurrenceError);
+          }
+
+          occurrence = publicOccurrence;
+        }
+
         let creatorName = "Não informado";
-        if (occurrence?.profiles?.full_name) {
-          creatorName = occurrence.profiles.full_name;
-        } else if (occurrence?.created_by) {
+        if (occurrence?.registered_by_name) {
+          creatorName = occurrence.registered_by_name;
+        } else if (occurrence?.registered_by) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
-            .eq('user_id', occurrence.created_by)
+            .eq('user_id', occurrence.registered_by)
             .maybeSingle();
           
           if (profile?.full_name) {
@@ -75,9 +127,10 @@ const Autenticidade = () => {
         setVerificationResult({
           isValid: true,
           signerName: signedDoc.signer_name,
-          signedAt: signedDoc.created_at && !isNaN(new Date(signedDoc.created_at).getTime()) ? format(new Date(signedDoc.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado",
+          signedAt: formatDateTime(signedDoc.created_at),
           fileName: signedDoc.file_name,
           occurrence: {
+            protocol: extractOccurrenceProtocol(signedDoc.file_name) || hash,
             ...occurrence,
             creatorName: creatorName
           }
@@ -237,11 +290,11 @@ const Autenticidade = () => {
                         <CardContent className="p-6 space-y-6">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                              <Badge variant="outline" className="mb-2">{verificationResult.occurrence.category}</Badge>
-                              <h4 className="text-2xl font-bold text-foreground">{verificationResult.occurrence.title}</h4>
+                              <Badge variant="outline" className="mb-2">{verificationResult.occurrence.category || "Ocorrência"}</Badge>
+                              <h4 className="text-2xl font-bold text-foreground">{verificationResult.occurrence.title || verificationResult.fileName || "Documento assinado"}</h4>
                               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                                 <Building2 className="w-3 h-3" />
-                                {verificationResult.occurrence.condominium?.name}
+                                {verificationResult.occurrence.condominium?.name || "Condomínio não informado"}
                               </p>
                             </div>
                             {verificationResult.occurrence.protocol && (
@@ -257,7 +310,7 @@ const Autenticidade = () => {
                               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Data do Ocorrido</p>
                               <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-muted-foreground" />
-                                <span className="font-medium">{verificationResult.occurrence.occurred_at && !isNaN(new Date(verificationResult.occurrence.occurred_at).getTime()) ? format(new Date(verificationResult.occurrence.occurred_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : "Não informado"}</span>
+                                <span className="font-medium">{formatDateTime(verificationResult.occurrence.occurred_at)}</span>
                               </div>
                             </div>
                             <div className="space-y-1">
@@ -265,7 +318,7 @@ const Autenticidade = () => {
                               <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-muted-foreground" />
                                 <span className="font-medium">
-                                  {verificationResult.occurrence.creatorName || verificationResult.occurrence.reporter_name || "Não informado"}
+                                  {verificationResult.occurrence.creatorName || "Não informado"}
                                 </span>
                               </div>
                             </div>
@@ -274,7 +327,7 @@ const Autenticidade = () => {
                           <div className="space-y-2">
                             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Descrição da Ocorrência</p>
                             <div className="p-4 bg-background border border-border rounded-xl text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                              {verificationResult.occurrence.description}
+                              {verificationResult.occurrence.description || "Não informado"}
                             </div>
                           </div>
 
