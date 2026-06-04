@@ -887,22 +887,6 @@ export default function SindicoPortariaOccurrences() {
       doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 5, { align: "right" });
     }
 
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(33, 33, 33);
-      doc.text(condominiumName.toUpperCase(), pageWidth / 2, pageHeight - 18, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      if (addressLine) {
-        doc.text(addressLine, pageWidth / 2, pageHeight - 13, { align: "center" });
-      }
-      if (cepLine) {
-        doc.text(cepLine, pageWidth / 2, pageHeight - 9, { align: "center" });
-      }
-      doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 5, { align: "right" });
-    }
-
     doc.save(`ocorrencia_${occurrence.protocol || occurrence.id.slice(0, 8)}.pdf`);
     toast({ title: "PDF gerado com sucesso!" });
   };
