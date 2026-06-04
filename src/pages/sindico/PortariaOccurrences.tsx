@@ -39,6 +39,7 @@ interface Occurrence {
   id: string;
   condominium_id: string;
   registered_by: string;
+  registered_by_name?: string | null;
   title: string;
   description: string;
   category: string;
@@ -71,6 +72,7 @@ interface Occurrence {
     neighborhood: string | null;
     zip_code: string | null;
     logo_url?: string | null;
+    owner_id?: string;
   } | null;
 }
 
