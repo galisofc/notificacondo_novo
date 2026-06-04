@@ -15,7 +15,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, CheckCircle2, Clock, Search, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, X, Building2, Home, Camera, ImagePlus, Loader2, FileDown, Trash2 } from "lucide-react";
+import { Plus, CheckCircle2, Clock, Search, AlertTriangle, ClipboardList, ArrowUpRight, CalendarIcon, X, Building2, Home, Camera, ImagePlus, Loader2, FileDown, Trash2, UserCheck, UserX } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import BlockApartmentDisplay from "@/components/common/BlockApartmentDisplay";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
@@ -106,6 +107,7 @@ export default function PortariaOccurrences() {
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
   const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
+  const [identifySelf, setIdentifySelf] = useState<string>("nao");
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -399,11 +401,11 @@ export default function PortariaOccurrences() {
         registered_by: user!.id,
         title: newTitle,
         description: newDescription,
-        category: newCategory,
-        priority: newPriority,
-        occurred_at: isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString(),
-        reporter_block_id: reporterBlock,
-        reporter_apartment_id: reporterApartment,
+        category: identifySelf === "sim" ? newCategory : "Geral",
+        priority: identifySelf === "sim" ? newPriority : "media",
+        occurred_at: identifySelf === "sim" ? (isNaN(occurredAt.getTime()) ? new Date().toISOString() : occurredAt.toISOString()) : new Date().toISOString(),
+        reporter_block_id: identifySelf === "sim" ? reporterBlock : null,
+        reporter_apartment_id: identifySelf === "sim" ? reporterApartment : null,
         target_block_id: targetBlock,
         target_apartment_id: targetApartment,
         photos: photos,
@@ -583,60 +585,90 @@ export default function PortariaOccurrences() {
                   <Label>Descrição</Label>
                   <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Descreva o ocorrido..." rows={4} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <Select value={newCategory} onValueChange={setNewCategory}>
-                    <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
-                    <SelectContent>
-                      {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
-                      }
-                    </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Prioridade</Label>
-                    <Select value={newPriority} onValueChange={setNewPriority}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <Label className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-primary" />
+                    Deseja se identificar para registrar a ocorrência?
+                  </Label>
+                  <RadioGroup 
+                    value={identifySelf} 
+                    onValueChange={setIdentifySelf}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="sim" id="identify-sim" />
+                      <Label htmlFor="identify-sim" className="cursor-pointer font-medium">Sim</Label>
+                    </div>
+                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                      <RadioGroupItem value="nao" id="identify-nao" />
+                      <Label htmlFor="identify-nao" className="cursor-pointer font-medium">Não</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Data da Ocorrência</Label>
-                    <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Horário</Label>
-                    <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
-                  </div>
+                {identifySelf === "sim" && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-down">
+                      <div className="space-y-2">
+                        <Label>Categoria</Label>
+                        <Select value={newCategory} onValueChange={setNewCategory}>
+                          <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
+                          <SelectContent>
+                            {[...categories, ...(!categories.some(c => c.name === "Barulho") ? [{ id: "temp-barulho", name: "Barulho" }] : [])]
+                              .sort((a, b) => a.name.localeCompare(b.name))
+                              .map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)
+                            }
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Prioridade</Label>
+                        <Select value={newPriority} onValueChange={setNewPriority}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-down">
+                      <div className="space-y-2">
+                        <Label>Data da Ocorrência</Label>
+                        <Input type="date" value={occurredDate} onChange={(e) => setOccurredDate(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Horário</Label>
+                        <Input type="time" value={occurredTime} onChange={(e) => setOccurredTime(e.target.value)} />
+                      </div>
+                    </div>
+
+                    {/* Reporter unit (only when identifying) */}
+                    <div className="animate-fade-down">
+                      {renderBlockApartmentSelectors(
+                        "Registrado por (Unidade)",
+                        reporterBlockId,
+                        setReporterBlockId,
+                        reporterApartmentId,
+                        setReporterApartmentId,
+                        reporterApartments
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Always show Target unit for both scenarios as requested (implicitly by Requirements 3 & 4) */}
+                <div className="animate-fade-down">
+                  {renderBlockApartmentSelectors(
+                    "Ocorrência sobre (Unidade)",
+                    targetBlockId,
+                    setTargetBlockId,
+                    targetApartmentId,
+                    setTargetApartmentId,
+                    targetApartments
+                  )}
                 </div>
-
-                {/* Reporter unit */}
-                {renderBlockApartmentSelectors(
-                  "Registrado por (Unidade)",
-                  reporterBlockId,
-                  setReporterBlockId,
-                  reporterApartmentId,
-                  setReporterApartmentId,
-                  reporterApartments
-                )}
-
-                {/* Target unit */}
-                {renderBlockApartmentSelectors(
-                  "Ocorrência sobre (Unidade)",
-                  targetBlockId,
-                  setTargetBlockId,
-                  targetApartmentId,
-                  setTargetApartmentId,
-                  targetApartments
-                )}
 
                 {/* Photo upload */}
                 <div className="space-y-2">
@@ -694,7 +726,7 @@ export default function PortariaOccurrences() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || createMutation.isPending}>
+                <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || (identifySelf === "sim" && !newCategory) || createMutation.isPending}>
                   {createMutation.isPending ? "Registrando..." : "Registrar"}
                 </Button>
               </DialogFooter>
