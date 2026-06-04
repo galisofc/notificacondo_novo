@@ -294,7 +294,7 @@ export default function PortariaOccurrences() {
           .from("profiles")
           .select("id, user_id, full_name")
           .in("user_id", allUserIds);
-        profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id, p.full_name]));
+        profileMap = Object.fromEntries((profiles || []).map((p) => [p.user_id || p.id, p.full_name]));
       }
 
       // Collect block/apartment IDs for name resolution
