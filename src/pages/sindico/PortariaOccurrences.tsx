@@ -901,6 +901,16 @@ export default function SindicoPortariaOccurrences() {
       });
       return;
     }
+
+    if (occurrence.status !== "resolvida") {
+      toast({
+        title: "Ocorrência em aberto",
+        description: "Somente ocorrências finalizadas podem ser assinadas.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setCurrentOccurrenceToSign(occurrence);
     setPasswordDialogOpen(true);
   };
