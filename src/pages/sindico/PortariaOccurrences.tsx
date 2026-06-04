@@ -844,12 +844,17 @@ export default function SindicoPortariaOccurrences() {
       doc.setPage(i);
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
-      
-      // QR Code and Authentication Text - Now centered at the bottom of the content
+      // QR Code and Authentication Text - Now centered below content
       if (qrDataUrl) {
-        const qrSize = 25;
+        const qrSize = 30;
         const qrX = (pageWidth - qrSize) / 2;
-        const qrY = pageHeight - 65; 
+        let qrY = yPos + 5; 
+        
+        if (qrY + qrSize + 20 > pageHeight - 30) {
+          doc.addPage();
+          qrY = margin + 5;
+        }
+        
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
         
         doc.setFontSize(7);
@@ -861,7 +866,6 @@ export default function SindicoPortariaOccurrences() {
         doc.setFontSize(6);
         doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, qrY + qrSize + 5.5, { align: "center" });
         
-        // Show the unique validation code
         const validationCode = occurrence.is_signed ? (occurrence.signature_hash || "-") : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7);
