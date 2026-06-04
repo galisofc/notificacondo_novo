@@ -1361,7 +1361,7 @@ export default function SindicoPortariaOccurrences() {
                           )}
                         </Button>
                       )}
-                      {occ.is_signed && (
+                      {(occ.is_signed || occ.status === "resolvida") && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -1375,25 +1375,25 @@ export default function SindicoPortariaOccurrences() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full sm:w-auto"
+                          className="h-10 px-4 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-emerald-600 transition-all active:scale-95 font-bold w-full sm:w-auto"
                           onClick={() => {
                             setResolveOccurrenceId(occ.id);
                             setResolveDialogOpen(true);
                           }}
                         >
-                          <CheckCircle2 className="w-4 h-4 mr-1" /> Finalizar
+                          <CheckCircle2 className="w-4 h-4 mr-2" /> Finalizar
                         </Button>
                       )}
                       <Button
                         variant="destructive"
                         size="sm"
-                        className="w-full sm:w-auto"
+                        className="h-10 px-4 rounded-xl shadow-md shadow-red-100 transition-all active:scale-95 font-bold w-full sm:w-auto"
                         onClick={() => {
                           setDeleteOccurrenceId(occ.id);
                           setDeleteDialogOpen(true);
                         }}
                       >
-                        <Trash2 className="w-4 h-4 mr-1" /> Excluir
+                        <Trash2 className="w-4 h-4 mr-2" /> Excluir
                       </Button>
                     </div>
                   </div>
