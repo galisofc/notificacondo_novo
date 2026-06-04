@@ -114,7 +114,7 @@ export default function SindicoPortariaOccurrences() {
   const [newTitle, setNewTitle] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newPriority, setNewPriority] = useState("media");
+  const [newPriority, setNewPriority] = useState("");
   const [reporterBlockId, setReporterBlockId] = useState<string>("");
   const [reporterApartmentId, setReporterApartmentId] = useState<string>("");
   const [targetBlockId, setTargetBlockId] = useState<string>("");
@@ -122,8 +122,8 @@ export default function SindicoPortariaOccurrences() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-  const [occurredDate, setOccurredDate] = useState<string>(() => format(new Date(), "yyyy-MM-dd"));
-  const [occurredTime, setOccurredTime] = useState<string>(() => format(new Date(), "HH:mm"));
+  const [occurredDate, setOccurredDate] = useState<string>("");
+  const [occurredTime, setOccurredTime] = useState<string>("");
   const [identifySelf, setIdentifySelf] = useState<string>("nao");
 
   // Digital Signature state
@@ -267,10 +267,10 @@ export default function SindicoPortariaOccurrences() {
     enabled: !!selectedCondominium,
   });
 
-  // Set default category when categories load
+  // Default category is now empty to force selection
   useEffect(() => {
     if (categories.length > 0 && !newCategory) {
-      setNewCategory(categories[0].name);
+      // setNewCategory(categories[0].name); // Removed to keep it empty
     }
   }, [categories, newCategory]);
 
@@ -479,16 +479,15 @@ export default function SindicoPortariaOccurrences() {
       setCreateDialogOpen(false);
       setNewTitle("");
       setNewDescription("");
-      setNewCategory(categories[0]?.name || "");
-      setNewPriority("media");
+      setNewCategory("");
+      setNewPriority("");
       setReporterBlockId("");
       setReporterApartmentId("");
       setTargetBlockId("");
       setTargetApartmentId("");
       setPhotos([]);
-      const now = new Date();
-      setOccurredDate(format(now, "yyyy-MM-dd"));
-      setOccurredTime(format(now, "HH:mm"));
+      setOccurredDate("");
+      setOccurredTime("");
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
@@ -1580,7 +1579,7 @@ export default function SindicoPortariaOccurrences() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || createMutation.isPending}>
+              <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || !newPriority || !occurredDate || !occurredTime || createMutation.isPending}>
                 {createMutation.isPending ? "Registrando..." : "Registrar"}
               </Button>
             </DialogFooter>
