@@ -811,7 +811,7 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
-    // Síndico Responsável (Signature area or info)
+    // Síndico Responsável info
     const sindicoName = (occurrence.condominium as any)?.owner_name || "Síndico Responsável";
     if (yPos > 240) {
       doc.addPage();
@@ -820,16 +820,13 @@ export default function SindicoPortariaOccurrences() {
       yPos += 15;
     }
     
-    doc.setDrawColor(150, 150, 150);
-    doc.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
-    yPos += 5;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.text(sindicoName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
     yPos += 4;
     doc.setFont("helvetica", "normal");
     doc.text("Síndico Responsável", pageWidth / 2, yPos, { align: "center" });
-    yPos += 15;
+    yPos += 10;
 
     // Footer and QR Code
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -847,12 +844,17 @@ export default function SindicoPortariaOccurrences() {
       doc.setPage(i);
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
-      
-      // QR Code and Authentication Text - Now centered at the bottom of the content
+      // QR Code and Authentication Text - Now centered below content
       if (qrDataUrl) {
-        const qrSize = 25;
+        const qrSize = 30;
         const qrX = (pageWidth - qrSize) / 2;
-        const qrY = pageHeight - 65; 
+        let qrY = yPos + 5; 
+        
+        if (qrY + qrSize + 20 > pageHeight - 30) {
+          doc.addPage();
+          qrY = margin + 5;
+        }
+        
         doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
         
         doc.setFontSize(7);
@@ -864,7 +866,6 @@ export default function SindicoPortariaOccurrences() {
         doc.setFontSize(6);
         doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, qrY + qrSize + 5.5, { align: "center" });
         
-        // Show the unique validation code
         const validationCode = occurrence.is_signed ? (occurrence.signature_hash || "-") : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7);
