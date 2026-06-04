@@ -68,11 +68,23 @@ const Autenticidade = () => {
           target_apartment:apartments!porter_occurrences_target_apartment_id_fkey(number)
         `;
 
-        let { data: occurrence, error: occError } = await (supabase as any)
-          .from('porter_occurrences')
-          .select(occurrenceSelect)
-          .eq('signature_hash', hash)
+        const { data: publicOccurrence } = await (supabase as any)
+          .rpc('get_signed_porter_occurrence', { _hash: hash })
           .maybeSingle();
+
+        let occurrence = publicOccurrence;
+        let occError = null;
+
+        if (!occurrence) {
+          const directResult = await (supabase as any)
+            .from('porter_occurrences')
+            .select(occurrenceSelect)
+            .eq('signature_hash', hash)
+            .maybeSingle();
+
+          occurrence = directResult.data;
+          occError = directResult.error;
+        }
 
         if (occError) {
           console.error("Erro ao buscar ocorrência assinada:", occError);
@@ -96,7 +108,9 @@ const Autenticidade = () => {
         }
 
         let creatorName = "Não informado";
-        if (occurrence?.registered_by) {
+        if (occurrence?.registered_by_name) {
+          creatorName = occurrence.registered_by_name;
+        } else if (occurrence?.registered_by) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('full_name')
