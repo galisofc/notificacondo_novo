@@ -503,13 +503,7 @@ export default function PortariaOccurrences() {
 
   const getPriorityBadge = (priority: string) => {
     const p = PRIORITIES.find((pr) => pr.value === priority);
-    return 
-  };
-
-  const openCount = occurrences.filter((o) => o.status === "aberta").length;
-  const resolvedCount = occurrences.filter((o) => o.status === "resolvida").length;
-
-  const statCards = [
+    return <Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
     { title: "Em Aberto", value: openCount, icon: Clock, gradient: "from-amber-500 to-orange-500" },
     { title: "Resolvidas", value: resolvedCount, icon: CheckCircle2, gradient: "from-accent to-emerald-600" },
     { title: "Total", value: occurrences.length, icon: ClipboardList, gradient: "from-primary to-blue-600" },
