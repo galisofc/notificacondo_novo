@@ -125,6 +125,7 @@ const AdvertenciasEMultas = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [blockFilter, setBlockFilter] = useState<string>("all");
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
