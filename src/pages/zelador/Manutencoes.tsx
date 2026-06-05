@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +70,10 @@ function DroppableColumn({ id, children, isOver }: { id: string; children: React
   const { setNodeRef, isOver: hovering } = useDroppable({ id });
   const active = isOver || hovering;
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Manutenções</title>
+      </Helmet>
     <div
       ref={setNodeRef}
       className={`space-y-3 min-h-[100px] max-h-[65vh] overflow-y-auto rounded-lg transition-colors duration-200 p-1 ${

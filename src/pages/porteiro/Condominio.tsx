@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -465,6 +466,10 @@ export default function PorteiroCondominio() {
 
   const getTotalResidents = () => {
     return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Condominio</title>
+      </Helmet>
       blocks?.reduce(
         (total, block) =>
           total +

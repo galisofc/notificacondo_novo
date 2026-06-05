@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -316,7 +317,11 @@ export default function PortariaOccurrences() {
         aptMap = Object.fromEntries((aptsData || []).map((a) => [a.id, a.number]));
       }
 
-      return (data || []).map((o: any) => ({
+      return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Portaria - Ocorrências</title>
+      </Helmet>data || []).map((o: any) => ({
         ...o,
         resolved_by_name: o.resolved_by_name ?? (o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null),
         registered_by_name: o.registered_by_name ?? (o.registered_by ? (profileMap[o.registered_by] ?? null) : null),
@@ -498,7 +503,12 @@ export default function PortariaOccurrences() {
 
   const getPriorityBadge = (priority: string) => {
     const p = PRIORITIES.find((pr) => pr.value === priority);
-    return <Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
+    return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Portaria - Ocorrências</title>
+      </Helmet>
+      < Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
   };
 
   const openCount = occurrences.filter((o) => o.status === "aberta").length;

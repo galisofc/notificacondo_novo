@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -83,6 +84,10 @@ const ContactMessages = () => {
   const unreadCount = messages?.filter((m) => !m.is_read).length || 0;
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - ContactMessages</title>
+      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <SuperAdminBreadcrumbs

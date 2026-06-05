@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,6 +164,10 @@ export default function ZeladorDashboard() {
   }));
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Zelador - Dashboard</title>
+      </Helmet>
     <DashboardLayout>
       <div className="flex-1 space-y-6 p-4 md:p-6 lg:p-8 pt-6">
         <div className="flex items-center justify-between">

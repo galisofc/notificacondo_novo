@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -652,6 +653,10 @@ const CondominiumDetails = () => {
 
   if (loading) {
     return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - CondominiumDetails</title>
+      </Helmet>
       <DashboardLayout>
         <div className="flex items-center justify-center h-96">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

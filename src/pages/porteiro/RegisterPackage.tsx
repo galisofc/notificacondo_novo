@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Package, CheckCircle2, Loader2, MessageCircle, AlertCircle, MapPin, User, Phone, UserPlus, Check, ChevronsUpDown, Search, icons, QrCode } from "lucide-react";
@@ -421,6 +422,10 @@ export default function RegisterPackage() {
 
   if (step === "success") {
     return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Registrar Encomenda</title>
+      </Helmet>
       <DashboardLayout>
         <div className="max-w-lg mx-auto">
           <Card>

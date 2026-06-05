@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,6 +87,10 @@ export default function ManutencoesHistorico() {
   const location = detailExec?.location as { lat: number; lng: number } | null;
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - ManutencoesHistorico</title>
+      </Helmet>
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6">
         <SindicoBreadcrumbs

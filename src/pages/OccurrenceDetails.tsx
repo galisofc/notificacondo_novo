@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -248,7 +249,11 @@ const OccurrenceDetails = () => {
       )
       .subscribe();
 
-    return () => {
+    return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - OccurrenceDetails</title>
+      </Helmet>) => {
       supabase.removeChannel(channel);
     };
   }, [id, occurrence, evidences, defenses, decisions, accessLogs]);
@@ -1393,7 +1398,12 @@ const OccurrenceDetails = () => {
   };
 
   const getFileIcon = (type: string) => {
-    if (type === "image") return <ImageIcon className="w-5 h-5" />;
+    if (type === "image") return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - OccurrenceDetails</title>
+      </Helmet>
+      < ImageIcon className="w-5 h-5" />;
     if (type === "video") return <Video className="w-5 h-5" />;
     return <FileText className="w-5 h-5" />;
   };

@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +84,10 @@ const ResidentAccess = () => {
 
   if (loading || redirecting) {
     return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Acesso do Morador</title>
+      </Helmet>
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-gradient-card border-border/50">
           <CardContent className="pt-8 pb-8">

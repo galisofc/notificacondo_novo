@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,7 +77,11 @@ export default function SindicoPortariaShiftHandovers() {
         }
       }
 
-      return (data || []).map((h: any) => ({
+      return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - PortariaShiftHandovers</title>
+      </Helmet>data || []).map((h: any) => ({
         ...h,
         outgoing_porter_name: porterNames[h.outgoing_porter_id] || "Porteiro",
       })) as HandoverRecord[];
