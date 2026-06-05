@@ -171,6 +171,16 @@ const AdvertenciasEMultas = () => {
     
   const filteredResidents = residents.filter((r) => r.apartment_id === formData.apartment_id);
 
+  // Blocks for the main filter (all blocks from selected condominium)
+  const blocksForFilter = blocks
+    .filter((b) => condominiumFilter === "all" || b.condominium_id === condominiumFilter)
+    .sort((a, b) => naturalSort(a.name, b.name));
+
+  // Apartments for the main filter (if a block is selected)
+  const apartmentsForFilter = apartments
+    .filter((a) => blockFilter === "all" || a.block_id === blockFilter)
+    .sort((a, b) => naturalSort(a.number, b.number));
+
   // Build apartment warnings count map from all occurrences
   const apartmentWarningsCount: Record<string, number> = {};
   occurrences.forEach((occ) => {
