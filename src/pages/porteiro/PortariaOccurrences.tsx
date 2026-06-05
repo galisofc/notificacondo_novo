@@ -352,7 +352,9 @@ export default function PortariaOccurrences() {
         .eq("block_id", filterBlockId)
         .order("number");
       if (error) throw error;
-      return data as Apartment[];
+      return (data as Apartment[]).sort((a, b) => 
+        a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' })
+      );
     },
     enabled: !!filterBlockId && filterBlockId !== "all",
     staleTime: 1000 * 60 * 5,
