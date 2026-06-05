@@ -937,7 +937,7 @@ const AdvertenciasEMultas = () => {
               Exibindo <span className="font-medium text-foreground">{filteredOccurrences.length}</span> de{" "}
               <span className="font-medium text-foreground">{occurrences.length}</span> ocorrência{occurrences.length !== 1 ? "s" : ""}
             </p>
-            {(statusFilter !== "all" || typeFilter !== "all" || condominiumFilter !== "all") && (
+            {(statusFilter !== "all" || typeFilter !== "all" || condominiumFilter !== "all" || blockFilter !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -945,6 +945,7 @@ const AdvertenciasEMultas = () => {
                   setStatusFilter("all");
                   setTypeFilter("all");
                   setCondominiumFilter("all");
+                  setBlockFilter("all");
                 }}
                 className="text-xs"
               >
