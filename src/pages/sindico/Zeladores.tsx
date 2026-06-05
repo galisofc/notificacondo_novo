@@ -141,7 +141,9 @@ export default function Zeladores() {
         profile: profileMap.get(z.user_id) || null,
         condominium: z.condominium as { name: string } | null,
       }))
-    );
+    
+    <>
+  );
     setLoading(false);
   }, [user, condominiums]);
 

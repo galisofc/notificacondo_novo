@@ -384,7 +384,9 @@ export default function ZeladorManutencoes() {
         setLocationLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
-    );
+    
+    <>
+  );
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -548,7 +550,9 @@ export default function ZeladorManutencoes() {
           </div>
         )}
       </div>
-    );
+    
+    <>
+  );
   };
 
   return (

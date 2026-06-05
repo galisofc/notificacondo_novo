@@ -220,7 +220,9 @@ export default function TermsOfUse() {
                     </div>
                   </CardContent>
                 </Card>
-              );
+              
+    <>
+  );
             })}
           </div>
 

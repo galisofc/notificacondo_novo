@@ -477,7 +477,9 @@ export default function SindicoManutencoes() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
+                  
+    <>
+  );
                 })}
               </TableBody>
             </Table>

@@ -319,9 +319,9 @@ export default function PortariaOccurrences() {
 
       return (
     <>
-      <Helmet>
+        <Helmet>
         <title>NotificaCondo - Portaria - Ocorrências</title>
-      </Helmet>data || []).map((o: any) => ({
+        </Helmet>data || []).map((o: any) => ({
         ...o,
         resolved_by_name: o.resolved_by_name ?? (o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null),
         registered_by_name: o.registered_by_name ?? (o.registered_by ? (profileMap[o.registered_by] ?? null) : null),
@@ -505,9 +505,9 @@ export default function PortariaOccurrences() {
     const p = PRIORITIES.find((pr) => pr.value === priority);
     return (
     <>
-      <Helmet>
+        <Helmet>
         <title>NotificaCondo - Portaria - Ocorrências</title>
-      </Helmet>
+        </Helmet>
       < Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
   };
 

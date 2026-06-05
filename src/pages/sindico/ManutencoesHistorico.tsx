@@ -202,7 +202,9 @@ export default function ManutencoesHistorico() {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  );
+                  
+    <>
+  );
                 })}
               </TableBody>
             </Table>
@@ -251,7 +253,9 @@ export default function ManutencoesHistorico() {
                             <Icon className="h-3 w-3" />
                             {sc.label}
                           </Badge>
-                        );
+                        
+    <>
+  );
                       })()}
                     </div>
                   </div>

@@ -48,7 +48,9 @@ const ResidentAccess = () => {
           {
             body: { token },
           }
-        );
+        
+    <>
+  );
 
         if (funcError || data?.error) {
           setError(data?.error || "Link inválido ou expirado");
@@ -108,7 +110,9 @@ const ResidentAccess = () => {
           </CardContent>
         </Card>
       </div>
-    );
+    
+    <>
+  );
   }
 
   if (error) {
@@ -131,7 +135,9 @@ const ResidentAccess = () => {
           </CardContent>
         </Card>
       </div>
-    );
+    
+    <>
+  );
   }
 
   if (resident) {
@@ -180,7 +186,9 @@ const ResidentAccess = () => {
           </CardContent>
         </Card>
       </div>
-    );
+    
+    <>
+  );
   }
 
   return null;

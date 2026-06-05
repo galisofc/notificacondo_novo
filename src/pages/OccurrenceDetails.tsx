@@ -239,7 +239,9 @@ const OccurrenceDetails = () => {
               n.id === updated.id
                 ? { ...n, zpro_status: updated.zpro_status, delivered_at: updated.delivered_at, read_at: updated.read_at, accepted_at: updated.accepted_at }
                 : n
-            );
+            
+    <>
+  );
             if (occurrence) {
               buildTimeline(occurrence, evidences, defenses, decisions, next, accessLogs);
             }
@@ -356,7 +358,9 @@ const OccurrenceDetails = () => {
         decisionsData || [],
         notificationsData || [],
         accessLogsData || []
-      );
+      
+    <>
+  );
     } catch (error) {
       console.error("Error fetching occurrence:", error);
       toast({ title: "Erro ao carregar ocorrência", variant: "destructive" });
@@ -509,7 +513,9 @@ const OccurrenceDetails = () => {
       <span className={`px-3 py-1 rounded-full text-sm font-medium ${styles[status] || ""}`}>
         {labels[status] || status}
       </span>
-    );
+    
+    <>
+  );
   };
 
   const getTypeBadge = (type: string) => {
@@ -527,7 +533,9 @@ const OccurrenceDetails = () => {
       <span className={`px-3 py-1 rounded-full text-sm font-medium ${styles[type] || ""}`}>
         {labels[type] || type}
       </span>
-    );
+    
+    <>
+  );
   };
 
   const handleSubmitDecision = async () => {
@@ -1173,7 +1181,9 @@ const OccurrenceDetails = () => {
           `Prazo: ${formatShortDate(defense.deadline)} | Enviada em: ${formatShortDate(defense.submitted_at)}`,
           margin,
           yPos
-        );
+        
+    <>
+  );
         yPos += 8;
         doc.setFontSize(10);
         doc.setTextColor(33, 33, 33);
@@ -1336,7 +1346,9 @@ const OccurrenceDetails = () => {
           pageWidth / 2,
           yPos + 4,
           { align: "center" }
-        );
+        
+    <>
+  );
         yPos += 10;
 
         autoTable(doc, {
@@ -1415,7 +1427,9 @@ const OccurrenceDetails = () => {
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </DashboardLayout>
-    );
+    
+    <>
+  );
   }
 
   if (!occurrence) {
@@ -1425,7 +1439,9 @@ const OccurrenceDetails = () => {
           <p className="text-center text-muted-foreground">Ocorrência não encontrada.</p>
         </div>
       </DashboardLayout>
-    );
+    
+    <>
+  );
   }
 
   return (
@@ -1736,7 +1752,9 @@ const OccurrenceDetails = () => {
                           </div>
                           <p className="text-foreground whitespace-pre-line text-justify">{dec.justification}</p>
                         </div>
-                      );
+                      
+    <>
+  );
                     })}
                   </div>
                 )}
@@ -1842,7 +1860,9 @@ const OccurrenceDetails = () => {
                             <span className="flex-1 truncate text-foreground">{item.title}</span>
                             <span className="text-muted-foreground shrink-0">{formatDateTime(item.created_at)}</span>
                           </div>
-                        );
+                        
+    <>
+  );
                       })}
                     </div>
                   )}

@@ -303,7 +303,9 @@ export default function PartyHallNotifications() {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      );
+                      
+    <>
+  );
                     })}
                   </TableBody>
                 </Table>
