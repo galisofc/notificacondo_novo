@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -193,10 +192,6 @@ export default function SindicoBanners() {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Banners</title>
-      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <SindicoBreadcrumbs items={[{ label: "Banners" }]} />

@@ -563,7 +563,7 @@ const SindicoPackages = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - Encomendas</title>
+        <title>Gerenciar Encomendas | NotificaCondo</title>
         <meta name="description" content="Gerenciamento de encomendas dos condomínios" />
       </Helmet>
 

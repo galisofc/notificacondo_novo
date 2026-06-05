@@ -181,7 +181,7 @@ const ResidentDashboard = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - ResidentDashboard</title>
+        <title>Dashboard | Área do Morador</title>
         <meta name="description" content="Painel do morador" />
       </Helmet>
 

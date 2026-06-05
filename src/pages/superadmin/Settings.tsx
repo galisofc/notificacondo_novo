@@ -666,7 +666,7 @@ export default function SuperAdminSettings() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - SuperAdmin - Configurações</title>
+        <title>Configurações | Super Admin</title>
       </Helmet>
       <div className="space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{ label: "Configurações" }]} />

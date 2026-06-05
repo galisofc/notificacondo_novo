@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { Shield, Scale, BookOpen, ArrowLeft, Building2, Users, Gavel, FileText, AlertTriangle, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -226,10 +225,6 @@ const CivilCode = () => {
   ];
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - CivilCode</title>
-      </Helmet>
     <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -302,7 +302,7 @@ const SindicoInvoices = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - Faturas</title>
+        <title>Faturas | NotificaCondo</title>
         <meta name="description" content="Acompanhe as faturas dos seus condomínios" />
       </Helmet>
 

@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -85,10 +84,6 @@ const Contact = () => {
 
   if (isSuccess) {
     return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Contact</title>
-      </Helmet>
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4 relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

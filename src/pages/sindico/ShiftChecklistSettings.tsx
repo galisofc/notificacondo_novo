@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -124,10 +123,6 @@ export default function ShiftChecklistSettings() {
   }, {});
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - ShiftChecklistSettings</title>
-      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

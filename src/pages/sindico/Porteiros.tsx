@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -743,10 +742,6 @@ export default function Porteiros() {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Porteiros</title>
-      </Helmet>
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}

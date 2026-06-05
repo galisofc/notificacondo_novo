@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -349,10 +348,6 @@ export default function ShiftHandover() {
   }, {});
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Passagem de Plantão</title>
-      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <div>

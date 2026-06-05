@@ -488,7 +488,7 @@ const Condominiums = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - Condomínios</title>
+        <title>Condomínios | CondoManager</title>
       </Helmet>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
         <SindicoBreadcrumbs items={[{ label: "Condomínios" }]} />

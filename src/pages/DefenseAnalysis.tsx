@@ -368,7 +368,7 @@ const DefenseAnalysis = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - DefenseAnalysis</title>
+        <title>Análise de Defesas | NotificaCondo</title>
         <meta name="description" content="Analise as defesas apresentadas pelos moradores" />
       </Helmet>
 

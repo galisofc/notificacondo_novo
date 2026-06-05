@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -317,11 +316,7 @@ export default function PortariaOccurrences() {
         aptMap = Object.fromEntries((aptsData || []).map((a) => [a.id, a.number]));
       }
 
-      return (
-    <>
-        <Helmet>
-        <title>NotificaCondo - Portaria - Ocorrências</title>
-        </Helmet>data || []).map((o: any) => ({
+      return (data || []).map((o: any) => ({
         ...o,
         resolved_by_name: o.resolved_by_name ?? (o.resolved_by ? (profileMap[o.resolved_by] ?? null) : null),
         registered_by_name: o.registered_by_name ?? (o.registered_by ? (profileMap[o.registered_by] ?? null) : null),
@@ -504,6 +499,12 @@ export default function PortariaOccurrences() {
   const getPriorityBadge = (priority: string) => {
     const p = PRIORITIES.find((pr) => pr.value === priority);
     return <Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
+  };
+
+  const openCount = occurrences.filter((o) => o.status === "aberta").length;
+  const resolvedCount = occurrences.filter((o) => o.status === "resolvida").length;
+
+  const statCards = [
     { title: "Em Aberto", value: openCount, icon: Clock, gradient: "from-amber-500 to-orange-500" },
     { title: "Resolvidas", value: resolvedCount, icon: CheckCircle2, gradient: "from-accent to-emerald-600" },
     { title: "Total", value: occurrences.length, icon: ClipboardList, gradient: "from-primary to-blue-600" },

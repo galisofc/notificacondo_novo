@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,10 +134,6 @@ export default function OccurrencePdfTemplatePage() {
 
   if (isLoading || !form) {
     return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - OccurrencePdfTemplate</title>
-      </Helmet>
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />

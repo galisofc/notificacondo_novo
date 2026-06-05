@@ -426,7 +426,7 @@ export default function WabaLogs() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - WabaLogs</title>
+        <title>Logs WABA | Super Admin</title>
       </Helmet>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[

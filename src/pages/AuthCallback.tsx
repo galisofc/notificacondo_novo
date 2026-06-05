@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,10 +124,6 @@ const AuthCallback = () => {
   }, [navigate, params.next]);
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - AuthCallback</title>
-      </Helmet>
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-gradient-card border-border/50">
         <CardContent className="pt-8 pb-8">

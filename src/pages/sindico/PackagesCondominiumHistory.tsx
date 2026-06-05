@@ -779,7 +779,7 @@ const PackagesCondominiumHistory = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - PackagesCondominiumHistory</title>
+        <title>Histórico por Condomínio | NotificaCondo</title>
         <meta name="description" content="Histórico de encomendas por condomínio" />
       </Helmet>
 

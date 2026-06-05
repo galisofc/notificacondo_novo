@@ -396,7 +396,7 @@ export default function WhatsAppChat() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - WhatsAppChat</title>
+        <title>Chat WhatsApp | Super Admin</title>
       </Helmet>
       <div className="space-y-4 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{ label: "WhatsApp" }, { label: "Chat" }]} />

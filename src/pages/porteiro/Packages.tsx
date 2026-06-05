@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Package, PackagePlus, Search, PackageCheck, X, Building2, Loader2, CheckCircle2 } from "lucide-react";
@@ -322,10 +321,6 @@ export default function PorteiroPackages() {
   const pendingCount = packages.filter((p) => p.status === "pendente").length;
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Encomendas</title>
-      </Helmet>
     <DashboardLayout>
       <SubscriptionGate>
       <div className="space-y-6">

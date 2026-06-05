@@ -361,7 +361,7 @@ export default function SuperAdminDashboard() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - SuperAdminDashboard</title>
+        <title>Super Admin | NotificaCondo</title>
         <meta name="description" content="Painel administrativo da plataforma" />
       </Helmet>
 

@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { ArrowLeft, FileText, Users, Shield, AlertTriangle, CreditCard, Scale, XCircle, RefreshCw, Gavel, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -117,10 +116,6 @@ export default function TermsOfUse() {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Termos de Uso</title>
-      </Helmet>
     <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -220,9 +215,7 @@ export default function TermsOfUse() {
                     </div>
                   </CardContent>
                 </Card>
-              
-    <>
-  );
+              );
             })}
           </div>
 

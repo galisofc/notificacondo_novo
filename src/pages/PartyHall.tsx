@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useViewModePreference } from "@/hooks/useUserPreferences";
@@ -453,10 +452,6 @@ export default function PartyHall() {
   );
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Salão de Festas</title>
-      </Helmet>
     <DashboardLayout>
       <SubscriptionGate condominiumId={selectedCondominium !== "all" ? selectedCondominium : undefined}>
       <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6">

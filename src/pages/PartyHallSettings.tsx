@@ -1,4 +1,3 @@
-import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,10 +171,6 @@ export default function PartyHallSettings() {
   });
 
   return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - PartyHallSettings</title>
-      </Helmet>
     <DashboardLayout>
       <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6">
         <SindicoBreadcrumbs 

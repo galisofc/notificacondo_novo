@@ -499,7 +499,7 @@ const SindicoSubscriptions = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - Minha Assinatura</title>
+        <title>Assinaturas | NotificaCondo</title>
         <meta name="description" content="Gerencie as assinaturas dos seus condomínios" />
       </Helmet>
 
