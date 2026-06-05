@@ -939,91 +939,130 @@ const AdvertenciasEMultas = () => {
           <>
 
 
-            <div className="space-y-3 md:space-y-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {filteredOccurrences.map((occurrence) => (
               <div
                 key={occurrence.id}
-                className="p-3 md:p-4 rounded-xl bg-card border border-border shadow-card hover:shadow-elevated transition-all"
+                className="group relative flex flex-col p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 overflow-hidden"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {occurrence.protocol && (
-                        <span className="px-2 py-1 rounded-md text-xs font-mono bg-muted text-foreground border border-border">
-                          Protocolo {occurrence.protocol}
-                        </span>
-                      )}
+                {/* Visual Accent */}
+                <div className={`absolute top-0 left-0 w-1.5 h-full ${
+                  occurrence.type === 'multa' ? 'bg-destructive' : 
+                  occurrence.type === 'notificacao' ? 'bg-amber-500' : 'bg-blue-500'
+                }`} />
+
+                <div className="flex flex-col h-full gap-4">
+                  {/* Header: Badges and Protocol */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {getTypeBadge(occurrence.type)}
                       {getStatusBadge(occurrence.status)}
                       {getDefenseDeadlineBadge(occurrence)}
                       {occurrence.apartment_id && apartmentWarningsCount[occurrence.apartment_id] > 0 && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
                           {apartmentWarningsCount[occurrence.apartment_id]}ª Adv.
                         </span>
                       )}
                     </div>
-                    <h3 className="font-semibold text-sm md:text-base text-foreground mb-1 truncate">
+                    {occurrence.protocol && (
+                      <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded border border-border/50">
+                        #{occurrence.protocol}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Body: Title and Description */}
+                  <div className="flex-1 space-y-2">
+                    <h3 className="font-display font-bold text-base md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
                       {occurrence.title}
                     </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
-                      {occurrence.description}
+                    <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed italic">
+                      "{occurrence.description}"
                     </p>
-                    <div className="flex flex-wrap gap-2 md:gap-4 text-xs text-muted-foreground">
-                      <span className="truncate max-w-[120px]">{occurrence.condominiums?.name}</span>
+                  </div>
+
+                  {/* Info: Condo, Apt, Date */}
+                  <div className="grid grid-cols-2 gap-y-2 pt-3 border-t border-border/40">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Condomínio</span>
+                      <span className="text-xs font-medium truncate">{occurrence.condominiums?.name}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Unidade</span>
                       <BlockApartmentDisplay
                         blockName={occurrence.blocks?.name}
                         apartmentNumber={occurrence.apartments?.number}
                         variant="inline"
+                        className="text-xs font-medium"
                       />
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Morador</span>
+                      <span className="text-xs font-medium truncate">{occurrence.residents?.full_name || "N/A"}</span>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60">Data</span>
+                      <span className="text-xs font-medium flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-primary/70" />
                         {formatDate(occurrence.occurred_at)}
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2 self-end sm:self-start">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/occurrences/${occurrence.id}`)} className="text-xs">
-                      <Eye className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                      Ver
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    <div className="flex-1" />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                      onClick={() => navigate(`/occurrences/${occurrence.id}`)}
+                      title="Visualizar"
+                    >
+                      <Eye className="w-4 h-4" />
                     </Button>
+                    
                     {occurrence.status === "registrada" && (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5"
                         onClick={() => handleEdit(occurrence)}
+                        title="Editar"
                       >
-                        <Pencil className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                        Editar
+                        <Pencil className="w-4 h-4" />
                       </Button>
                     )}
+
                     {occurrence.status === "registrada" && occurrence.resident_id && (
                       <Button 
                         variant="hero" 
                         size="sm" 
-                        className="text-xs"
+                        className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider shadow-sm hover:shadow-glow transition-all"
                         onClick={() => setConfirmNotifyDialog({ open: true, occurrence })}
                         disabled={sendingNotification === occurrence.id}
                       >
                         {sendingNotification === occurrence.id ? (
-                          <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                          <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
                         ) : (
-                          <Send className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                          <Send className="w-3 h-3 mr-1.5" />
                         )}
-                        {sendingNotification === occurrence.id ? "Enviando..." : "Notificar"}
+                        Notificar
                       </Button>
                     )}
+
                     <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/5"
                       onClick={() => setConfirmDeleteDialog({ open: true, occurrence: occurrence })}
                       disabled={deleting === occurrence.id}
+                      title="Excluir"
                     >
                       {deleting === occurrence.id ? (
-                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                        <Trash2 className="w-4 h-4" />
                       )}
                     </Button>
                   </div>
