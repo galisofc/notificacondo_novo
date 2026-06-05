@@ -720,5 +720,6 @@ export default function PartyHall() {
       </div>
       </SubscriptionGate>
     </DashboardLayout>
+    </>
   );
 }
