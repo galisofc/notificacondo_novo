@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight as ChevronRightIcon, Megaphone, Package, PackagePlus, PackageCheck, Clock, Search, QrCode, Calendar, TrendingUp, FileText, BookOpen, Send, Trash2 } from "lucide-react";
@@ -226,6 +227,9 @@ export default function PorteiroDashboard() {
 
   return (
     <DashboardLayout>
+      <Helmet>
+        <title>NotificaCondo - Portaria Dashboard</title>
+      </Helmet>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
