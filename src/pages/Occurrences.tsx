@@ -154,9 +154,20 @@ const AdvertenciasEMultas = () => {
     fine_percentage: "50",
   });
 
+  // Helper to sort blocks/apartments naturally (Bloco 1, Bloco 2, Bloco 10...)
+  const naturalSort = (a: string, b: string) => {
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  };
+
   // Filtered data based on selection
-  const filteredBlocks = blocks.filter((b) => b.condominium_id === formData.condominium_id);
-  const filteredApartments = apartments.filter((a) => a.block_id === formData.block_id);
+  const filteredBlocks = blocks
+    .filter((b) => b.condominium_id === formData.condominium_id)
+    .sort((a, b) => naturalSort(a.name, b.name));
+    
+  const filteredApartments = apartments
+    .filter((a) => a.block_id === formData.block_id)
+    .sort((a, b) => naturalSort(a.number, b.number));
+    
   const filteredResidents = residents.filter((r) => r.apartment_id === formData.apartment_id);
 
   // Build apartment warnings count map from all occurrences
