@@ -161,11 +161,6 @@ interface TimelineItem {
 }
 
 const OccurrenceDetails = () => {
-  return (
-    <DashboardLayout>
-      <Helmet>
-        <title>NotificaCondo - Detalhes da Ocorrência</title>
-      </Helmet>
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -255,6 +250,9 @@ const OccurrenceDetails = () => {
       .subscribe();
 
     return (
+      <Helmet>
+        <title>NotificaCondo - Detalhes da Ocorrência</title>
+      </Helmet>
     <>
       <Helmet>
   const fetchData = async () => {
