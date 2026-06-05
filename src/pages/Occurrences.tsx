@@ -197,12 +197,14 @@ const AdvertenciasEMultas = () => {
     const matchesStatus = statusFilter === "all" || occ.status === statusFilter;
     const matchesType = typeFilter === "all" || occ.type === typeFilter;
     const matchesCondominium = condominiumFilter === "all" || occ.condominium_id === condominiumFilter;
+    const matchesBlock = blockFilter === "all" || occ.block_id === blockFilter;
+    
     const matchesSearch = !searchTerm || 
       occ.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       occ.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       occ.residents?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       occ.apartments?.number?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesType && matchesCondominium && matchesSearch;
+    return matchesStatus && matchesType && matchesCondominium && matchesBlock && matchesSearch;
   });
 
   const fetchData = async () => {
