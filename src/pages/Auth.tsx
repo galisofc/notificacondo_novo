@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,6 +80,12 @@ const BRAZILIAN_STATES = [
 ];
 
 const Auth = () => {
+  return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Login</title>
+      </Helmet>
+
   const { trialDays } = useTrialDays();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -1554,6 +1561,7 @@ const Auth = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 };
 

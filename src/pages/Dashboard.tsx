@@ -370,7 +370,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Dashboard | NotificaCondo</title>
+        <title>NotificaCondo - Dashboard</title>
         <meta name="description" content="Painel de gestão condominial" />
       </Helmet>
 
