@@ -808,8 +808,38 @@ const AdvertenciasEMultas = () => {
 
           <TabsContent value="occurrences">
 
-        {/* Filters and Add Button */}
-        <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
+        {/* Filtros e botão de ação */}
+        <div className="flex flex-col gap-3 mb-4 md:mb-6">
+          <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar por título, descrição, morador ou apto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 bg-card"
+              />
+            </div>
+            <Button
+              variant="hero"
+              onClick={() => {
+                if (condominiums.length === 0) {
+                  toast({
+                    title: "Atenção",
+                    description: "Cadastre um condomínio primeiro.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setEditingId(null);
+                setIsDialogOpen(true);
+              }}
+              className="w-full lg:w-auto gap-2 shadow-glow"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Ocorrência
+            </Button>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
             <Select value={condominiumFilter} onValueChange={setCondominiumFilter}>
               <SelectTrigger className="bg-card border-border text-sm">
@@ -850,26 +880,8 @@ const AdvertenciasEMultas = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            variant="hero"
-            onClick={() => {
-              if (condominiums.length === 0) {
-                toast({
-                  title: "Atenção",
-                  description: "Cadastre um condomínio primeiro.",
-                  variant: "destructive",
-                });
-                return;
-              }
-              setEditingId(null);
-              setIsDialogOpen(true);
-            }}
-            className="w-full sm:w-auto sm:self-end"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Registrar Ocorrência
-          </Button>
         </div>
+
 
         {/* Results Counter */}
         {!loading && (
