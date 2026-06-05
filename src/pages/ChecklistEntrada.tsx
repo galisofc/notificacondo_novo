@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,6 +231,10 @@ export default function ChecklistEntrada() {
 
   if (loading) {
     return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - ChecklistEntrada</title>
+      </Helmet>
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>

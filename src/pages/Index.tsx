@@ -13,7 +13,7 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>NotificaCondo - Sistema de Multas e Notificações para Condomínios</title>
+        <title>NotificaCondo - Início</title>
         <meta 
           name="description" 
           content="Plataforma SaaS para gestão de notificações, advertências e multas condominiais com prova jurídica automática, conformidade LGPD e integração WhatsApp." 

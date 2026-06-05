@@ -7,7 +7,7 @@ export default function CronJobs() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Cron Jobs | Super Admin</title>
+        <title>NotificaCondo - CronJobs</title>
       </Helmet>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{ label: "Cron Jobs" }]} />

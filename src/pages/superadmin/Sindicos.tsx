@@ -7,7 +7,7 @@ export default function Sindicos() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Gestão de Síndicos | Super Admin</title>
+        <title>NotificaCondo - Sindicos</title>
       </Helmet>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{ label: "Síndicos" }]} />

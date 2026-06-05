@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -140,7 +141,9 @@ export default function Zeladores() {
         profile: profileMap.get(z.user_id) || null,
         condominium: z.condominium as { name: string } | null,
       }))
-    );
+    
+    <>
+  );
     setLoading(false);
   }, [user, condominiums]);
 
@@ -333,6 +336,10 @@ export default function Zeladores() {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Zeladores</title>
+      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

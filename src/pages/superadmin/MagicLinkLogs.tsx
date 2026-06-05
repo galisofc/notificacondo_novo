@@ -7,7 +7,7 @@ export default function MagicLinkLogs() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Logs de Magic Link | Super Admin</title>
+        <title>NotificaCondo - MagicLinkLogs</title>
       </Helmet>
       <div className="space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[

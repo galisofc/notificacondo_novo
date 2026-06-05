@@ -180,7 +180,7 @@ export default function Transfers() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Histórico de Transferências | NotificaCondo</title>
+        <title>NotificaCondo - Transfers</title>
       </Helmet>
 
       <div className="space-y-6">

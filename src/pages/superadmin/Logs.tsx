@@ -10,7 +10,7 @@ export default function Logs() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Logs de Auditoria | Super Admin</title>
+        <title>NotificaCondo - Logs</title>
       </Helmet>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{ label: "Logs de Auditoria" }]} />

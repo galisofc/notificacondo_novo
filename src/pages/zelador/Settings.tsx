@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -154,6 +155,10 @@ export default function ZeladorSettings() {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Zelador - Configurações</title>
+      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">

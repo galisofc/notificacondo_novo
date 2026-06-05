@@ -314,7 +314,7 @@ const PackagesDashboard = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Estatísticas de Encomendas | NotificaCondo</title>
+        <title>NotificaCondo - PackagesDashboard</title>
         <meta name="description" content="Dashboard de estatísticas de encomendas" />
       </Helmet>
 

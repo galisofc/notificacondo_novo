@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Shield, ArrowLeft, Lock, Eye, Database, UserCheck, Mail, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -139,6 +140,10 @@ Esta política pode ser atualizada periodicamente. A versão mais recente estar�
 
 const PrivacyPolicy = () => {
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Política de Privacidade</title>
+      </Helmet>
     <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Package, PackageCheck, Clock, Eye, Calendar, MapPin, Info, ImageOff } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +49,10 @@ export default function ResidentPackages() {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - Encomendas</title>
+      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}

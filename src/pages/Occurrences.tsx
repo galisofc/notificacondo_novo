@@ -780,7 +780,7 @@ const AdvertenciasEMultas = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Advertências e Multas | CondoManager</title>
+        <title>NotificaCondo - Ocorrências</title>
       </Helmet>
       <SubscriptionGate condominiumId={condominiumFilter !== "all" ? condominiumFilter : undefined}>
       <div className="space-y-4 md:space-y-6 animate-fade-up">

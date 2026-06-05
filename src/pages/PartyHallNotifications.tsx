@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,6 +152,10 @@ export default function PartyHallNotifications() {
   };
 
   return (
+    <>
+      <Helmet>
+        <title>NotificaCondo - PartyHallNotifications</title>
+      </Helmet>
     <DashboardLayout>
       <div className="space-y-6">
         <TrialBanner />
@@ -298,7 +303,9 @@ export default function PartyHallNotifications() {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      );
+                      
+    <>
+  );
                     })}
                   </TableBody>
                 </Table>

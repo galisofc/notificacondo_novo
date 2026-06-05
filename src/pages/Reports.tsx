@@ -443,7 +443,7 @@ const Reports = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Relatórios | CondoManager</title>
+        <title>NotificaCondo - Relatórios</title>
       </Helmet>
       <SubscriptionGate condominiumId={selectedCondominium !== "all" ? selectedCondominium : undefined}>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
