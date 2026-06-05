@@ -224,7 +224,9 @@ const AdvertenciasEMultas = () => {
             .from("apartments")
             .select("id, block_id, number")
             .in("block_id", blockIds);
-          setApartments(aptsData || []);
+          setApartments((aptsData || []).sort((a, b) => 
+            a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' })
+          ));
 
           // Fetch residents
           if (aptsData && aptsData.length > 0) {
