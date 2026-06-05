@@ -103,7 +103,9 @@ export default function SindicoPortariaOccurrences() {
 
   const [condominiums, setCondominiums] = useState<{ id: string; name: string }[]>([]);
   const [selectedCondominium, setSelectedCondominium] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>(() => {
+    return localStorage.getItem("portaria_status_filter") || "aberta";
+  });
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -200,6 +202,10 @@ export default function SindicoPortariaOccurrences() {
     fetchCondominiums();
   }, [user]);
 
+  useEffect(() => {
+    localStorage.setItem("portaria_status_filter", filterStatus);
+  }, [filterStatus]);
+
   // Fetch blocks for selected condominium
   const { data: blocks = [] } = useQuery({
     queryKey: ["blocks", selectedCondominium],
@@ -211,7 +217,9 @@ export default function SindicoPortariaOccurrences() {
         .eq("condominium_id", selectedCondominium)
         .order("name");
       if (error) throw error;
-      return data as Block[];
+      return (data as Block[]).sort((a, b) => 
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+      );
     },
     enabled: !!selectedCondominium,
     staleTime: 1000 * 60 * 5,
@@ -412,7 +420,9 @@ export default function SindicoPortariaOccurrences() {
         .eq("block_id", filterBlockId)
         .order("number");
       if (error) throw error;
-      return data as Apartment[];
+      return (data as Apartment[]).sort((a, b) => 
+        a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' })
+      );
     },
     enabled: !!filterBlockId && filterBlockId !== "all",
     staleTime: 1000 * 60 * 5,
