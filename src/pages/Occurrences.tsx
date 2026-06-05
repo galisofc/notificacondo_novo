@@ -213,7 +213,9 @@ const AdvertenciasEMultas = () => {
           .from("blocks")
           .select("id, condominium_id, name")
           .in("condominium_id", condoIds);
-        setBlocks(blocksData || []);
+        setBlocks((blocksData || []).sort((a, b) => 
+          a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+        ));
 
         // Fetch apartments
         if (blocksData && blocksData.length > 0) {
