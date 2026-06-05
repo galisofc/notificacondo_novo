@@ -72,6 +72,7 @@ export default function RegisterPackage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredCode, setRegisteredCode] = useState("");
   const [notificationResult, setNotificationResult] = useState<NotificationResult | null>(null);
+  const [targetResidents, setTargetResidents] = useState<Array<{ full_name: string; phone?: string }>>([]);
   const [destinationPreview, setDestinationPreview] = useState<DestinationPreview | null>(null);
   const [packageTypes, setPackageTypes] = useState<PackageType[]>([]);
   const [selectedPackageType, setSelectedPackageType] = useState("");
@@ -139,6 +140,11 @@ export default function RegisterPackage() {
         const hasResidents = residents.length > 0;
 
         if (condoRes.data && blockRes.data && aptRes.data) {
+          setTargetResidents(residents.map(r => ({
+            full_name: r.full_name,
+            phone: r.phone || undefined
+          })));
+
           setDestinationPreview({
             condominiumName: condoRes.data.name,
             blockName: blockRes.data.name,
@@ -536,35 +542,34 @@ export default function RegisterPackage() {
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${destinationPreview.hasResidents ? 'bg-primary/20' : 'bg-destructive/20'}`}>
                       <MapPin className={`w-5 h-5 ${destinationPreview.hasResidents ? 'text-primary' : 'text-destructive'}`} />
                     </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Destino selecionado</p>
-                      <p className="font-semibold text-lg uppercase">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase font-semibold">Destinatário Selecionado</p>
+                      <p className="font-bold text-xl uppercase text-primary">
                         {destinationPreview.blockName} - APTO {destinationPreview.apartmentNumber}
                       </p>
                       {destinationPreview.residents.length > 0 ? (
-                        <div className="space-y-2 mt-1">
+                        <div className="space-y-1.5 mt-2">
                           {destinationPreview.residents.map((resident, idx) => (
-                            <div key={idx} className="flex items-center gap-3">
-                              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                <User className="w-3 h-3" />
+                            <div key={idx} className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-white/60 dark:bg-black/20 p-2 rounded-md border border-primary/10 shadow-sm">
+                              <p className="text-sm font-bold flex items-center gap-1.5 text-foreground uppercase">
+                                <User className="w-3.5 h-3.5 text-primary" />
                                 {resident.full_name}
                               </p>
                               {resident.phone && (
-                                <a 
-                                  href={`tel:${resident.phone}`}
-                                  className="text-sm text-primary flex items-center gap-1 hover:underline"
-                                >
-                                  <Phone className="w-3 h-3" />
-                                  {resident.phone}
-                                </a>
+                                <div className="flex items-center gap-1.5 text-primary bg-primary/5 px-2 py-0.5 rounded-full">
+                                  <Phone className="w-3.5 h-3.5" />
+                                  <span className="text-xs font-bold">
+                                    {resident.phone}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                          <AlertCircle className="w-3 h-3" />
-                          Nenhum morador cadastrado
+                        <p className="text-sm text-destructive font-semibold flex items-center gap-1.5 mt-2 bg-destructive/5 p-2 rounded-md border border-destructive/10">
+                          <AlertCircle className="w-4 h-4" />
+                          NENHUM MORADOR CADASTRADO
                         </p>
                       )}
                     </div>

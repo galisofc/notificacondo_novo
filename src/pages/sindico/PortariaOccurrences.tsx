@@ -123,8 +123,8 @@ export default function SindicoPortariaOccurrences() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-  const [occurredDate, setOccurredDate] = useState<string>("");
-  const [occurredTime, setOccurredTime] = useState<string>("");
+  const [occurredDate, setOccurredDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [occurredTime, setOccurredTime] = useState<string>(format(new Date(), "HH:mm"));
   const [identifySelf, setIdentifySelf] = useState<string>("nao");
 
   // Digital Signature state
@@ -271,9 +271,12 @@ export default function SindicoPortariaOccurrences() {
   // Default category is now empty to force selection
   useEffect(() => {
     if (categories.length > 0 && !newCategory) {
-      // setNewCategory(categories[0].name); // Removed to keep it empty
+      setNewCategory(categories[0].name);
     }
-  }, [categories, newCategory]);
+    if (!newPriority) {
+      setNewPriority(PRIORITIES[1].value); // Média
+    }
+  }, [categories, newCategory, newPriority]);
 
   // Fetch ALL categories (including inactive) for management dialog
   const { data: allCategories = [], refetch: refetchAllCategories } = useQuery({
@@ -480,15 +483,15 @@ export default function SindicoPortariaOccurrences() {
       setCreateDialogOpen(false);
       setNewTitle("");
       setNewDescription("");
-      setNewCategory("");
-      setNewPriority("");
+      setNewCategory(categories.length > 0 ? categories[0].name : "");
+      setNewPriority(PRIORITIES[1].value);
       setReporterBlockId("");
       setReporterApartmentId("");
       setTargetBlockId("");
       setTargetApartmentId("");
       setPhotos([]);
-      setOccurredDate("");
-      setOccurredTime("");
+      setOccurredDate(format(new Date(), "yyyy-MM-dd"));
+      setOccurredTime(format(new Date(), "HH:mm"));
     },
     onError: () => toast({ title: "Erro ao registrar ocorrência", variant: "destructive" }),
   });
