@@ -156,7 +156,7 @@ const Autenticidade = () => {
   return (
     <div className="min-h-screen bg-slate-50/50">
       <Helmet>
-        <title>Autenticidade | NotificaCondo</title>
+        <title>NotificaCondo - Autenticidade</title>
         <meta name="description" content="Verifique a autenticidade e assinatura digital de documentos gerados pelo sistema NotificaCondo." />
       </Helmet>
 
