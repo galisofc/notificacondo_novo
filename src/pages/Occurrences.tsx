@@ -119,7 +119,9 @@ const AdvertenciasEMultas = () => {
   const [residents, setResidents] = useState<Resident[]>([]);
   const [occurrences, setOccurrences] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>("aberta");
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    return localStorage.getItem("occurrence_status_filter") || "aberta";
+  });
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -246,6 +248,10 @@ const AdvertenciasEMultas = () => {
   useEffect(() => {
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("occurrence_status_filter", statusFilter);
+  }, [statusFilter]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
