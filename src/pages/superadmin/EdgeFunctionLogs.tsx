@@ -166,7 +166,7 @@ export default function EdgeFunctionLogs() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Logs de Funções de Backend | Super Admin</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
       </Helmet>
       <div className="space-y-4 md:space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[

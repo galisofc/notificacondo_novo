@@ -7,7 +7,7 @@ export default function Notifications() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Monitoramento de Notificações | CondoManager</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
         <meta
           name="description"
           content="Monitore o status das notificações WhatsApp enviadas aos moradores"

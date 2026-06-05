@@ -910,7 +910,7 @@ const PorteiroPackagesHistory = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Histórico de Encomendas | NotificaCondo</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
         <meta name="description" content="Histórico de encomendas do condomínio" />
       </Helmet>
 

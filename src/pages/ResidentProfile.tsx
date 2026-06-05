@@ -145,7 +145,7 @@ const ResidentProfile = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Meu Perfil | Área do Morador</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
         <meta name="description" content="Gerencie seus dados pessoais" />
       </Helmet>
 

@@ -583,7 +583,7 @@ export default function PackageTypes() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Tipos de Encomenda | Super Admin</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
       </Helmet>
 
       <div className="space-y-6 animate-fade-up">

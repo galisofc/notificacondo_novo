@@ -5,7 +5,7 @@ import SuperAdminBreadcrumbs from "@/components/superadmin/SuperAdminBreadcrumbs
 export default function Subscriptions() {
   return <DashboardLayout>
       <Helmet>
-        <title>Monitoramento de Assinaturas | Super Admin</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
       </Helmet>
       <div className="space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{

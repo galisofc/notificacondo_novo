@@ -18,7 +18,7 @@ export default function Invoices() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>Central de Faturas | Super Admin</title>
+        <title>NotificaCondo - [Nome Substituivel]</title>
       </Helmet>
       <div className="space-y-6 animate-fade-up">
         <SuperAdminBreadcrumbs items={[{ label: "Faturas" }]} />
