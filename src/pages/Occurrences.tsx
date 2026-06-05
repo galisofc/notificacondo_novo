@@ -125,6 +125,7 @@ const AdvertenciasEMultas = () => {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [blockFilter, setBlockFilter] = useState<string>("all");
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -170,6 +171,16 @@ const AdvertenciasEMultas = () => {
     
   const filteredResidents = residents.filter((r) => r.apartment_id === formData.apartment_id);
 
+  // Blocks for the main filter (all blocks from selected condominium)
+  const blocksForFilter = blocks
+    .filter((b) => condominiumFilter === "all" || b.condominium_id === condominiumFilter)
+    .sort((a, b) => naturalSort(a.name, b.name));
+
+  // Apartments for the main filter (if a block is selected)
+  const apartmentsForFilter = apartments
+    .filter((a) => blockFilter === "all" || a.block_id === blockFilter)
+    .sort((a, b) => naturalSort(a.number, b.number));
+
   // Build apartment warnings count map from all occurrences
   const apartmentWarningsCount: Record<string, number> = {};
   occurrences.forEach((occ) => {
@@ -186,12 +197,14 @@ const AdvertenciasEMultas = () => {
     const matchesStatus = statusFilter === "all" || occ.status === statusFilter;
     const matchesType = typeFilter === "all" || occ.type === typeFilter;
     const matchesCondominium = condominiumFilter === "all" || occ.condominium_id === condominiumFilter;
+    const matchesBlock = blockFilter === "all" || occ.block_id === blockFilter;
+    
     const matchesSearch = !searchTerm || 
       occ.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       occ.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       occ.residents?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       occ.apartments?.number?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesType && matchesCondominium && matchesSearch;
+    return matchesStatus && matchesType && matchesCondominium && matchesBlock && matchesSearch;
   });
 
   const fetchData = async () => {
@@ -861,7 +874,7 @@ const AdvertenciasEMultas = () => {
               Nova Ocorrência
             </Button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
             <Select value={condominiumFilter} onValueChange={setCondominiumFilter}>
               <SelectTrigger className="bg-card border-border text-sm">
                 <SelectValue placeholder="Condomínio" />
@@ -871,6 +884,19 @@ const AdvertenciasEMultas = () => {
                 {condominiums.map((condo) => (
                   <SelectItem key={condo.id} value={condo.id}>
                     {condo.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={blockFilter} onValueChange={setBlockFilter}>
+              <SelectTrigger className="bg-card border-border text-sm">
+                <SelectValue placeholder="Todos blocos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos blocos</SelectItem>
+                {blocksForFilter.map((block) => (
+                  <SelectItem key={block.id} value={block.id}>
+                    {block.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -911,7 +937,7 @@ const AdvertenciasEMultas = () => {
               Exibindo <span className="font-medium text-foreground">{filteredOccurrences.length}</span> de{" "}
               <span className="font-medium text-foreground">{occurrences.length}</span> ocorrência{occurrences.length !== 1 ? "s" : ""}
             </p>
-            {(statusFilter !== "all" || typeFilter !== "all" || condominiumFilter !== "all") && (
+            {(statusFilter !== "all" || typeFilter !== "all" || condominiumFilter !== "all" || blockFilter !== "all") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -919,6 +945,7 @@ const AdvertenciasEMultas = () => {
                   setStatusFilter("all");
                   setTypeFilter("all");
                   setCondominiumFilter("all");
+                  setBlockFilter("all");
                 }}
                 className="text-xs"
               >
