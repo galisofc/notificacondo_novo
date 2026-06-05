@@ -161,6 +161,11 @@ interface TimelineItem {
 }
 
 const OccurrenceDetails = () => {
+  return (
+    <DashboardLayout>
+      <Helmet>
+        <title>NotificaCondo - Detalhes da Ocorrência</title>
+      </Helmet>
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -240,8 +245,6 @@ const OccurrenceDetails = () => {
                 ? { ...n, zpro_status: updated.zpro_status, delivered_at: updated.delivered_at, read_at: updated.read_at, accepted_at: updated.accepted_at }
                 : n
             
-    <>
-  );
             if (occurrence) {
               buildTimeline(occurrence, evidences, defenses, decisions, next, accessLogs);
             }
@@ -254,12 +257,6 @@ const OccurrenceDetails = () => {
     return (
     <>
       <Helmet>
-        <title>NotificaCondo - OccurrenceDetails</title>
-      </Helmet>) => {
-      supabase.removeChannel(channel);
-    };
-  }, [id, occurrence, evidences, defenses, decisions, accessLogs]);
-
   const fetchData = async () => {
     if (!id) return;
 
@@ -366,9 +363,6 @@ const OccurrenceDetails = () => {
       toast({ title: "Erro ao carregar ocorrência", variant: "destructive" });
     } finally {
       setLoading(false);
-    }
-  };
-
   const buildTimeline = (
     occ: Occurrence,
     evs: Evidence[],
