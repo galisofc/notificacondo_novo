@@ -81,9 +81,8 @@ const BRAZILIAN_STATES = [
 
 const Auth = () => {
   const { trialDays } = useTrialDays();
-
-  const { trialDays } = useTrialDays();
   const [isLogin, setIsLogin] = useState(true);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSearchingCnpj, setIsSearchingCnpj] = useState(false);
   const [step, setStep] = useState(1);
@@ -335,15 +334,6 @@ const Auth = () => {
     setErrors({});
     setIsLoading(true);
 
-    return (
-      <>
-        <Helmet>
-          <title>NotificaCondo - Login</title>
-        </Helmet>
-
-    e.preventDefault();
-    setErrors({});
-    setIsLoading(true);
 
     try {
       if (isLogin) {
@@ -520,7 +510,12 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <>
+      <Helmet>
+        <title>NotificaCondo - Login</title>
+      </Helmet>
+      <div className="min-h-screen bg-background flex">
+
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-card relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
