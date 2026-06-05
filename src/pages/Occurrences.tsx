@@ -937,64 +937,7 @@ const AdvertenciasEMultas = () => {
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Pesquisar ocorrências..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 bg-card"
-                    />
-                  </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-[150px] bg-card">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os Status</SelectItem>
-                      <SelectItem value="registrada">Registrada</SelectItem>
-                      <SelectItem value="notificado">Notificado</SelectItem>
-                      <SelectItem value="arquivada">Arquivada</SelectItem>
-                      <SelectItem value="advertido">Advertido</SelectItem>
-                      <SelectItem value="em_defesa">Em Defesa</SelectItem>
-                      <SelectItem value="multado">Multado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleOpenDialog} className="w-full sm:w-auto gap-2 shadow-glow">
-                  <Plus className="w-4 h-4" />
-                  Nova Ocorrência
-                </Button>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] bg-card">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Tipos</SelectItem>
-                    <SelectItem value="advertencia">Advertência</SelectItem>
-                    <SelectItem value="notificacao">Notificação</SelectItem>
-                    <SelectItem value="multa">Multa</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={condominiumFilter} onValueChange={setCondominiumFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px] bg-card">
-                    <SelectValue placeholder="Condomínio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Condomínios</SelectItem>
-                    {condominiums.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+
 
             <div className="space-y-3 md:space-y-4">
             {filteredOccurrences.map((occurrence) => (
