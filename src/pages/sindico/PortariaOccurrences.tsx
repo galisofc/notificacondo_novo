@@ -1059,7 +1059,7 @@ export default function SindicoPortariaOccurrences() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Portaria - Ocorrências</title>
       </Helmet>
       <SubscriptionGate condominiumId={selectedCondominium || undefined}>
       <div className="space-y-8 animate-fade-up">

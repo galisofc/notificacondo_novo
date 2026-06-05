@@ -7,7 +7,7 @@ export default function Notifications() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Notificações WhatsApp</title>
         <meta
           name="description"
           content="Monitore o status das notificações WhatsApp enviadas aos moradores"

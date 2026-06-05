@@ -228,7 +228,7 @@ export default function PorteiroDashboard() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Portaria - Dashboard</title>
       </Helmet>
       <div className="space-y-6">
         {/* Header */}

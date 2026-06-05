@@ -448,7 +448,7 @@ const ResidentOccurrenceDetails = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - ResidentOccurrenceDetails</title>
         <meta name="description" content="Detalhes da ocorrência" />
       </Helmet>
 

@@ -180,7 +180,7 @@ export default function Transfers() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Transfers</title>
       </Helmet>
 
       <div className="space-y-6">

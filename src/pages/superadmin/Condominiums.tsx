@@ -7,7 +7,7 @@ export default function Condominiums() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Condomínios</title>
         <meta name="description" content="Gerenciamento de condomínios cadastrados na plataforma" />
       </Helmet>
       <div className="space-y-6 animate-fade-up">

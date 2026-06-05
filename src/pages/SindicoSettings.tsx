@@ -553,7 +553,7 @@ const SindicoSettings = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - SindicoSettings</title>
       </Helmet>
       <div className="space-y-6 animate-fade-up max-w-3xl">
         <SindicoBreadcrumbs items={[{ label: "Configurações" }]} />

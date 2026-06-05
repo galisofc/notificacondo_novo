@@ -995,7 +995,7 @@ export default function SubscriptionDetails() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - SubscriptionDetails</title>
       </Helmet>
 
       <div className="space-y-4 sm:space-y-6 animate-fade-up">

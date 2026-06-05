@@ -512,7 +512,7 @@ const Auth = () => {
   return (
     <>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Login</title>
       </Helmet>
       <div className="min-h-screen bg-background flex">
 

@@ -294,7 +294,7 @@ export default function WhatsAppConfig() {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - WhatsAppConfig</title>
       </Helmet>
 
       <div className="space-y-4 sm:space-y-6 animate-fade-up">

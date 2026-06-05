@@ -227,7 +227,7 @@ const Plans = () => {
   return (
     <>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - Planos</title>
         <meta 
           name="description" 
           content={`Compare os planos do NotificaCondo e escolha o melhor para seu condomínio. Trial grátis de ${trialDays} dias, sem cartão de crédito.`}

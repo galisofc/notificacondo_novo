@@ -264,7 +264,7 @@ const ResidentOccurrences = () => {
   return (
     <DashboardLayout>
       <Helmet>
-        <title>NotificaCondo - [Nome Substituivel]</title>
+        <title>NotificaCondo - ResidentOccurrences</title>
         <meta name="description" content="Lista de ocorrências do morador" />
       </Helmet>
 
