@@ -888,6 +888,19 @@ const AdvertenciasEMultas = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={blockFilter} onValueChange={setBlockFilter}>
+              <SelectTrigger className="bg-card border-border text-sm">
+                <SelectValue placeholder="Todos blocos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos blocos</SelectItem>
+                {blocksForFilter.map((block) => (
+                  <SelectItem key={block.id} value={block.id}>
+                    {block.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="bg-card border-border text-sm">
                 <SelectValue placeholder="Status" />
