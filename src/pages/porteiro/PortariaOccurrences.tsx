@@ -187,7 +187,9 @@ export default function PortariaOccurrences() {
         .eq("condominium_id", selectedCondominium)
         .order("name");
       if (error) throw error;
-      return data as Block[];
+      return (data as Block[]).sort((a, b) => 
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+      );
     },
     enabled: !!selectedCondominium,
     staleTime: 1000 * 60 * 5,
