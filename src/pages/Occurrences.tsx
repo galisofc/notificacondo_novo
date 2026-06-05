@@ -808,8 +808,38 @@ const AdvertenciasEMultas = () => {
 
           <TabsContent value="occurrences">
 
-        {/* Filters and Add Button */}
-        <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
+        {/* Filtros e botão de ação */}
+        <div className="flex flex-col gap-3 mb-4 md:mb-6">
+          <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Pesquisar por título, descrição, morador ou apto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 bg-card"
+              />
+            </div>
+            <Button
+              variant="hero"
+              onClick={() => {
+                if (condominiums.length === 0) {
+                  toast({
+                    title: "Atenção",
+                    description: "Cadastre um condomínio primeiro.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setEditingId(null);
+                setIsDialogOpen(true);
+              }}
+              className="w-full lg:w-auto gap-2 shadow-glow"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Ocorrência
+            </Button>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
             <Select value={condominiumFilter} onValueChange={setCondominiumFilter}>
               <SelectTrigger className="bg-card border-border text-sm">
@@ -850,26 +880,8 @@ const AdvertenciasEMultas = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            variant="hero"
-            onClick={() => {
-              if (condominiums.length === 0) {
-                toast({
-                  title: "Atenção",
-                  description: "Cadastre um condomínio primeiro.",
-                  variant: "destructive",
-                });
-                return;
-              }
-              setEditingId(null);
-              setIsDialogOpen(true);
-            }}
-            className="w-full sm:w-auto sm:self-end"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Registrar Ocorrência
-          </Button>
         </div>
+
 
         {/* Results Counter */}
         {!loading && (
@@ -925,64 +937,7 @@ const AdvertenciasEMultas = () => {
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Pesquisar ocorrências..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 bg-card"
-                    />
-                  </div>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-[150px] bg-card">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os Status</SelectItem>
-                      <SelectItem value="registrada">Registrada</SelectItem>
-                      <SelectItem value="notificado">Notificado</SelectItem>
-                      <SelectItem value="arquivada">Arquivada</SelectItem>
-                      <SelectItem value="advertido">Advertido</SelectItem>
-                      <SelectItem value="em_defesa">Em Defesa</SelectItem>
-                      <SelectItem value="multado">Multado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleOpenDialog} className="w-full sm:w-auto gap-2 shadow-glow">
-                  <Plus className="w-4 h-4" />
-                  Nova Ocorrência
-                </Button>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px] bg-card">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Tipos</SelectItem>
-                    <SelectItem value="advertencia">Advertência</SelectItem>
-                    <SelectItem value="notificacao">Notificação</SelectItem>
-                    <SelectItem value="multa">Multa</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={condominiumFilter} onValueChange={setCondominiumFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px] bg-card">
-                    <SelectValue placeholder="Condomínio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Condomínios</SelectItem>
-                    {condominiums.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+
 
             <div className="space-y-3 md:space-y-4">
             {filteredOccurrences.map((occurrence) => (
