@@ -503,12 +503,7 @@ export default function PortariaOccurrences() {
 
   const getPriorityBadge = (priority: string) => {
     const p = PRIORITIES.find((pr) => pr.value === priority);
-    return (
-    <>
-        <Helmet>
-        <title>NotificaCondo - Portaria - Ocorrências</title>
-        </Helmet>
-      < Badge className={p?.color || ""}>{p?.label || priority}</Badge>;
+    return 
   };
 
   const openCount = occurrences.filter((o) => o.status === "aberta").length;
