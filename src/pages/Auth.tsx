@@ -80,11 +80,7 @@ const BRAZILIAN_STATES = [
 ];
 
 const Auth = () => {
-  return (
-    <>
-      <Helmet>
-        <title>NotificaCondo - Login</title>
-      </Helmet>
+  const { trialDays } = useTrialDays();
 
   const { trialDays } = useTrialDays();
   const [isLogin, setIsLogin] = useState(true);
@@ -335,6 +331,16 @@ const Auth = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    setIsLoading(true);
+
+    return (
+      <>
+        <Helmet>
+          <title>NotificaCondo - Login</title>
+        </Helmet>
+
     e.preventDefault();
     setErrors({});
     setIsLoading(true);
@@ -1563,6 +1569,9 @@ const Auth = () => {
     </div>
     </>
   );
+};
+
+export default Auth;
 };
 
 export default Auth;
