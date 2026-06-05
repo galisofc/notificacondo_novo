@@ -72,6 +72,7 @@ export default function RegisterPackage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredCode, setRegisteredCode] = useState("");
   const [notificationResult, setNotificationResult] = useState<NotificationResult | null>(null);
+  const [targetResidents, setTargetResidents] = useState<Array<{ full_name: string; phone?: string }>>([]);
   const [destinationPreview, setDestinationPreview] = useState<DestinationPreview | null>(null);
   const [packageTypes, setPackageTypes] = useState<PackageType[]>([]);
   const [selectedPackageType, setSelectedPackageType] = useState("");
@@ -139,6 +140,11 @@ export default function RegisterPackage() {
         const hasResidents = residents.length > 0;
 
         if (condoRes.data && blockRes.data && aptRes.data) {
+          setTargetResidents(residents.map(r => ({
+            full_name: r.full_name,
+            phone: r.phone || undefined
+          })));
+
           setDestinationPreview({
             condominiumName: condoRes.data.name,
             blockName: blockRes.data.name,
