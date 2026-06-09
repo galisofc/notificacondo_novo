@@ -702,7 +702,7 @@ export default function SindicoPortariaOccurrences() {
     };
 
     const headerCity = (city || "").toUpperCase();
-    const occurrenceDate = new Date(occurrence.created_at);
+    const occurrenceDate = new Date(occurrence.occurred_at || occurrence.created_at);
     const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(occurrenceDate)}`;
 
     yPos += 5;
@@ -735,7 +735,7 @@ export default function SindicoPortariaOccurrences() {
 
     const details = [
       { label: "Protocolo:", value: occurrence.protocol || "-" },
-      { label: "Data:", value: format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
+      { label: "Data:", value: format(occurrenceDate, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
       { label: "Categoria:", value: occurrence.category },
       { label: "Prioridade:", value: PRIORITIES.find(p => p.value === occurrence.priority)?.label || occurrence.priority },
       { label: "Status:", value: occurrence.status === "aberta" ? "Aberta" : "Resolvida" },
