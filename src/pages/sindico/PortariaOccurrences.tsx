@@ -667,8 +667,11 @@ export default function SindicoPortariaOccurrences() {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const contentWidth = pageWidth - margin * 2;
+    const footerReserve = 30; // espaço reservado ao rodapé (linha + condo + endereço + página)
+    const bottomLimit = pageHeight - footerReserve;
     let yPos = margin;
 
     const condo = occurrence.condominium;
@@ -691,12 +694,17 @@ export default function SindicoPortariaOccurrences() {
       return `${date.getDate().toString().padStart(2, "0")} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
     };
 
-    // Left-side block: city + date and logo
-    const leftColX = margin;
+    const ensureSpace = (needed: number) => {
+      if (yPos + needed > bottomLimit) {
+        doc.addPage();
+        yPos = margin;
+      }
+    };
+
     const headerCity = (city || "").toUpperCase();
     const occurrenceDate = new Date(occurrence.created_at);
     const dateLabel = `${headerCity ? headerCity + ", " : ""}${formatFullDate(occurrenceDate)}`;
-    
+
     yPos += 5;
 
     // Header
@@ -704,21 +712,19 @@ export default function SindicoPortariaOccurrences() {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(33, 33, 33);
     doc.text("LIVRO DE OCORRÊNCIAS", pageWidth / 2, yPos, { align: "center" });
-    
-    // Space for location and date (approx 3 lines)
-    yPos += 25;
+    yPos += 18;
 
-    // Date/City label (right aligned as previously requested, but now with more space)
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
     doc.text(dateLabel, pageWidth - margin, yPos, { align: "right" });
-    yPos += 10;
+    yPos += 8;
 
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 10;
+    yPos += 8;
 
-    // Occurrence Details
+    // Title
+    ensureSpace(10);
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text(occurrence.title, margin, yPos);
@@ -726,7 +732,7 @@ export default function SindicoPortariaOccurrences() {
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    
+
     const details = [
       { label: "Protocolo:", value: occurrence.protocol || "-" },
       { label: "Data:", value: format(new Date(occurrence.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
@@ -736,6 +742,7 @@ export default function SindicoPortariaOccurrences() {
     ];
 
     details.forEach(detail => {
+      ensureSpace(6);
       doc.setFont("helvetica", "bold");
       doc.text(detail.label, margin, yPos);
       doc.setFont("helvetica", "normal");
@@ -745,6 +752,7 @@ export default function SindicoPortariaOccurrences() {
 
     // Responsável pela abertura
     const openedBy = occurrence.registered_by_name || "Portaria";
+    ensureSpace(6);
     doc.setFont("helvetica", "bold");
     doc.text("Sistema:", margin, yPos);
     doc.setFont("helvetica", "normal");
@@ -752,6 +760,7 @@ export default function SindicoPortariaOccurrences() {
     yPos += 6;
 
     if (occurrence.reporter_block_name) {
+      ensureSpace(6);
       doc.setFont("helvetica", "bold");
       doc.text("Registrado por:", margin, yPos);
       doc.setFont("helvetica", "normal");
@@ -760,6 +769,7 @@ export default function SindicoPortariaOccurrences() {
     }
 
     if (occurrence.target_block_name) {
+      ensureSpace(6);
       doc.setFont("helvetica", "bold");
       doc.text("Sobre:", margin, yPos);
       doc.setFont("helvetica", "normal");
@@ -768,17 +778,19 @@ export default function SindicoPortariaOccurrences() {
     }
 
     yPos += 4;
+    ensureSpace(8);
     doc.setFont("helvetica", "bold");
     doc.text("Descrição:", margin, yPos);
     yPos += 6;
     doc.setFont("helvetica", "normal");
 
-    const lineHeight = 5 * 1.0;
+    const lineHeight = 5;
     const renderJustifiedText = (text: string) => {
-      const paragraphs = text.split(/\n+/);
+      const paragraphs = String(text || "").split(/\n+/);
       paragraphs.forEach((para, pIdx) => {
         const lines: string[] = doc.splitTextToSize(para, contentWidth);
         lines.forEach((line, idx) => {
+          ensureSpace(lineHeight);
           const isLast = idx === lines.length - 1;
           doc.text(line, margin, yPos, {
             align: isLast ? "left" : "justify",
@@ -794,10 +806,7 @@ export default function SindicoPortariaOccurrences() {
     yPos += 5;
 
     if (occurrence.status === "resolvida" && occurrence.resolution_notes) {
-      if (yPos > 250) {
-        doc.addPage();
-        yPos = margin + 10;
-      }
+      ensureSpace(10);
       doc.setFont("helvetica", "bold");
       doc.text("Resolução:", margin, yPos);
       yPos += 6;
@@ -808,33 +817,25 @@ export default function SindicoPortariaOccurrences() {
 
     // Photos
     if (occurrence.photos && occurrence.photos.length > 0) {
-      if (yPos > 200) {
-        doc.addPage();
-        yPos = margin;
-      }
+      ensureSpace(15);
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.text("EVIDÊNCIAS FOTOGRÁFICAS", margin, yPos);
-      yPos += 10;
+      yPos += 8;
 
       for (const photoUrl of occurrence.photos) {
         try {
           const img = new Image();
           img.src = photoUrl;
           await new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
-          
+
           if (img.complete && img.naturalWidth > 0) {
             const ratio = img.naturalWidth / img.naturalHeight;
-            let drawW = contentWidth / 2 - 5;
-            let drawH = drawW / ratio;
-            
-            if (yPos + drawH > 270) {
-              doc.addPage();
-              yPos = margin;
-            }
-            
+            const drawW = contentWidth / 2 - 5;
+            const drawH = drawW / ratio;
+            ensureSpace(drawH + 5);
             doc.addImage(photoUrl, "JPEG", margin, yPos, drawW, drawH);
-            yPos += drawH + 10;
+            yPos += drawH + 8;
           }
         } catch (e) {
           console.error("Error adding photo to PDF", e);
@@ -842,26 +843,20 @@ export default function SindicoPortariaOccurrences() {
       }
     }
 
-    // Síndico Responsável info
+    // Síndico Responsável
     const sindicoName = (occurrence.condominium as any)?.owner_name || "Síndico Responsável";
-    if (yPos > 240) {
-      doc.addPage();
-      yPos = margin + 10;
-    } else {
-      yPos += 15;
-    }
-    
+    ensureSpace(20);
+    yPos += 8;
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(33, 33, 33);
     doc.text(sindicoName.toUpperCase(), pageWidth / 2, yPos, { align: "center" });
     yPos += 4;
     doc.setFont("helvetica", "normal");
     doc.text("Síndico Responsável", pageWidth / 2, yPos, { align: "center" });
-    yPos += 10;
+    yPos += 8;
 
-    // Footer and QR Code
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const pageCount = doc.getNumberOfPages();
+    // QR Code (uma única vez, na última página do conteúdo)
     const authCode = occurrence.is_signed ? (occurrence.signature_hash || occurrence.id) : (occurrence.protocol || occurrence.id);
     const authUrl = `https://notificacondo.com.br/autenticidade?code=${authCode}`;
     let qrDataUrl = "";
@@ -871,37 +866,43 @@ export default function SindicoPortariaOccurrences() {
       console.error("Error generating QR Code", e);
     }
 
+    if (qrDataUrl) {
+      const qrSize = 30;
+      const qrBlockHeight = qrSize + 14;
+      ensureSpace(qrBlockHeight);
+      const qrX = (pageWidth - qrSize) / 2;
+      const qrY = yPos;
+      doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(33, 33, 33);
+      doc.text("Autenticação", pageWidth / 2, qrY + qrSize + 3, { align: "center" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6);
+      doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, qrY + qrSize + 5.5, { align: "center" });
+
+      const validationCode = occurrence.is_signed
+        ? (occurrence.signature_hash || "-")
+        : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text(
+        occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`,
+        pageWidth / 2,
+        qrY + qrSize + 9,
+        { align: "center" },
+      );
+      yPos = qrY + qrBlockHeight;
+    }
+
+    // Footer em todas as páginas (somente linha + condomínio + endereço + página)
+    const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, pageHeight - 25, pageWidth - margin, pageHeight - 25);
-      // QR Code and Authentication Text - Now centered below content
-      if (qrDataUrl) {
-        const qrSize = 30;
-        const qrX = (pageWidth - qrSize) / 2;
-        let qrY = yPos + 5; 
-        
-        if (qrY + qrSize + 20 > pageHeight - 30) {
-          doc.addPage();
-          qrY = margin + 5;
-        }
-        
-        doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
-        
-        doc.setFontSize(7);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(33, 33, 33);
-        doc.text("Autenticação", pageWidth / 2, qrY + qrSize + 3, { align: "center" });
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6);
-        doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, qrY + qrSize + 5.5, { align: "center" });
-        
-        const validationCode = occurrence.is_signed ? (occurrence.signature_hash || "-") : (occurrence.protocol || occurrence.id.slice(0, 8).toUpperCase());
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(7);
-        doc.text(occurrence.is_signed ? `HASH: ${validationCode}` : `CÓDIGO: ${validationCode}`, pageWidth / 2, qrY + qrSize + 9, { align: "center" });
-      }
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
