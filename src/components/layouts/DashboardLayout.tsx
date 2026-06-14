@@ -981,10 +981,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     <User className="w-4 h-4" />
                     Perfil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/sindico/settings")} className="gap-2 cursor-pointer py-2 rounded-lg m-1">
-                    <Settings className="w-4 h-4" />
-                    Configurações
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="gap-2 cursor-pointer text-destructive focus:text-destructive py-2 rounded-lg m-1">
                     <LogOut className="w-4 h-4" />
