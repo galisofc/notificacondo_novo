@@ -855,24 +855,6 @@ function SidebarNavigation() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => navigate("/notifications")}
-                    className="relative p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-                  >
-                    <Bell className="w-4 h-4" />
-                    {pendingDefenses > 0 && (
-                      <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold animate-pulse">
-                        {pendingDefenses > 9 ? "9+" : pendingDefenses}
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>{pendingDefenses > 0 ? `${pendingDefenses} defesa(s) pendente(s)` : "Nenhuma notificação pendente"}</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
                     onClick={handleSignOut}
                     className="p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
                   >
