@@ -200,9 +200,6 @@ export default function SindicoPortariaOccurrences() {
     fetchCondominiums();
   }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem("portaria_status_filter", filterStatus);
-  }, [filterStatus]);
 
   // Fetch blocks for selected condominium
   const { data: blocks = [] } = useQuery({
