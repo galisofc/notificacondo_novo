@@ -85,9 +85,7 @@ export default function PortariaOccurrences() {
 
   const [condominiums, setCondominiums] = useState<{ id: string; name: string }[]>([]);
   const [selectedCondominium, setSelectedCondominium] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<string>(() => {
-    return localStorage.getItem("porteiro_portaria_status_filter") || "aberta";
-  });
+  const [filterStatus, setFilterStatus] = useState<string>("aberta");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
@@ -172,9 +170,6 @@ export default function PortariaOccurrences() {
     fetchCondominiums();
   }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem("porteiro_portaria_status_filter", filterStatus);
-  }, [filterStatus]);
 
   // Fetch blocks for selected condominium
   const { data: blocks = [] } = useQuery({
@@ -828,7 +823,7 @@ export default function PortariaOccurrences() {
                   {filterApartments.map((a) => <SelectItem key={a.id} value={a.id}>{a.number}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50 shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar">
+              <div className="flex bg-slate-100/80 dark:bg-slate-800/60 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar">
                 {[
                   { value: "all", label: "Todas" },
                   { value: "aberta", label: "Abertas" },
@@ -839,8 +834,8 @@ export default function PortariaOccurrences() {
                     onClick={() => setFilterStatus(opt.value)}
                     className={`flex-1 sm:flex-none px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 whitespace-nowrap ${
                       filterStatus === opt.value
-                        ? "bg-white text-primary shadow-md transform scale-[1.02]"
-                        : "text-slate-500 hover:text-slate-700 hover:bg-white/50"
+                        ? "bg-white dark:bg-slate-900 text-primary shadow-md transform scale-[1.02]"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-900/50"
                     }`}
                   >
                     {opt.label}
@@ -908,7 +903,7 @@ export default function PortariaOccurrences() {
         ) : (
           <div className="space-y-3">
             {filteredOccurrences.map((occ) => (
-              <Card key={occ.id} className="group bg-white border-slate-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
+              <Card key={occ.id} className="group bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
                 <div className={cn(
                   "h-1.5 w-full transition-colors duration-500",
                   occ.status === "aberta" ? "bg-amber-500 group-hover:bg-amber-400" : "bg-emerald-500 group-hover:bg-emerald-400"
@@ -929,15 +924,15 @@ export default function PortariaOccurrences() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-2">
                           {occ.protocol && (
-                            <Badge variant="secondary" className="font-mono text-[10px] bg-slate-100 text-slate-600 border-slate-200 px-2 py-0.5 rounded-md">
+                            <Badge variant="secondary" className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
                               Protocolo: {occ.protocol}
                             </Badge>
                           )}
-                          <h3 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors uppercase">{occ.title}</h3>
+                          <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg tracking-tight group-hover:text-primary transition-colors uppercase">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
-                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50">{occ.category}</Badge>
+                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">{occ.category}</Badge>
                         </div>
-                        <p className="text-slate-600 leading-relaxed text-sm md:text-base text-justify break-words hyphens-auto">{occ.description}</p>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base text-justify break-words hyphens-auto">{occ.description}</p>
 
                         {/* Photos */}
                         {occ.photos && occ.photos.length > 0 && (
@@ -959,54 +954,54 @@ export default function PortariaOccurrences() {
                         {(occ.reporter_block_name || occ.target_block_name || occ.registered_by_name) && (
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.registered_by_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Registrado por:</span>
-                                <span className="font-bold text-slate-700">{occ.registered_by_name}</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">Registrado por:</span>
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{occ.registered_by_name}</span>
                               </div>
                             )}
                             {occ.reporter_block_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Solicitante:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">Solicitante:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.reporter_block_name}
                                   apartmentNumber={occ.reporter_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-bold text-slate-700"
+                                  valueClassName="font-bold text-slate-700 dark:text-slate-200"
                                 />
                               </div>
                             )}
                             {occ.target_block_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Sobre:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">Sobre:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.target_block_name}
                                   apartmentNumber={occ.target_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-bold text-slate-700"
+                                  valueClassName="font-bold text-slate-700 dark:text-slate-200"
                                 />
                               </div>
                             )}
                           </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 gap-4">
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                               <CalendarIcon className="w-3.5 h-3.5 text-primary/60" />
                               <span>{format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                             </div>
                             
                             {occ.status === "resolvida" && (
-                              <div className="flex flex-col gap-1.5 mt-2 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                              <div className="flex flex-col gap-1.5 mt-2 p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-xl border border-emerald-100/50 dark:border-emerald-900/50">
                                 {occ.resolution_notes && (
                                   <div className="flex gap-2">
-                                    <ClipboardList className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                    <p className="text-sm text-emerald-800 italic">"{occ.resolution_notes}"</p>
+                                    <ClipboardList className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                    <p className="text-sm text-emerald-800 dark:text-emerald-200 italic">"{occ.resolution_notes}"</p>
                                   </div>
                                 )}
-                                <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                                <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                   <span>Finalizado por <span className="uppercase">{occ.resolved_by_name}</span> {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
                                 </div>
