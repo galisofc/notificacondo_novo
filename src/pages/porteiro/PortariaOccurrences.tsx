@@ -986,22 +986,22 @@ export default function PortariaOccurrences() {
                           </div>
                         )}
 
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 gap-4">
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                               <CalendarIcon className="w-3.5 h-3.5 text-primary/60" />
                               <span>{format(new Date(occ.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
                             </div>
                             
                             {occ.status === "resolvida" && (
-                              <div className="flex flex-col gap-1.5 mt-2 p-3 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                              <div className="flex flex-col gap-1.5 mt-2 p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-xl border border-emerald-100/50 dark:border-emerald-900/50">
                                 {occ.resolution_notes && (
                                   <div className="flex gap-2">
-                                    <ClipboardList className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                    <p className="text-sm text-emerald-800 italic">"{occ.resolution_notes}"</p>
+                                    <ClipboardList className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                    <p className="text-sm text-emerald-800 dark:text-emerald-200 italic">"{occ.resolution_notes}"</p>
                                   </div>
                                 )}
-                                <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                                <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
                                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                   <span>Finalizado por <span className="uppercase">{occ.resolved_by_name}</span> {occ.resolved_at && `em ${format(new Date(occ.resolved_at), "dd/MM/yy 'às' HH:mm")}`}</span>
                                 </div>
