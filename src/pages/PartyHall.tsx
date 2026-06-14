@@ -151,7 +151,7 @@ export default function PartyHall() {
               type
             )
           `)
-          .order("booking_date", { ascending: false });
+          .order("booking_date", { ascending: true });
 
         if (selectedCondominium !== "all") {
           query = query.eq("condominium_id", selectedCondominium);
