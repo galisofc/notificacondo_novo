@@ -954,32 +954,32 @@ export default function PortariaOccurrences() {
                         {(occ.reporter_block_name || occ.target_block_name || occ.registered_by_name) && (
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs">
                             {occ.registered_by_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Registrado por:</span>
-                                <span className="font-bold text-slate-700">{occ.registered_by_name}</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">Registrado por:</span>
+                                <span className="font-bold text-slate-700 dark:text-slate-200">{occ.registered_by_name}</span>
                               </div>
                             )}
                             {occ.reporter_block_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Solicitante:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">Solicitante:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.reporter_block_name}
                                   apartmentNumber={occ.reporter_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-bold text-slate-700"
+                                  valueClassName="font-bold text-slate-700 dark:text-slate-200"
                                 />
                               </div>
                             )}
                             {occ.target_block_name && (
-                              <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                                <span className="text-slate-500 font-medium">Sobre:</span>
+                              <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 px-2 py-1 rounded-md border border-slate-100 dark:border-slate-700">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">Sobre:</span>
                                 <BlockApartmentDisplay
                                   blockName={occ.target_block_name}
                                   apartmentNumber={occ.target_apartment_number}
                                   variant="inline"
                                   showIcons
-                                  valueClassName="font-bold text-slate-700"
+                                  valueClassName="font-bold text-slate-700 dark:text-slate-200"
                                 />
                               </div>
                             )}
