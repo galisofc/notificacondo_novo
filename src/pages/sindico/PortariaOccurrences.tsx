@@ -1283,15 +1283,15 @@ export default function SindicoPortariaOccurrences() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-2">
                           {occ.protocol && (
-                            <Badge variant="secondary" className="font-mono text-[10px] bg-slate-100 text-slate-600 border-slate-200 px-2 py-0.5 rounded-md">
+                            <Badge variant="secondary" className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md">
                               Protocolo: {occ.protocol}
                             </Badge>
                           )}
-                          <h3 className="font-bold text-slate-900 text-lg tracking-tight group-hover:text-primary transition-colors">{occ.title}</h3>
+                          <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg tracking-tight group-hover:text-primary transition-colors">{occ.title}</h3>
                           {getPriorityBadge(occ.priority)}
-                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50">{occ.category}</Badge>
+                          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">{occ.category}</Badge>
                         </div>
-                        <p className="text-slate-600 leading-relaxed text-sm md:text-base text-justify break-words hyphens-auto">{occ.description}</p>
+                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm md:text-base text-justify break-words hyphens-auto">{occ.description}</p>
 
                         {/* Photos */}
                         {occ.photos && occ.photos.length > 0 && (
