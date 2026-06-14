@@ -1402,7 +1402,7 @@ export default function SindicoPortariaOccurrences() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-10 px-4 rounded-xl border-slate-200 hover:bg-slate-50 hover:text-primary transition-all active:scale-95 font-bold w-full sm:w-auto"
+                          className="h-10 px-4 rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary transition-all active:scale-95 font-bold w-full sm:w-auto"
                           onClick={() => generatePDF(occ)}
                         >
                           <FileDown className="w-4 h-4 mr-2" /> PDF
