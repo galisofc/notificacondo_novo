@@ -1239,6 +1239,28 @@ const SindicoPackages = () => {
                   )}
                 </div>
 
+                {selectedPackage.status === "pendente" && (
+                  <Button
+                    onClick={handleResendNotification}
+                    disabled={isResendingNotification || !selectedPackage.apartment?.id}
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                  >
+                    {isResendingNotification ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4" />
+                        {notificationLogs.length > 0 ? "Reenviar Notificação via WhatsApp" : "Enviar Notificação via WhatsApp"}
+                      </>
+                    )}
+                  </Button>
+                )}
+
                 {isLoadingLogs ? (
                   <div className="flex items-center justify-center py-4 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
