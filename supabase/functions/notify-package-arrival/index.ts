@@ -233,10 +233,20 @@ serve(async (req) => {
     console.log(`Package type: ${packageTypeName}, Tracking: ${trackingCode}, Porter: ${porterName}`);
 
     // ========== FETCH RESIDENTS ==========
-    const { data: residents, error: resError } = await supabase
+    const { data: allResidents, error: resError } = await supabase
       .from("residents")
-      .select("id, full_name, phone, email")
+      .select("id, full_name, phone, email, property_owner_id, resident_type")
       .eq("apartment_id", apartment_id);
+
+    // If there are tenants (inquilinos) in the unit, notify only them.
+    // Otherwise, notify everyone in the apartment.
+    const tenants = (allResidents || []).filter(
+      (r: any) => r.resident_type === "inquilino" || !!r.property_owner_id
+    );
+    const residents = tenants.length > 0 ? tenants : allResidents;
+    console.log(
+      `Residents found: ${allResidents?.length || 0}; tenants: ${tenants.length}; will notify: ${residents?.length || 0}`
+    );
 
     if (resError) {
       console.error("Error fetching residents:", resError);
