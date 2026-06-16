@@ -1444,19 +1444,59 @@ const CondominiumDetails = () => {
                   placeholder="(11) 99999-9999"
                 />
               </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="is_owner"
-                    checked={residentForm.is_owner}
-                    onCheckedChange={(checked) =>
-                      setResidentForm({ ...residentForm, is_owner: !!checked })
-                    }
-                  />
-                  <Label htmlFor="is_owner" className="cursor-pointer">
-                    Proprietário
-                  </Label>
+              <div className="space-y-2">
+                <Label htmlFor="resType">Tipo de morador *</Label>
+                <select
+                  id="resType"
+                  value={residentForm.resident_type}
+                  onChange={(e) =>
+                    setResidentForm({
+                      ...residentForm,
+                      resident_type: e.target.value as "proprietario" | "inquilino",
+                      is_owner: e.target.value === "proprietario" ? true : residentForm.is_owner,
+                    })
+                  }
+                  className="w-full h-10 px-3 rounded-lg bg-secondary/50 border border-border text-foreground"
+                >
+                  <option value="proprietario">Proprietário</option>
+                  <option value="inquilino">Inquilino</option>
+                </select>
+              </div>
+              {residentForm.resident_type === "inquilino" && (
+                <div className="space-y-3 rounded-lg border border-border p-3 bg-secondary/30">
+                  <p className="text-sm font-medium">Dados do proprietário</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerName">Nome do proprietário *</Label>
+                    <Input
+                      id="ownerName"
+                      value={residentForm.owner_name}
+                      onChange={(e) => setResidentForm({ ...residentForm, owner_name: e.target.value })}
+                      placeholder="Nome completo do proprietário"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerPhone">Telefone do proprietário *</Label>
+                    <MaskedInput
+                      id="ownerPhone"
+                      mask="phone"
+                      value={residentForm.owner_phone}
+                      onChange={(value) => setResidentForm({ ...residentForm, owner_phone: value })}
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerEmail">E-mail do proprietário</Label>
+                    <Input
+                      id="ownerEmail"
+                      type="email"
+                      value={residentForm.owner_email}
+                      onChange={(e) => setResidentForm({ ...residentForm, owner_email: e.target.value })}
+                      placeholder="proprietario@email.com"
+                    />
+                  </div>
                 </div>
+              )}
+              <div className="flex items-center gap-6">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="is_responsible"
@@ -1466,7 +1506,7 @@ const CondominiumDetails = () => {
                     }
                   />
                   <Label htmlFor="is_responsible" className="cursor-pointer">
-                    Responsável
+                    Responsável principal
                   </Label>
                 </div>
               </div>
