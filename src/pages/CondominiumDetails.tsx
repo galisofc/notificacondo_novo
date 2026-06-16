@@ -1247,17 +1247,17 @@ const CondominiumDetails = () => {
                                       {aptResidents.map((resident) => (
                                         <div
                                           key={resident.id}
-                                          className="flex items-center justify-between p-3 rounded-lg bg-card text-card-foreground border border-border"
+                                          className="flex items-center justify-between p-3 rounded-lg bg-background text-foreground border border-border shadow-sm"
                                         >
                                           <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                               <User className="w-4 h-4 text-primary" />
                                             </div>
                                             <div>
-                                              <p className="font-semibold text-sm text-card-foreground">
+                                              <p className="font-bold text-sm text-foreground">
                                                 {resident.full_name}
                                               </p>
-                                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                              <div className="flex items-center gap-3 text-xs font-medium text-foreground/80">
                                                 {resident.phone && (
                                                   <span className="flex items-center gap-1">
                                                     <Phone className="w-3 h-3" />
@@ -1267,18 +1267,18 @@ const CondominiumDetails = () => {
                                               </div>
                                               <div className="flex gap-1 mt-1">
                                                 {resident.is_owner ? (
-                                                  <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">
+                                                  <Badge className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold bg-primary text-primary-foreground border-transparent">
                                                     Proprietário
-                                                  </span>
+                                                  </Badge>
                                                 ) : resident.property_owner_id ? (
-                                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px]">
+                                                  <Badge variant="secondary" className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold text-secondary-foreground">
                                                     Inquilino
-                                                  </span>
+                                                  </Badge>
                                                 ) : null}
                                                 {resident.is_responsible && (
-                                                  <span className="px-1.5 py-0.5 rounded bg-accent/10 text-accent text-[10px]">
+                                                  <Badge className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold bg-primary text-primary-foreground border-transparent">
                                                     Responsável
-                                                  </span>
+                                                  </Badge>
                                                 )}
                                               </div>
                                             </div>
