@@ -1590,6 +1590,19 @@ const CondominiumDetails = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Inline Owner Form (from Resident Dialog) */}
+        {id && (
+          <OwnerFormDialog
+            open={ownerDialogFromResident}
+            onOpenChange={setOwnerDialogFromResident}
+            condominiumId={id}
+            onSaved={(owner) => {
+              setPropertyOwners((prev) => [...prev, owner].sort((a, b) => a.full_name.localeCompare(b.full_name)));
+              setResidentForm((prev) => ({ ...prev, property_owner_id: owner.id }));
+            }}
+          />
+        )}
+
         {/* CSV Import Dialog */}
         {csvImportApartment && (
           <ResidentCSVImportDialog
