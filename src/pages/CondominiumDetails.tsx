@@ -583,6 +583,7 @@ const CondominiumDetails = () => {
       owner_name: "",
       owner_phone: "",
       owner_email: "",
+      property_owner_id: "",
     });
     setResidentDialog(true);
   };
@@ -602,17 +603,39 @@ const CondominiumDetails = () => {
     try {
       const normalizedPhone = residentForm.phone?.replace(/\D/g, "") || null;
       const isTenant = residentForm.resident_type === "inquilino";
+
+      let ownerSnapshot: { owner_name: string | null; owner_phone: string | null; owner_email: string | null; property_owner_id: string | null } = {
+        owner_name: null,
+        owner_phone: null,
+        owner_email: null,
+        property_owner_id: null,
+      };
+
+      if (isTenant) {
+        if (!residentForm.property_owner_id) {
+          toast({ title: "Erro", description: "Selecione o proprietário do imóvel.", variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+        const selected = propertyOwners.find((o) => o.id === residentForm.property_owner_id);
+        if (!selected) {
+          toast({ title: "Erro", description: "Proprietário não encontrado.", variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+        ownerSnapshot = {
+          property_owner_id: selected.id,
+          owner_name: selected.full_name,
+          owner_phone: selected.phone,
+          owner_email: selected.email,
+        };
+      }
+
       const ownerPayload = {
         resident_type: residentForm.resident_type,
-        owner_name: isTenant ? (residentForm.owner_name || null) : null,
-        owner_phone: isTenant ? (residentForm.owner_phone?.replace(/\D/g, "") || null) : null,
-        owner_email: isTenant ? (residentForm.owner_email || null) : null,
+        ...ownerSnapshot,
       };
-      if (isTenant && (!ownerPayload.owner_name || !ownerPayload.owner_phone)) {
-        toast({ title: "Erro", description: "Para inquilinos, informe nome e telefone do proprietário.", variant: "destructive" });
-        setSaving(false);
-        return;
-      }
+
       if (editingResident) {
         const { error } = await supabase
           .from("residents")
@@ -657,6 +680,7 @@ const CondominiumDetails = () => {
         owner_name: "",
         owner_phone: "",
         owner_email: "",
+        property_owner_id: "",
       });
       fetchData();
     } catch (error: any) {
