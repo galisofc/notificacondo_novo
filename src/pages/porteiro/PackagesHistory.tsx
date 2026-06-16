@@ -268,6 +268,52 @@ const PorteiroPackagesHistory = () => {
     fetchLogs();
   }, [showDetailsModal, selectedPackage?.id]);
 
+  const refetchNotificationLogs = async () => {
+    if (!selectedPackage?.id) return;
+    const { data, error } = await supabase
+      .from("whatsapp_notification_logs")
+      .select("*")
+      .eq("package_id", selectedPackage.id)
+      .order("created_at", { ascending: false });
+    if (!error) setNotificationLogs(data || []);
+  };
+
+  const handleResendNotification = async () => {
+    if (!selectedPackage) return;
+    setIsResendingNotification(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-package-arrival", {
+        body: {
+          package_id: selectedPackage.id,
+          apartment_id: selectedPackage.apartment_id,
+          pickup_code: selectedPackage.pickup_code,
+          photo_url: selectedPackage.photo_url,
+        },
+      });
+      if (error) throw error;
+      const count = data?.notifications_sent ?? 0;
+      toast({
+        title: count > 0 ? "Notificação reenviada" : "Nenhuma notificação enviada",
+        description:
+          count > 0
+            ? `Mensagem enviada para ${count} morador(es).`
+            : "Verifique se há moradores com telefone cadastrado.",
+        variant: count > 0 ? "default" : "destructive",
+      });
+      await refetchNotificationLogs();
+    } catch (err) {
+      console.error("Error resending notification:", err);
+      toast({
+        title: "Erro ao reenviar",
+        description: "Não foi possível reenviar a notificação. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingNotification(false);
+    }
+  };
+
+
 
   // Fetch total count for pagination
   const { data: totalCount = 0 } = useQuery({
