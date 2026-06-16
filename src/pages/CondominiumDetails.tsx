@@ -674,6 +674,44 @@ const CondominiumDetails = () => {
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador cadastrado!" });
       }
+
+      // If tenant, ensure a matching "proprietario" resident row exists in the same apartment
+      if (isTenant && ownerSnapshot.property_owner_id) {
+        const { data: existingOwnerResident } = await (supabase as any)
+          .from("residents")
+          .select("id")
+          .eq("apartment_id", residentForm.apartment_id)
+          .eq("property_owner_id", ownerSnapshot.property_owner_id)
+          .eq("resident_type", "proprietario")
+          .maybeSingle();
+
+        if (!existingOwnerResident) {
+          const { error: ownerResidentError } = await supabase.from("residents").insert({
+            apartment_id: residentForm.apartment_id,
+            full_name: (ownerSnapshot.owner_name || "PROPRIETÁRIO").toUpperCase(),
+            email: ownerSnapshot.owner_email || "",
+            phone: ownerSnapshot.owner_phone || null,
+            cpf: null,
+            is_owner: true,
+            is_responsible: false,
+            resident_type: "proprietario",
+            property_owner_id: ownerSnapshot.property_owner_id,
+            owner_name: null,
+            owner_phone: null,
+            owner_email: null,
+          } as any);
+          if (ownerResidentError) {
+            console.error("Falha ao criar resident do proprietário:", ownerResidentError);
+            toast({
+              title: "Aviso",
+              description: "Inquilino salvo, mas não foi possível criar o cadastro do proprietário nesta unidade.",
+              variant: "destructive",
+            });
+          } else {
+            toast({ title: "Proprietário vinculado", description: "Cadastro do proprietário adicionado ao apartamento." });
+          }
+        }
+      }
       setResidentDialog(false);
       setEditingResident(null);
       setResidentForm({
