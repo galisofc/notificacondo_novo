@@ -43,7 +43,8 @@ serve(async (req) => {
       .select(`
         id, title, type, condominium_id,
         residents!inner (
-          id, full_name, phone, email, resident_type, owner_name, owner_phone,
+          id, full_name, phone, email, resident_type,
+          owner_name, owner_phone, property_owner_id,
           apartments!inner (
             number,
             blocks!inner (
@@ -65,6 +66,21 @@ serve(async (req) => {
     }
 
     const resident = occurrence.residents as any;
+
+    // Prefer linked property_owner record over inline snapshot
+    let ownerName: string | null = resident.owner_name || null;
+    let ownerPhone: string | null = resident.owner_phone || null;
+    if (resident.property_owner_id) {
+      const { data: ownerRow } = await supabase
+        .from("property_owners")
+        .select("full_name, phone")
+        .eq("id", resident.property_owner_id)
+        .maybeSingle();
+      if (ownerRow) {
+        ownerName = (ownerRow as any).full_name || ownerName;
+        ownerPhone = (ownerRow as any).phone || ownerPhone;
+      }
+    }
     const condoName = resident.apartments.blocks.condominiums.name;
     const condoId = occurrence.condominium_id;
 
@@ -134,11 +150,11 @@ serve(async (req) => {
       });
     }
 
-    if (residentIsTenant && resident.owner_phone && resident.owner_phone !== resident.phone) {
+    if (residentIsTenant && ownerPhone && ownerPhone !== resident.phone) {
       recipients.push({
         role: "proprietario",
-        phone: resident.owner_phone,
-        name: resident.owner_name || "Proprietário",
+        phone: ownerPhone,
+        name: ownerName || "Proprietário",
       });
     }
 
