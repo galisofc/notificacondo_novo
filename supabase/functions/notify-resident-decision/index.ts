@@ -11,6 +11,8 @@ interface NotifyResidentRequest {
   occurrence_id: string;
   decision: "arquivada" | "advertido" | "multado";
   justification: string;
+  responsible_party?: "inquilino" | "proprietario";
+  responsible_name?: string;
 }
 
 serve(async (req) => {
