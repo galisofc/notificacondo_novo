@@ -63,6 +63,8 @@ import ResidentCSVImportDialog from "@/components/condominium/ResidentCSVImportD
 import { BulkBlocksApartmentsWizard } from "@/components/condominium/BulkBlocksApartmentsWizard";
 import BulkResidentCSVImportDialog from "@/components/condominium/BulkResidentCSVImportDialog";
 import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApartmentSearch";
+import OwnersSection from "@/components/condominium/OwnersSection";
+import OwnerFormDialog, { PropertyOwner } from "@/components/condominium/OwnerFormDialog";
 import {
   Select,
   SelectContent,
@@ -113,6 +115,7 @@ interface Resident {
   owner_name?: string | null;
   owner_phone?: string | null;
   owner_email?: string | null;
+  property_owner_id?: string | null;
 }
 
 const CondominiumDetails = () => {
@@ -125,6 +128,8 @@ const CondominiumDetails = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
+  const [propertyOwners, setPropertyOwners] = useState<PropertyOwner[]>([]);
+  const [ownerDialogFromResident, setOwnerDialogFromResident] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -174,6 +179,7 @@ const CondominiumDetails = () => {
     owner_name: "",
     owner_phone: "",
     owner_email: "",
+    property_owner_id: "" as string,
   });
 
   const [saving, setSaving] = useState(false);
