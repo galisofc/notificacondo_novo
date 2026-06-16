@@ -1271,7 +1271,7 @@ const CondominiumDetails = () => {
                                                     Proprietário
                                                   </Badge>
                                                 ) : resident.property_owner_id ? (
-                                                  <Badge variant="secondary" className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold text-secondary-foreground">
+                                                  <Badge className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold bg-orange-500 text-white border-transparent hover:bg-orange-500">
                                                     Inquilino
                                                   </Badge>
                                                 ) : null}
