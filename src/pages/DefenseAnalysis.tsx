@@ -200,7 +200,7 @@ const DefenseAnalysis = () => {
         .limit(100);
 
       if (error) throw error;
-      setDefenses((data as DefenseWithDetails[]) || []);
+      setDefenses(((data as unknown) as DefenseWithDetails[]) || []);
     } catch (error: any) {
       console.error("Error fetching defenses:", error);
       toast({
