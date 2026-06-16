@@ -80,10 +80,13 @@ WHERE r.resident_type = 'inquilino'
 
 UPDATE public.residents r
 SET property_owner_id = po.id
-FROM public.apartments a
-JOIN public.blocks b ON b.id = a.block_id
-JOIN public.property_owners po ON po.condominium_id = b.condominium_id AND po.phone = r.owner_phone
+FROM public.apartments a,
+     public.blocks b,
+     public.property_owners po
 WHERE r.apartment_id = a.id
+  AND a.block_id = b.id
+  AND po.condominium_id = b.condominium_id
+  AND po.phone = r.owner_phone
   AND r.property_owner_id IS NULL
   AND r.owner_phone IS NOT NULL;
 
