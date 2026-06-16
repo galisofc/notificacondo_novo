@@ -1247,14 +1247,14 @@ const CondominiumDetails = () => {
                                       {aptResidents.map((resident) => (
                                         <div
                                           key={resident.id}
-                                          className="flex items-center justify-between p-3 rounded-lg bg-muted border border-border"
+                                          className="flex items-center justify-between p-3 rounded-lg bg-card text-card-foreground border border-border"
                                         >
                                           <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                               <User className="w-4 h-4 text-primary" />
                                             </div>
                                             <div>
-                                              <p className="font-semibold text-sm text-foreground">
+                                              <p className="font-semibold text-sm text-card-foreground">
                                                 {resident.full_name}
                                               </p>
                                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
