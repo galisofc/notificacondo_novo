@@ -1254,6 +1254,7 @@ const CondominiumDetails = () => {
                                                     owner_name: resident.owner_name || "",
                                                     owner_phone: resident.owner_phone ? formatPhone(resident.owner_phone.replace(/^55(?=\d{10,11}$)/, "")) : "",
                                                     owner_email: resident.owner_email || "",
+                                                    property_owner_id: resident.property_owner_id || "",
                                                   });
                                                   setResidentDialog(true);
                                                 }}
