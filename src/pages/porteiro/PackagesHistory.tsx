@@ -285,7 +285,7 @@ const PorteiroPackagesHistory = () => {
       const { data, error } = await supabase.functions.invoke("notify-package-arrival", {
         body: {
           package_id: selectedPackage.id,
-          apartment_id: selectedPackage.apartment_id,
+          apartment_id: selectedPackage.apartment?.id,
           pickup_code: selectedPackage.pickup_code,
           photo_url: selectedPackage.photo_url,
         },
