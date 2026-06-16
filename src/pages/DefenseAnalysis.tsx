@@ -74,6 +74,9 @@ interface DefenseWithDetails {
     full_name: string;
     email: string;
     phone: string | null;
+    resident_type?: "proprietario" | "inquilino" | null;
+    owner_name?: string | null;
+    owner_phone?: string | null;
   };
   defense_attachments: {
     id: string;
@@ -110,6 +113,8 @@ const DefenseAnalysis = () => {
   const [decisionType, setDecisionType] = useState<"arquivada" | "advertido" | "multado" | "">("");
   const [justification, setJustification] = useState("");
   const [savingDecision, setSavingDecision] = useState(false);
+  const [responsibleParty, setResponsibleParty] = useState<"inquilino" | "proprietario">("proprietario");
+  const [responsibleName, setResponsibleName] = useState("");
 
   // Image preview
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -179,7 +184,10 @@ const DefenseAnalysis = () => {
             id,
             full_name,
             email,
-            phone
+            phone,
+            resident_type,
+            owner_name,
+            owner_phone
           ),
           defense_attachments (
             id,
@@ -192,7 +200,7 @@ const DefenseAnalysis = () => {
         .limit(100);
 
       if (error) throw error;
-      setDefenses((data as DefenseWithDetails[]) || []);
+      setDefenses(((data as unknown) as DefenseWithDetails[]) || []);
     } catch (error: any) {
       console.error("Error fetching defenses:", error);
       toast({
@@ -231,6 +239,11 @@ const DefenseAnalysis = () => {
   const handleOpenDecisionDialog = (type: "arquivada" | "advertido" | "multado") => {
     setDecisionType(type);
     setJustification("");
+    const r = selectedDefense?.residents;
+    const inferred: "inquilino" | "proprietario" =
+      (r?.resident_type as any) === "inquilino" ? "inquilino" : "proprietario";
+    setResponsibleParty(inferred);
+    setResponsibleName(inferred === "inquilino" ? (r?.full_name || "") : (r?.owner_name || r?.full_name || ""));
     setIsDecisionDialogOpen(true);
   };
 
@@ -254,10 +267,21 @@ const DefenseAnalysis = () => {
 
       if (decisionError) throw decisionError;
 
-      // Update occurrence status
+      // Update occurrence status + responsible snapshot
+      const r = selectedDefense.residents;
+      const responsiblePhone =
+        decisionType !== "arquivada"
+          ? (responsibleParty === "inquilino" ? (r?.phone || null) : (r?.owner_phone || r?.phone || null))
+          : null;
+      const occurrenceUpdate: any = { status: decisionType };
+      if (decisionType !== "arquivada") {
+        occurrenceUpdate.responsible_party = responsibleParty;
+        occurrenceUpdate.responsible_name = responsibleName?.trim() || null;
+        occurrenceUpdate.responsible_phone = responsiblePhone;
+      }
       const { error: updateError } = await supabase
         .from("occurrences")
-        .update({ status: decisionType })
+        .update(occurrenceUpdate)
         .eq("id", selectedDefense.occurrence_id);
 
       if (updateError) throw updateError;
@@ -283,6 +307,8 @@ const DefenseAnalysis = () => {
           occurrence_id: selectedDefense.occurrence_id,
           decision: decisionType,
           justification: justification.trim(),
+          responsible_party: decisionType !== "arquivada" ? responsibleParty : undefined,
+          responsible_name: decisionType !== "arquivada" ? (responsibleName?.trim() || undefined) : undefined,
         },
       }).then((result) => {
         if (result.error) {
@@ -713,6 +739,48 @@ const DefenseAnalysis = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {decisionType !== "arquivada" && (
+              <div className="space-y-3 rounded-lg border border-border p-3 bg-secondary/30">
+                <p className="text-sm font-medium">Responsável pela {decisionType === "multado" ? "multa" : "advertência"}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="respParty">Tipo</Label>
+                    <Select
+                      value={responsibleParty}
+                      onValueChange={(v) => {
+                        const party = v as "inquilino" | "proprietario";
+                        setResponsibleParty(party);
+                        const r = selectedDefense?.residents;
+                        setResponsibleName(party === "inquilino" ? (r?.full_name || "") : (r?.owner_name || r?.full_name || ""));
+                      }}
+                    >
+                      <SelectTrigger id="respParty" className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="proprietario">Proprietário</SelectItem>
+                        <SelectItem value="inquilino">Inquilino</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="respName">Nome completo</Label>
+                    <input
+                      id="respName"
+                      value={responsibleName}
+                      onChange={(e) => setResponsibleName(e.target.value)}
+                      placeholder="Nome do responsável"
+                      className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+                {selectedDefense?.residents?.owner_phone && responsibleParty === "inquilino" && (
+                  <p className="text-xs text-muted-foreground">
+                    Notificação será enviada para o inquilino e também para o proprietário cadastrado.
+                  </p>
+                )}
+              </div>
+            )}
             <div>
               <Label htmlFor="justification">Justificativa da decisão *</Label>
               <Textarea

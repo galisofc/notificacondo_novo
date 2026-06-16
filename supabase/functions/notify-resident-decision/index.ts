@@ -11,6 +11,8 @@ interface NotifyResidentRequest {
   occurrence_id: string;
   decision: "arquivada" | "advertido" | "multado";
   justification: string;
+  responsible_party?: "inquilino" | "proprietario";
+  responsible_name?: string;
 }
 
 serve(async (req) => {
@@ -25,7 +27,7 @@ serve(async (req) => {
   let notificationId: string | null = null;
 
   try {
-    const { occurrence_id, decision, justification }: NotifyResidentRequest = await req.json();
+    const { occurrence_id, decision, justification, responsible_party, responsible_name }: NotifyResidentRequest = await req.json();
     console.log("Notify resident decision:", { occurrence_id, decision });
 
     if (!occurrence_id || !decision) {
@@ -35,13 +37,13 @@ serve(async (req) => {
       );
     }
 
-    // Fetch occurrence with resident info
+    // Fetch occurrence with resident info (includes owner data for tenant scenarios)
     const { data: occurrence, error: occError } = await supabase
       .from("occurrences")
       .select(`
         id, title, type, condominium_id,
         residents!inner (
-          id, full_name, phone, email,
+          id, full_name, phone, email, resident_type, owner_name, owner_phone,
           apartments!inner (
             number,
             blocks!inner (
@@ -63,15 +65,6 @@ serve(async (req) => {
     }
 
     const resident = occurrence.residents as any;
-
-    if (!resident?.phone) {
-      console.log("Resident has no phone, skipping");
-      return new Response(
-        JSON.stringify({ success: true, skipped: true, reason: "Morador sem telefone" }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const condoName = resident.apartments.blocks.condominiums.name;
     const condoId = occurrence.condominium_id;
 
@@ -107,17 +100,6 @@ serve(async (req) => {
     const appBaseUrl = "https://notificacondo.com.br";
     const link = `${appBaseUrl}/resident/occurrences/${occurrence_id}`;
 
-    // Build variables
-    const variables: Record<string, string> = {
-      nome: resident.full_name || "Morador",
-      titulo: occurrence.title,
-      condominio: condoName,
-      justificativa: justification || "Sem justificativa adicional.",
-      link,
-    };
-
-    const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
-
     // Build button params if template has URL buttons with dynamic suffix
     let buttonParams: any[] | undefined;
     if (template?.button_config) {
@@ -136,62 +118,110 @@ serve(async (req) => {
       }
     }
 
-    // Create notification log entry
-    const { data: logEntry } = await supabase
-      .from("whatsapp_notification_logs")
-      .insert({
-        function_name: "notify-resident-decision",
+    // Build recipient list: always the resident, plus owner if tenant
+    type Recipient = { role: "inquilino" | "proprietario" | "morador"; phone: string; name: string };
+    const recipients: Recipient[] = [];
+
+    const residentIsTenant =
+      resident.resident_type === "inquilino" || responsible_party === "inquilino";
+    const baseRole: "inquilino" | "morador" = residentIsTenant ? "inquilino" : "morador";
+
+    if (resident.phone) {
+      recipients.push({
+        role: baseRole,
         phone: resident.phone,
-        template_name: wabaTemplateName,
-        template_language: wabaLanguage,
-        condominium_id: condoId,
-        resident_id: resident.id,
-        success: false,
-      })
-      .select("id")
-      .single();
-
-    notificationId = logEntry?.id || null;
-
-    console.log(`Sending Meta template "${wabaTemplateName}" to ${resident.phone}`);
-
-    const result = await sendMetaTemplate({
-      phone: resident.phone,
-      templateName: wabaTemplateName,
-      language: wabaLanguage,
-      bodyParams,
-      bodyParamNames,
-      buttonParams,
-    });
-
-    // Update log
-    if (notificationId) {
-      await supabase
-        .from("whatsapp_notification_logs")
-        .update({
-          success: result.success,
-          message_id: result.messageId || null,
-          response_status: result.debug?.status || null,
-          response_body: typeof result.debug?.response === "string" ? result.debug.response.substring(0, 2000) : null,
-          request_payload: result.debug?.payload || null,
-          error_message: result.error || null,
-        })
-        .eq("id", notificationId);
+        name: resident.full_name || "Morador",
+      });
     }
 
-    if (!result.success) {
-      console.error("Meta send failed:", result.error);
+    if (residentIsTenant && resident.owner_phone && resident.owner_phone !== resident.phone) {
+      recipients.push({
+        role: "proprietario",
+        phone: resident.owner_phone,
+        name: resident.owner_name || "Proprietário",
+      });
+    }
+
+    if (recipients.length === 0) {
+      console.log("No recipient phone available, skipping");
       return new Response(
-        JSON.stringify({ success: false, error: result.error, notification_id: notificationId }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ success: true, skipped: true, reason: "Sem telefone para notificar" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("WhatsApp decision notification sent successfully via Meta");
+    const results: any[] = [];
+    let anyFailure = false;
+
+    for (const r of recipients) {
+      const variables: Record<string, string> = {
+        nome: r.name,
+        titulo: occurrence.title,
+        condominio: condoName,
+        justificativa: justification || "Sem justificativa adicional.",
+        link,
+      };
+      const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
+
+      const { data: logEntry } = await supabase
+        .from("whatsapp_notification_logs")
+        .insert({
+          function_name: "notify-resident-decision",
+          phone: r.phone,
+          template_name: wabaTemplateName,
+          template_language: wabaLanguage,
+          condominium_id: condoId,
+          resident_id: resident.id,
+          recipient_role: r.role,
+          success: false,
+        })
+        .select("id")
+        .single();
+
+      const logId = logEntry?.id || null;
+      console.log(`Sending Meta template "${wabaTemplateName}" to ${r.phone} (${r.role})`);
+
+      const result = await sendMetaTemplate({
+        phone: r.phone,
+        templateName: wabaTemplateName,
+        language: wabaLanguage,
+        bodyParams,
+        bodyParamNames,
+        buttonParams,
+      });
+
+      if (logId) {
+        await supabase
+          .from("whatsapp_notification_logs")
+          .update({
+            success: result.success,
+            message_id: result.messageId || null,
+            response_status: result.debug?.status || null,
+            response_body: typeof result.debug?.response === "string" ? result.debug.response.substring(0, 2000) : null,
+            request_payload: result.debug?.payload || null,
+            error_message: result.error || null,
+          })
+          .eq("id", logId);
+      }
+
+      if (!result.success) {
+        anyFailure = true;
+        console.error(`Meta send failed for ${r.role}:`, result.error);
+      }
+
+      results.push({
+        role: r.role,
+        phone: r.phone,
+        success: result.success,
+        messageId: result.messageId,
+        error: result.error,
+        notification_id: logId,
+      });
+    }
 
     return new Response(
-      JSON.stringify({ success: true, messageId: result.messageId, notification_id: notificationId }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ success: !anyFailure, results, responsible_party, responsible_name }),
+      { status: anyFailure ? 207 : 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error("Unexpected error:", error);
