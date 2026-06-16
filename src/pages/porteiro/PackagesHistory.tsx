@@ -151,6 +151,7 @@ const PorteiroPackagesHistory = () => {
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
   const [notificationLogs, setNotificationLogs] = useState<any[]>([]);
+  const [isResendingNotification, setIsResendingNotification] = useState(false);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const pageSize = 20;
 
