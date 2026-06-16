@@ -573,6 +573,10 @@ const CondominiumDetails = () => {
       cpf: "",
       is_owner: false,
       is_responsible: false,
+      resident_type: "proprietario",
+      owner_name: "",
+      owner_phone: "",
+      owner_email: "",
     });
     setResidentDialog(true);
   };
@@ -591,6 +595,18 @@ const CondominiumDetails = () => {
     setSaving(true);
     try {
       const normalizedPhone = residentForm.phone?.replace(/\D/g, "") || null;
+      const isTenant = residentForm.resident_type === "inquilino";
+      const ownerPayload = {
+        resident_type: residentForm.resident_type,
+        owner_name: isTenant ? (residentForm.owner_name || null) : null,
+        owner_phone: isTenant ? (residentForm.owner_phone?.replace(/\D/g, "") || null) : null,
+        owner_email: isTenant ? (residentForm.owner_email || null) : null,
+      };
+      if (isTenant && (!ownerPayload.owner_name || !ownerPayload.owner_phone)) {
+        toast({ title: "Erro", description: "Para inquilinos, informe nome e telefone do proprietário.", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
       if (editingResident) {
         const { error } = await supabase
           .from("residents")
@@ -602,6 +618,7 @@ const CondominiumDetails = () => {
             cpf: residentForm.cpf || null,
             is_owner: residentForm.is_owner,
             is_responsible: residentForm.is_responsible,
+            ...ownerPayload,
           })
           .eq("id", editingResident.id);
         if (error) throw error;
@@ -615,6 +632,7 @@ const CondominiumDetails = () => {
           cpf: residentForm.cpf || null,
           is_owner: residentForm.is_owner,
           is_responsible: residentForm.is_responsible,
+          ...ownerPayload,
         });
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador cadastrado!" });
@@ -629,6 +647,10 @@ const CondominiumDetails = () => {
         cpf: "",
         is_owner: false,
         is_responsible: false,
+        resident_type: "proprietario",
+        owner_name: "",
+        owner_phone: "",
+        owner_email: "",
       });
       fetchData();
     } catch (error: any) {
@@ -1198,6 +1220,10 @@ const CondominiumDetails = () => {
                                                     cpf: resident.cpf || "",
                                                     is_owner: resident.is_owner,
                                                     is_responsible: resident.is_responsible,
+                                                    resident_type: (resident.resident_type as any) || "proprietario",
+                                                    owner_name: resident.owner_name || "",
+                                                    owner_phone: resident.owner_phone ? formatPhone(resident.owner_phone.replace(/^55(?=\d{10,11}$)/, "")) : "",
+                                                    owner_email: resident.owner_email || "",
                                                   });
                                                   setResidentDialog(true);
                                                 }}
