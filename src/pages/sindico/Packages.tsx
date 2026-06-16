@@ -182,62 +182,100 @@ const SindicoPackages = () => {
   // Notification logs for selected package
   const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [isResendingNotification, setIsResendingNotification] = useState(false);
+
+  const fetchNotificationLogs = async (packageId: string) => {
+    setIsLoadingLogs(true);
+    try {
+      let { data, error } = await supabase
+        .from("whatsapp_notification_logs")
+        .select("id, created_at, success, error_message, template_name, status, debug_info, accepted_at, sent_at, delivered_at, read_at")
+        .eq("package_id", packageId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        const fallback = await supabase
+          .from("whatsapp_notification_logs")
+          .select("id, created_at, success, error_message, template_name, status, debug_info")
+          .eq("package_id", packageId)
+          .order("created_at", { ascending: false });
+        data = fallback.data as any;
+      }
+
+      setNotificationLogs((data || []).map((d: any) => ({
+        id: d.id,
+        created_at: d.created_at,
+        success: d.success,
+        error_message: d.error_message,
+        template_name: d.template_name,
+        status: d.status,
+        debug_info: d.debug_info,
+        accepted_at: d.accepted_at ?? null,
+        sent_at: d.sent_at ?? null,
+        delivered_at: d.delivered_at ?? null,
+        read_at: d.read_at ?? null,
+      })));
+    } catch (err) {
+      console.error("Error fetching notification logs:", err);
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
+
+  const handleResendNotification = async () => {
+    if (!selectedPackage) return;
+    setIsResendingNotification(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-package-arrival", {
+        body: {
+          package_id: selectedPackage.id,
+          apartment_id: selectedPackage.apartment?.id,
+          pickup_code: selectedPackage.pickup_code,
+          photo_url: selectedPackage.photo_url,
+        },
+      });
+      if (error) throw error;
+      if (data?.notifications_sent > 0) {
+        toast({
+          title: "Notificação reenviada",
+          description: `${data.notifications_sent} morador(es) notificado(s).`,
+        });
+      } else {
+        toast({
+          title: "Nenhum morador notificado",
+          description: data?.message || "Verifique se o apartamento possui moradores com WhatsApp.",
+          variant: "destructive",
+        });
+      }
+      await fetchNotificationLogs(selectedPackage.id);
+    } catch (err: any) {
+      toast({
+        title: "Erro ao reenviar",
+        description: err.message || "Não foi possível reenviar a notificação.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingNotification(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedPackage?.id) {
       setNotificationLogs([]);
       return;
     }
-    let cancelled = false;
-    const fetchLogs = async () => {
-      setIsLoadingLogs(true);
-      try {
-        let { data, error } = await supabase
-          .from("whatsapp_notification_logs")
-          .select("id, created_at, success, error_message, template_name, status, debug_info, accepted_at, sent_at, delivered_at, read_at")
-          .eq("package_id", selectedPackage.id)
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          const fallback = await supabase
-            .from("whatsapp_notification_logs")
-            .select("id, created_at, success, error_message, template_name, status, debug_info")
-            .eq("package_id", selectedPackage.id)
-            .order("created_at", { ascending: false });
-          data = fallback.data as any;
-        }
-
-        if (cancelled) return;
-        setNotificationLogs((data || []).map((d: any) => ({
-          id: d.id,
-          created_at: d.created_at,
-          success: d.success,
-          error_message: d.error_message,
-          template_name: d.template_name,
-          status: d.status,
-          debug_info: d.debug_info,
-          accepted_at: d.accepted_at ?? null,
-          sent_at: d.sent_at ?? null,
-          delivered_at: d.delivered_at ?? null,
-          read_at: d.read_at ?? null,
-        })));
-      } catch (err) {
-        console.error("Error fetching notification logs:", err);
-      } finally {
-        if (!cancelled) setIsLoadingLogs(false);
-      }
-    };
-    fetchLogs();
+    const packageId = selectedPackage.id;
+    fetchNotificationLogs(packageId);
 
     const channel = supabase
-      .channel(`sindico-pkg-notif-${selectedPackage.id}`)
+      .channel(`sindico-pkg-notif-${packageId}`)
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "whatsapp_notification_logs",
-          filter: `package_id=eq.${selectedPackage.id}`,
+          filter: `package_id=eq.${packageId}`,
         },
         (payload) => {
           const updated = payload.new as any;
@@ -259,10 +297,40 @@ const SindicoPackages = () => {
           );
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "whatsapp_notification_logs",
+          filter: `package_id=eq.${packageId}`,
+        },
+        (payload) => {
+          const inserted = payload.new as any;
+          setNotificationLogs((prev) => {
+            if (prev.some((log) => log.id === inserted.id)) return prev;
+            return [
+              {
+                id: inserted.id,
+                created_at: inserted.created_at,
+                success: inserted.success,
+                error_message: inserted.error_message,
+                template_name: inserted.template_name,
+                status: inserted.status,
+                debug_info: inserted.debug_info,
+                accepted_at: inserted.accepted_at ?? null,
+                sent_at: inserted.sent_at ?? null,
+                delivered_at: inserted.delivered_at ?? null,
+                read_at: inserted.read_at ?? null,
+              },
+              ...prev,
+            ];
+          });
+        }
+      )
       .subscribe();
 
     return () => {
-      cancelled = true;
       supabase.removeChannel(channel);
     };
   }, [selectedPackage?.id]);
@@ -1170,6 +1238,28 @@ const SindicoPackages = () => {
                     </Badge>
                   )}
                 </div>
+
+                {selectedPackage.status === "pendente" && (
+                  <Button
+                    onClick={handleResendNotification}
+                    disabled={isResendingNotification || !selectedPackage.apartment?.id}
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                  >
+                    {isResendingNotification ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4" />
+                        {notificationLogs.length > 0 ? "Reenviar Notificação via WhatsApp" : "Enviar Notificação via WhatsApp"}
+                      </>
+                    )}
+                  </Button>
+                )}
 
                 {isLoadingLogs ? (
                   <div className="flex items-center justify-center py-4 text-muted-foreground">
