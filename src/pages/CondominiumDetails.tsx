@@ -63,7 +63,7 @@ import ResidentCSVImportDialog from "@/components/condominium/ResidentCSVImportD
 import { BulkBlocksApartmentsWizard } from "@/components/condominium/BulkBlocksApartmentsWizard";
 import BulkResidentCSVImportDialog from "@/components/condominium/BulkResidentCSVImportDialog";
 import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApartmentSearch";
-import OwnersSection from "@/components/condominium/OwnersSection";
+
 import OwnerFormDialog, { PropertyOwner } from "@/components/condominium/OwnerFormDialog";
 import {
   Select,
@@ -913,18 +913,7 @@ const CondominiumDetails = () => {
           </Card>
         </div>
 
-        {/* Owners Section */}
-        {id && (
-          <OwnersSection
-            condominiumId={id}
-            owners={propertyOwners}
-            tenantCountByOwner={residents.reduce<Record<string, number>>((acc, r) => {
-              if (r.property_owner_id) acc[r.property_owner_id] = (acc[r.property_owner_id] || 0) + 1;
-              return acc;
-            }, {})}
-            onChanged={fetchData}
-          />
-        )}
+
 
         {/* Search and Filters */}
         <Card>
