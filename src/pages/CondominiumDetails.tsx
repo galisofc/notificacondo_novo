@@ -397,6 +397,14 @@ const CondominiumDetails = () => {
           setResidents(residentsData || []);
         }
       }
+
+      // Fetch property owners (independent of blocks)
+      const { data: ownersData } = await (supabase as any)
+        .from("property_owners")
+        .select("*")
+        .eq("condominium_id", id)
+        .order("full_name");
+      setPropertyOwners((ownersData as PropertyOwner[]) || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({ title: "Erro", description: "Erro ao carregar dados.", variant: "destructive" });
