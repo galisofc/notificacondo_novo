@@ -6,6 +6,7 @@ import {
   formatPhoneForMeta, 
   buildParamsArray,
   isMetaConfigured,
+  uploadMetaMedia,
   type MetaSendResult 
 } from "../_shared/meta-whatsapp.ts";
 
