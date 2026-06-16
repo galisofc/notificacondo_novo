@@ -17,6 +17,54 @@ const corsHeaders = {
 // Sanitize strings for use in messages
 const sanitize = (str: string) => str.replace(/[<>"'`]/g, "").trim();
 
+// Max image size accepted by Meta WhatsApp Cloud API for template header (5 MB)
+const META_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Robust extraction of file path from a Supabase Storage URL (handles public, sign,
+// subfolders and query strings). Mirrors src/lib/packageStorage.ts.
+function extractPackagePhotoPath(photoUrl: string): string | null {
+  if (!photoUrl) return null;
+  const bucketName = "package-photos";
+
+  // Already a path (no protocol, no slashes treated as bare filename allowed)
+  if (!photoUrl.startsWith("http")) {
+    // strip leading bucket prefix if present
+    if (photoUrl.startsWith(`${bucketName}/`)) return photoUrl.slice(bucketName.length + 1);
+    return photoUrl;
+  }
+
+  const patterns = [
+    `/object/public/${bucketName}/`,
+    `/object/sign/${bucketName}/`,
+    `/public/${bucketName}/`,
+    `/${bucketName}/`,
+  ];
+  for (const pattern of patterns) {
+    const idx = photoUrl.indexOf(pattern);
+    if (idx !== -1) {
+      let filePath = photoUrl.substring(idx + pattern.length);
+      const q = filePath.indexOf("?");
+      if (q !== -1) filePath = filePath.substring(0, q);
+      return filePath || null;
+    }
+  }
+  return null;
+}
+
+// Detect Meta media-download errors (131053 and variants).
+function isMetaMediaError(result: { error?: string; errorCode?: string; debug?: any }): boolean {
+  const code = result.errorCode || "";
+  const msg = (result.error || "").toLowerCase();
+  const resp = typeof result.debug?.response === "string" ? result.debug.response.toLowerCase() : "";
+  return (
+    code === "131053" ||
+    msg.includes("131053") ||
+    msg.includes("media upload") ||
+    msg.includes("media download") ||
+    resp.includes("131053")
+  );
+}
+
 interface WhatsAppTemplateRow {
   id: string;
   slug: string;
@@ -94,33 +142,51 @@ serve(async (req) => {
     // ========== GENERATE SIGNED URL FOR PHOTO ==========
     // The package-photos bucket is private, so we need a signed URL for Meta to access
     let signedPhotoUrl: string | null = null;
-    
+    let photoSkippedReason: string | null = null;
+
     if (photo_url) {
-      // Extract file path from the photo_url (remove bucket prefix if present)
-      let filePath = photo_url;
-      
-      // Handle various URL formats
-      if (photo_url.includes("/package-photos/")) {
-        filePath = photo_url.split("/package-photos/").pop() || photo_url;
-      } else if (photo_url.startsWith("http")) {
-        // If it's already a full URL, extract just the filename
-        const urlParts = photo_url.split("/");
-        filePath = urlParts[urlParts.length - 1];
-      }
-      
-      console.log(`Generating signed URL for photo: ${filePath}`);
-      
-      // Generate signed URL valid for 1 hour (enough time for Meta to download)
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from("package-photos")
-        .createSignedUrl(filePath, 3600); // 1 hour expiration
-      
-      if (signedError) {
-        console.error("Error generating signed URL:", signedError);
-        // Continue without photo rather than failing the notification
-      } else if (signedData?.signedUrl) {
-        signedPhotoUrl = signedData.signedUrl;
-        console.log(`Signed URL generated successfully`);
+      const filePath = extractPackagePhotoPath(photo_url);
+
+      if (!filePath) {
+        console.warn("Could not extract file path from photo URL:", photo_url);
+        photoSkippedReason = "invalid_path";
+      } else {
+        console.log(`Generating signed URL for photo: ${filePath}`);
+
+        // Generate signed URL valid for 1 hour (enough time for Meta to download)
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from("package-photos")
+          .createSignedUrl(filePath, 3600);
+
+        if (signedError) {
+          console.error("Error generating signed URL:", signedError);
+          photoSkippedReason = "signed_url_error";
+        } else if (signedData?.signedUrl) {
+          // Verify size before sending — Meta rejects >5 MB with 131053
+          try {
+            const head = await fetch(signedData.signedUrl, { method: "HEAD" });
+            const lenStr = head.headers.get("content-length");
+            const contentType = head.headers.get("content-type") || "";
+            const len = lenStr ? Number(lenStr) : 0;
+            console.log(`Photo HEAD: status=${head.status}, size=${len} bytes, type=${contentType}`);
+
+            if (!head.ok) {
+              photoSkippedReason = `head_${head.status}`;
+            } else if (len > META_MAX_IMAGE_BYTES) {
+              console.warn(`Photo too large for Meta (${len} bytes > ${META_MAX_IMAGE_BYTES}), skipping image`);
+              photoSkippedReason = "too_large";
+            } else if (contentType && !contentType.startsWith("image/")) {
+              console.warn(`Unexpected content-type ${contentType}, skipping image`);
+              photoSkippedReason = `bad_type_${contentType}`;
+            } else {
+              signedPhotoUrl = signedData.signedUrl;
+              console.log(`Signed URL generated and validated`);
+            }
+          } catch (headErr) {
+            console.warn("HEAD check failed, proceeding with image anyway:", headErr);
+            signedPhotoUrl = signedData.signedUrl;
+          }
+        }
       }
     }
 
@@ -321,13 +387,14 @@ serve(async (req) => {
       };
 
       let result: MetaSendResult;
+      let imageRetryReason: string | null = null;
 
       // Try to send via WABA template if configured
       if (wabaTemplateName && paramsOrder.length > 0) {
         console.log(`Using WABA template: ${wabaTemplateName}`);
-        
+
         const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
-        
+
         result = await sendMetaTemplate({
           phone: resident.phone!,
           templateName: wabaTemplateName,
@@ -337,10 +404,25 @@ serve(async (req) => {
           headerMediaUrl: signedPhotoUrl || undefined,
           headerMediaType: signedPhotoUrl ? "image" : undefined,
         });
+
+        // Auto-retry without image when Meta rejects the media (131053).
+        if (!result.success && signedPhotoUrl && isMetaMediaError(result)) {
+          imageRetryReason = result.errorCode || "131053";
+          console.warn(
+            `Meta rejected media (${imageRetryReason}) for ${resident.phone}. Retrying template without image.`
+          );
+          result = await sendMetaTemplate({
+            phone: resident.phone!,
+            templateName: wabaTemplateName,
+            language: wabaLanguage,
+            bodyParams,
+            bodyParamNames,
+          });
+        }
       } else {
         // Fallback: Send image with caption
         console.log("Fallback: sending image with caption");
-        
+
         const caption = `🏢 *${sanitize(condoName)}*\n\n` +
           `📦 *Nova Encomenda!*\n\n` +
           `Olá, *${sanitize(resident.full_name || "Morador")}*!\n\n` +
@@ -351,16 +433,25 @@ serve(async (req) => {
           `• Rastreio: ${sanitize(trackingCode)}\n` +
           `• Código de retirada: *${sanitize(pickup_code)}*\n\n` +
           `Recebido por: ${sanitize(porterName)}`;
-        
+
+        const { sendMetaText } = await import("../_shared/meta-whatsapp.ts");
+
         if (signedPhotoUrl) {
           result = await sendMetaImage({
             phone: resident.phone!,
             imageUrl: signedPhotoUrl,
             caption,
           });
+          // Retry as text if Meta rejects the image.
+          if (!result.success && isMetaMediaError(result)) {
+            imageRetryReason = result.errorCode || "131053";
+            console.warn(`Meta rejected image, retrying as text-only.`);
+            result = await sendMetaText({
+              phone: resident.phone!,
+              message: caption,
+            });
+          }
         } else {
-          // Import sendMetaText for text-only fallback
-          const { sendMetaText } = await import("../_shared/meta-whatsapp.ts");
           result = await sendMetaText({
             phone: resident.phone!,
             message: caption,
@@ -383,9 +474,11 @@ serve(async (req) => {
         request_payload: result.debug?.payload || { variables, params_order: paramsOrder },
         response_body: result.debug?.response,
         response_status: result.debug?.status,
-        debug_info: { 
+        debug_info: {
           original_photo_url: photo_url || null,
           signed_photo_url: signedPhotoUrl || null,
+          photo_skipped_reason: photoSkippedReason,
+          image_retry_reason: imageRetryReason,
           sent_by_user_id: user.id,
           sent_by_name: senderName,
         },
