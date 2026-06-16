@@ -677,12 +677,12 @@ const CondominiumDetails = () => {
 
       // If tenant, ensure a matching "proprietario" resident row exists in the same apartment
       if (isTenant && ownerSnapshot.property_owner_id) {
-        const { data: existingOwnerResident } = await supabase
+        const { data: existingOwnerResident } = await (supabase as any)
           .from("residents")
           .select("id")
           .eq("apartment_id", residentForm.apartment_id)
-          .eq("property_owner_id" as any, ownerSnapshot.property_owner_id)
-          .eq("resident_type" as any, "proprietario")
+          .eq("property_owner_id", ownerSnapshot.property_owner_id)
+          .eq("resident_type", "proprietario")
           .maybeSingle();
 
         if (!existingOwnerResident) {
