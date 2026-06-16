@@ -619,7 +619,7 @@ const CondominiumDetails = () => {
             is_owner: residentForm.is_owner,
             is_responsible: residentForm.is_responsible,
             ...ownerPayload,
-          })
+          } as any)
           .eq("id", editingResident.id);
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador atualizado!" });
@@ -633,7 +633,7 @@ const CondominiumDetails = () => {
           is_owner: residentForm.is_owner,
           is_responsible: residentForm.is_responsible,
           ...ownerPayload,
-        });
+        } as any);
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador cadastrado!" });
       }
