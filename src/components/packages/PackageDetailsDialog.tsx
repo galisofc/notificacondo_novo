@@ -171,6 +171,49 @@ export function PackageDetailsDialog({
           );
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "whatsapp_notification_logs",
+          filter: `package_id=eq.${package_.id}`,
+        },
+        (payload) => {
+          const inserted = payload.new as any;
+          setNotificationLogs((prev) => {
+            if (prev.some((log) => log.id === inserted.id)) return prev;
+            return [
+              {
+                id: inserted.id,
+                created_at: inserted.created_at,
+                success: inserted.success,
+                error_message: inserted.error_message,
+                template_name: inserted.template_name,
+                status: inserted.status,
+                debug_info: inserted.debug_info,
+                accepted_at: inserted.accepted_at ?? null,
+                sent_at: inserted.sent_at ?? null,
+                delivered_at: inserted.delivered_at ?? null,
+                read_at: inserted.read_at ?? null,
+              },
+              ...prev,
+            ];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "packages",
+          filter: `id=eq.${package_.id}`,
+        },
+        () => {
+          fetchNotificationLogs();
+        }
+      )
       .subscribe();
 
     return () => {
