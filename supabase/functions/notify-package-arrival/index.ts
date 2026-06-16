@@ -474,9 +474,11 @@ serve(async (req) => {
         request_payload: result.debug?.payload || { variables, params_order: paramsOrder },
         response_body: result.debug?.response,
         response_status: result.debug?.status,
-        debug_info: { 
+        debug_info: {
           original_photo_url: photo_url || null,
           signed_photo_url: signedPhotoUrl || null,
+          photo_skipped_reason: photoSkippedReason,
+          image_retry_reason: imageRetryReason,
           sent_by_user_id: user.id,
           sent_by_name: senderName,
         },
