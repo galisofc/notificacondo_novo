@@ -142,33 +142,51 @@ serve(async (req) => {
     // ========== GENERATE SIGNED URL FOR PHOTO ==========
     // The package-photos bucket is private, so we need a signed URL for Meta to access
     let signedPhotoUrl: string | null = null;
-    
+    let photoSkippedReason: string | null = null;
+
     if (photo_url) {
-      // Extract file path from the photo_url (remove bucket prefix if present)
-      let filePath = photo_url;
-      
-      // Handle various URL formats
-      if (photo_url.includes("/package-photos/")) {
-        filePath = photo_url.split("/package-photos/").pop() || photo_url;
-      } else if (photo_url.startsWith("http")) {
-        // If it's already a full URL, extract just the filename
-        const urlParts = photo_url.split("/");
-        filePath = urlParts[urlParts.length - 1];
-      }
-      
-      console.log(`Generating signed URL for photo: ${filePath}`);
-      
-      // Generate signed URL valid for 1 hour (enough time for Meta to download)
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from("package-photos")
-        .createSignedUrl(filePath, 3600); // 1 hour expiration
-      
-      if (signedError) {
-        console.error("Error generating signed URL:", signedError);
-        // Continue without photo rather than failing the notification
-      } else if (signedData?.signedUrl) {
-        signedPhotoUrl = signedData.signedUrl;
-        console.log(`Signed URL generated successfully`);
+      const filePath = extractPackagePhotoPath(photo_url);
+
+      if (!filePath) {
+        console.warn("Could not extract file path from photo URL:", photo_url);
+        photoSkippedReason = "invalid_path";
+      } else {
+        console.log(`Generating signed URL for photo: ${filePath}`);
+
+        // Generate signed URL valid for 1 hour (enough time for Meta to download)
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from("package-photos")
+          .createSignedUrl(filePath, 3600);
+
+        if (signedError) {
+          console.error("Error generating signed URL:", signedError);
+          photoSkippedReason = "signed_url_error";
+        } else if (signedData?.signedUrl) {
+          // Verify size before sending — Meta rejects >5 MB with 131053
+          try {
+            const head = await fetch(signedData.signedUrl, { method: "HEAD" });
+            const lenStr = head.headers.get("content-length");
+            const contentType = head.headers.get("content-type") || "";
+            const len = lenStr ? Number(lenStr) : 0;
+            console.log(`Photo HEAD: status=${head.status}, size=${len} bytes, type=${contentType}`);
+
+            if (!head.ok) {
+              photoSkippedReason = `head_${head.status}`;
+            } else if (len > META_MAX_IMAGE_BYTES) {
+              console.warn(`Photo too large for Meta (${len} bytes > ${META_MAX_IMAGE_BYTES}), skipping image`);
+              photoSkippedReason = "too_large";
+            } else if (contentType && !contentType.startsWith("image/")) {
+              console.warn(`Unexpected content-type ${contentType}, skipping image`);
+              photoSkippedReason = `bad_type_${contentType}`;
+            } else {
+              signedPhotoUrl = signedData.signedUrl;
+              console.log(`Signed URL generated and validated`);
+            }
+          } catch (headErr) {
+            console.warn("HEAD check failed, proceeding with image anyway:", headErr);
+            signedPhotoUrl = signedData.signedUrl;
+          }
+        }
       }
     }
 
