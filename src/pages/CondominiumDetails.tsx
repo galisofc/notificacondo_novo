@@ -875,6 +875,19 @@ const CondominiumDetails = () => {
           </Card>
         </div>
 
+        {/* Owners Section */}
+        {id && (
+          <OwnersSection
+            condominiumId={id}
+            owners={propertyOwners}
+            tenantCountByOwner={residents.reduce<Record<string, number>>((acc, r) => {
+              if (r.property_owner_id) acc[r.property_owner_id] = (acc[r.property_owner_id] || 0) + 1;
+              return acc;
+            }, {})}
+            onChanged={fetchData}
+          />
+        )}
+
         {/* Search and Filters */}
         <Card>
           <CardContent className="pt-6">
@@ -1503,36 +1516,38 @@ const CondominiumDetails = () => {
               </div>
               {residentForm.resident_type === "inquilino" && (
                 <div className="space-y-3 rounded-lg border border-border p-3 bg-secondary/30">
-                  <p className="text-sm font-medium">Dados do proprietário</p>
+                  <p className="text-sm font-medium">Proprietário do imóvel *</p>
                   <div className="space-y-2">
-                    <Label htmlFor="ownerName">Nome do proprietário *</Label>
-                    <Input
-                      id="ownerName"
-                      value={residentForm.owner_name}
-                      onChange={(e) => setResidentForm({ ...residentForm, owner_name: e.target.value })}
-                      placeholder="Nome completo do proprietário"
-                    />
+                    <Label htmlFor="ownerSelect">Selecionar proprietário cadastrado</Label>
+                    <select
+                      id="ownerSelect"
+                      value={residentForm.property_owner_id}
+                      onChange={(e) =>
+                        setResidentForm({ ...residentForm, property_owner_id: e.target.value })
+                      }
+                      className="w-full h-10 px-3 rounded-lg bg-secondary/50 border border-border text-foreground"
+                    >
+                      <option value="">Selecione um proprietário...</option>
+                      {propertyOwners.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.full_name}
+                          {o.phone ? ` — ${formatPhone(o.phone.replace(/^55(?=\d{10,11}$)/, ""))}` : ""}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerPhone">Telefone do proprietário *</Label>
-                    <MaskedInput
-                      id="ownerPhone"
-                      mask="phone"
-                      value={residentForm.owner_phone}
-                      onChange={(value) => setResidentForm({ ...residentForm, owner_phone: value })}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerEmail">E-mail do proprietário</Label>
-                    <Input
-                      id="ownerEmail"
-                      type="email"
-                      value={residentForm.owner_email}
-                      onChange={(e) => setResidentForm({ ...residentForm, owner_email: e.target.value })}
-                      placeholder="proprietario@email.com"
-                    />
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOwnerDialogFromResident(true)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Cadastrar novo proprietário
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Ao excluir o inquilino, o proprietário permanece cadastrado.
+                  </p>
                 </div>
               )}
               <div className="flex items-center gap-6">
