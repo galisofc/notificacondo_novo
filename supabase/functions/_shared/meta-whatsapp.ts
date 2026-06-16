@@ -37,6 +37,8 @@ export interface MetaTemplateParams {
   language: string;
   bodyParams?: string[];
   headerMediaUrl?: string;
+  /** Preferred: media id returned by /media upload. Avoids Meta download errors (131053). */
+  headerMediaId?: string;
   headerMediaType?: "image" | "video" | "document";
   bodyParamNames?: string[];
   buttonParams?: Array<{
