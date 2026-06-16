@@ -17,6 +17,54 @@ const corsHeaders = {
 // Sanitize strings for use in messages
 const sanitize = (str: string) => str.replace(/[<>"'`]/g, "").trim();
 
+// Max image size accepted by Meta WhatsApp Cloud API for template header (5 MB)
+const META_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// Robust extraction of file path from a Supabase Storage URL (handles public, sign,
+// subfolders and query strings). Mirrors src/lib/packageStorage.ts.
+function extractPackagePhotoPath(photoUrl: string): string | null {
+  if (!photoUrl) return null;
+  const bucketName = "package-photos";
+
+  // Already a path (no protocol, no slashes treated as bare filename allowed)
+  if (!photoUrl.startsWith("http")) {
+    // strip leading bucket prefix if present
+    if (photoUrl.startsWith(`${bucketName}/`)) return photoUrl.slice(bucketName.length + 1);
+    return photoUrl;
+  }
+
+  const patterns = [
+    `/object/public/${bucketName}/`,
+    `/object/sign/${bucketName}/`,
+    `/public/${bucketName}/`,
+    `/${bucketName}/`,
+  ];
+  for (const pattern of patterns) {
+    const idx = photoUrl.indexOf(pattern);
+    if (idx !== -1) {
+      let filePath = photoUrl.substring(idx + pattern.length);
+      const q = filePath.indexOf("?");
+      if (q !== -1) filePath = filePath.substring(0, q);
+      return filePath || null;
+    }
+  }
+  return null;
+}
+
+// Detect Meta media-download errors (131053 and variants).
+function isMetaMediaError(result: { error?: string; errorCode?: string; debug?: any }): boolean {
+  const code = result.errorCode || "";
+  const msg = (result.error || "").toLowerCase();
+  const resp = typeof result.debug?.response === "string" ? result.debug.response.toLowerCase() : "";
+  return (
+    code === "131053" ||
+    msg.includes("131053") ||
+    msg.includes("media upload") ||
+    msg.includes("media download") ||
+    resp.includes("131053")
+  );
+}
+
 interface WhatsAppTemplateRow {
   id: string;
   slug: string;
