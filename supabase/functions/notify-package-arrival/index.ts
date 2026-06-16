@@ -6,6 +6,7 @@ import {
   formatPhoneForMeta, 
   buildParamsArray,
   isMetaConfigured,
+  uploadMetaMedia,
   type MetaSendResult 
 } from "../_shared/meta-whatsapp.ts";
 
@@ -142,6 +143,7 @@ serve(async (req) => {
     // ========== GENERATE SIGNED URL FOR PHOTO ==========
     // The package-photos bucket is private, so we need a signed URL for Meta to access
     let signedPhotoUrl: string | null = null;
+    let metaMediaId: string | null = null;
     let photoSkippedReason: string | null = null;
 
     if (photo_url) {
@@ -162,28 +164,42 @@ serve(async (req) => {
           console.error("Error generating signed URL:", signedError);
           photoSkippedReason = "signed_url_error";
         } else if (signedData?.signedUrl) {
-          // Verify size before sending — Meta rejects >5 MB with 131053
+          // Download the image and upload directly to Meta's /media endpoint.
+          // Using a media id instead of a link avoids 131053 "Media upload error"
+          // that occurs when Meta later fails to fetch the link at delivery time.
           try {
-            const head = await fetch(signedData.signedUrl, { method: "HEAD" });
-            const lenStr = head.headers.get("content-length");
-            const contentType = head.headers.get("content-type") || "";
-            const len = lenStr ? Number(lenStr) : 0;
-            console.log(`Photo HEAD: status=${head.status}, size=${len} bytes, type=${contentType}`);
-
-            if (!head.ok) {
-              photoSkippedReason = `head_${head.status}`;
-            } else if (len > META_MAX_IMAGE_BYTES) {
-              console.warn(`Photo too large for Meta (${len} bytes > ${META_MAX_IMAGE_BYTES}), skipping image`);
-              photoSkippedReason = "too_large";
-            } else if (contentType && !contentType.startsWith("image/")) {
-              console.warn(`Unexpected content-type ${contentType}, skipping image`);
-              photoSkippedReason = `bad_type_${contentType}`;
+            const imgResp = await fetch(signedData.signedUrl);
+            if (!imgResp.ok) {
+              photoSkippedReason = `download_${imgResp.status}`;
             } else {
-              signedPhotoUrl = signedData.signedUrl;
-              console.log(`Signed URL generated and validated`);
+              const contentType = imgResp.headers.get("content-type") || "image/jpeg";
+              const buf = new Uint8Array(await imgResp.arrayBuffer());
+              console.log(`Downloaded photo: ${buf.byteLength} bytes, type=${contentType}`);
+
+              if (buf.byteLength === 0) {
+                photoSkippedReason = "empty_file";
+              } else if (buf.byteLength > META_MAX_IMAGE_BYTES) {
+                console.warn(`Photo too large for Meta (${buf.byteLength} bytes), skipping image`);
+                photoSkippedReason = "too_large";
+              } else if (!contentType.startsWith("image/")) {
+                console.warn(`Unexpected content-type ${contentType}, skipping image`);
+                photoSkippedReason = `bad_type_${contentType}`;
+              } else {
+                const fileName = filePath.split("/").pop() || "package.jpg";
+                const uploadRes = await uploadMetaMedia(buf, contentType, fileName);
+                if (uploadRes.success && uploadRes.mediaId) {
+                  metaMediaId = uploadRes.mediaId;
+                  signedPhotoUrl = signedData.signedUrl; // kept for logs
+                  console.log(`Meta media uploaded: id=${metaMediaId}`);
+                } else {
+                  console.warn(`Meta media upload failed: ${uploadRes.error}. Falling back to link.`);
+                  photoSkippedReason = `upload_failed:${uploadRes.error || "unknown"}`;
+                  signedPhotoUrl = signedData.signedUrl;
+                }
+              }
             }
-          } catch (headErr) {
-            console.warn("HEAD check failed, proceeding with image anyway:", headErr);
+          } catch (dlErr) {
+            console.warn("Failed to download/upload photo, falling back to link:", dlErr);
             signedPhotoUrl = signedData.signedUrl;
           }
         }
@@ -395,18 +411,21 @@ serve(async (req) => {
 
         const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
 
+        const hasHeaderMedia = Boolean(metaMediaId || signedPhotoUrl);
+
         result = await sendMetaTemplate({
           phone: resident.phone!,
           templateName: wabaTemplateName,
           language: wabaLanguage,
           bodyParams,
           bodyParamNames,
-          headerMediaUrl: signedPhotoUrl || undefined,
-          headerMediaType: signedPhotoUrl ? "image" : undefined,
+          headerMediaId: metaMediaId || undefined,
+          headerMediaUrl: metaMediaId ? undefined : (signedPhotoUrl || undefined),
+          headerMediaType: hasHeaderMedia ? "image" : undefined,
         });
 
         // Auto-retry without image when Meta rejects the media (131053).
-        if (!result.success && signedPhotoUrl && isMetaMediaError(result)) {
+        if (!result.success && hasHeaderMedia && isMetaMediaError(result)) {
           imageRetryReason = result.errorCode || "131053";
           console.warn(
             `Meta rejected media (${imageRetryReason}) for ${resident.phone}. Retrying template without image.`
@@ -477,6 +496,7 @@ serve(async (req) => {
         debug_info: {
           original_photo_url: photo_url || null,
           signed_photo_url: signedPhotoUrl || null,
+          meta_media_id: metaMediaId || null,
           photo_skipped_reason: photoSkippedReason,
           image_retry_reason: imageRetryReason,
           sent_by_user_id: user.id,

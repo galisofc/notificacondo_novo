@@ -37,6 +37,8 @@ export interface MetaTemplateParams {
   language: string;
   bodyParams?: string[];
   headerMediaUrl?: string;
+  /** Preferred: media id returned by /media upload. Avoids Meta download errors (131053). */
+  headerMediaId?: string;
   headerMediaType?: "image" | "video" | "document";
   bodyParamNames?: string[];
   buttonParams?: Array<{
@@ -143,17 +145,18 @@ export async function sendMetaTemplate(
   // Build template components
   const components: Array<Record<string, unknown>> = [];
   
-  // Add header component if media is present
-  if (params.headerMediaUrl) {
+  // Add header component if media is present (prefer media id over link)
+  if (params.headerMediaId || params.headerMediaUrl) {
     const mediaType = params.headerMediaType || "image";
+    const mediaObj: Record<string, unknown> = params.headerMediaId
+      ? { id: params.headerMediaId }
+      : { link: params.headerMediaUrl };
     components.push({
       type: "header",
       parameters: [
         {
           type: mediaType,
-          [mediaType]: {
-            link: params.headerMediaUrl,
-          },
+          [mediaType]: mediaObj,
         },
       ],
     });
@@ -528,6 +531,78 @@ export async function testMetaConnection(config?: MetaWhatsAppConfig): Promise<M
     };
   } catch (error) {
     console.error(`[META] Connection test error:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+      debug: { endpoint },
+    };
+  }
+}
+
+// ============= Media Upload =============
+
+export interface MetaMediaUploadResult {
+  success: boolean;
+  mediaId?: string;
+  error?: string;
+  debug?: { endpoint?: string; status?: number; response?: string };
+}
+
+/**
+ * Upload a media file to Meta's /media endpoint and return the resulting media id.
+ * Using a media id in template headers avoids 131053 "Media upload error" that
+ * happens when Meta cannot download the `link` reliably at delivery time.
+ *
+ * Reference: https://developers.facebook.com/docs/whatsapp/cloud-api/reference/media
+ */
+export async function uploadMetaMedia(
+  bytes: Uint8Array | ArrayBuffer | Blob,
+  mimeType: string,
+  fileName: string = "upload.bin",
+  config?: MetaWhatsAppConfig,
+): Promise<MetaMediaUploadResult> {
+  const cfg = config || getMetaConfig();
+  const endpoint = `${META_API_BASE_URL}/${cfg.phoneNumberId}/media`;
+
+  const blob = bytes instanceof Blob ? bytes : new Blob([bytes], { type: mimeType });
+
+  const form = new FormData();
+  form.append("messaging_product", "whatsapp");
+  form.append("type", mimeType);
+  form.append("file", blob, fileName);
+
+  console.log(`[META] Uploading media to ${endpoint} (${mimeType}, ${blob.size} bytes)`);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cfg.accessToken}`,
+      },
+      body: form,
+    });
+
+    const responseText = await response.text();
+    console.log(`[META] Media upload status: ${response.status}, body: ${responseText.substring(0, 300)}`);
+
+    let data: any;
+    try { data = JSON.parse(responseText); } catch { data = { raw: responseText }; }
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data?.error?.message || `HTTP ${response.status}`,
+        debug: { endpoint, status: response.status, response: responseText.substring(0, 500) },
+      };
+    }
+
+    return {
+      success: true,
+      mediaId: data?.id,
+      debug: { endpoint, status: response.status, response: responseText },
+    };
+  } catch (error) {
+    console.error(`[META] Media upload error:`, error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
