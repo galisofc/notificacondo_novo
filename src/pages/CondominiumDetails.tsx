@@ -667,7 +667,7 @@ const CondominiumDetails = () => {
           email: residentForm.email,
           phone: normalizedPhone,
           cpf: residentForm.cpf || null,
-          is_owner: residentForm.is_owner,
+          is_owner: isTenant ? false : true,
           is_responsible: residentForm.is_responsible,
           ...ownerPayload,
         } as any);
