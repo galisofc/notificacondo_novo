@@ -1,10 +1,24 @@
 ---
-name: Responsável Advertência/Multa
-description: Distinção inquilino x proprietário em advertências e multas; notificação enviada para ambos quando inquilino é responsável
+name: Responsável por Advertência/Multa + Cadastro Independente de Proprietário
+description: Inquilino x proprietário em residents, notifica ambos; proprietário agora em tabela própria property_owners vinculado por FK
 type: feature
 ---
-- `residents` tem `resident_type` (`proprietario`|`inquilino`), `owner_name`, `owner_phone`, `owner_email`.
-- `occurrences` tem snapshot `responsible_party`/`responsible_name`/`responsible_phone` na decisão.
-- Edge `notify-resident-decision`: se `resident_type='inquilino'` e existe `owner_phone`, envia template para AMBOS (inquilino + proprietário). Logs em `whatsapp_notification_logs.recipient_role`.
-- UI: dialog em `DefenseAnalysis.tsx` mostra seletor "Tipo (Inquilino/Proprietário)" + nome editável. Cadastro do morador em `CondominiumDetails.tsx` mostra bloco "Dados do proprietário" quando tipo = inquilino.
-- SQL manual: `.lovable/manual-sql/2026-06-16-occurrence-responsible-party.sql`.
+
+## Modelo
+- `residents.resident_type`: `proprietario` (default) | `inquilino`.
+- `residents.property_owner_id`: FK → `property_owners(id)` com `ON DELETE SET NULL`. Excluir inquilino NÃO apaga o proprietário.
+- `residents.owner_name/owner_phone/owner_email`: snapshot mantido para compatibilidade; sincronizado a partir do `property_owners` selecionado.
+- `property_owners`: tabela por condomínio (`condominium_id`, `full_name`, `cpf`, `phone`, `email`, `address`).
+- `occurrences.responsible_party` / `responsible_name` / `responsible_phone`: snapshot da decisão.
+- `whatsapp_notification_logs.recipient_role`: `morador` | `inquilino` | `proprietario`.
+
+## UI
+- `CondominiumDetails`: nova seção **Proprietários** (collapsible) + dialog `OwnerFormDialog`. No cadastro de inquilino, escolhe-se um proprietário existente via select, com botão "Cadastrar novo".
+- Exclusão de proprietário bloqueada se houver inquilinos vinculados.
+
+## Notificação
+`notify-resident-decision`: busca proprietário via `property_owner_id` (fallback para snapshot `owner_*`). Envia template WABA para inquilino + proprietário quando aplicável.
+
+## SQL manual
+- `.lovable/manual-sql/2026-06-16-occurrence-responsible-party.sql`
+- `.lovable/manual-sql/2026-06-16-property-owners.sql`
