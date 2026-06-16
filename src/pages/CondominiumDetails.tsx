@@ -1266,9 +1266,13 @@ const CondominiumDetails = () => {
                                                 )}
                                               </div>
                                               <div className="flex gap-1 mt-1">
-                                                {resident.is_owner && (
+                                                {resident.is_owner ? (
                                                   <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">
                                                     Proprietário
+                                                  </span>
+                                                ) : (
+                                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px]">
+                                                    Inquilino
                                                   </span>
                                                 )}
                                                 {resident.is_responsible && (
