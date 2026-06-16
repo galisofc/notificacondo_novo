@@ -74,6 +74,9 @@ interface DefenseWithDetails {
     full_name: string;
     email: string;
     phone: string | null;
+    resident_type?: "proprietario" | "inquilino" | null;
+    owner_name?: string | null;
+    owner_phone?: string | null;
   };
   defense_attachments: {
     id: string;
@@ -110,6 +113,8 @@ const DefenseAnalysis = () => {
   const [decisionType, setDecisionType] = useState<"arquivada" | "advertido" | "multado" | "">("");
   const [justification, setJustification] = useState("");
   const [savingDecision, setSavingDecision] = useState(false);
+  const [responsibleParty, setResponsibleParty] = useState<"inquilino" | "proprietario">("proprietario");
+  const [responsibleName, setResponsibleName] = useState("");
 
   // Image preview
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -179,7 +184,10 @@ const DefenseAnalysis = () => {
             id,
             full_name,
             email,
-            phone
+            phone,
+            resident_type,
+            owner_name,
+            owner_phone
           ),
           defense_attachments (
             id,
@@ -231,6 +239,11 @@ const DefenseAnalysis = () => {
   const handleOpenDecisionDialog = (type: "arquivada" | "advertido" | "multado") => {
     setDecisionType(type);
     setJustification("");
+    const r = selectedDefense?.residents;
+    const inferred: "inquilino" | "proprietario" =
+      (r?.resident_type as any) === "inquilino" ? "inquilino" : "proprietario";
+    setResponsibleParty(inferred);
+    setResponsibleName(inferred === "inquilino" ? (r?.full_name || "") : (r?.owner_name || r?.full_name || ""));
     setIsDecisionDialogOpen(true);
   };
 
