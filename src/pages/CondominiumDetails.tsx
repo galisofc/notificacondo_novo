@@ -1182,8 +1182,8 @@ const CondominiumDetails = () => {
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                                        <Home className="w-4 h-4 text-accent" />
+                                      <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                                        <Home className="w-4 h-4 text-primary" />
                                       </div>
                                       <div>
                                         <div className="flex items-center gap-2">
