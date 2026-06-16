@@ -1557,15 +1557,32 @@ const PorteiroPackagesHistory = () => {
 
                 {/* WhatsApp Notification */}
                 <div className="space-y-3 p-3 rounded-lg bg-muted/30 border">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4" />
-                    Notificação WhatsApp
-                    {notificationLogs.length > 0 && (
-                      <Badge variant="secondary" className="text-xs ml-auto">
-                        {notificationLogs.length} {notificationLogs.length === 1 ? "envio" : "envios"}
-                      </Badge>
-                    )}
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2 flex-1">
+                      <MessageSquare className="w-4 h-4" />
+                      Notificação WhatsApp
+                      {notificationLogs.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {notificationLogs.length} {notificationLogs.length === 1 ? "envio" : "envios"}
+                        </Badge>
+                      )}
+                    </h4>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResendNotification}
+                      disabled={isResendingNotification || !selectedPackage?.apartment?.id}
+                      className="h-8 gap-1.5"
+                    >
+                      {isResendingNotification ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      {isResendingNotification ? "Reenviando..." : "Reenviar"}
+                    </Button>
+                  </div>
+
 
                   {isLoadingLogs ? (
                     <div className="flex items-center justify-center py-4 text-muted-foreground">
