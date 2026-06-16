@@ -145,17 +145,18 @@ export async function sendMetaTemplate(
   // Build template components
   const components: Array<Record<string, unknown>> = [];
   
-  // Add header component if media is present
-  if (params.headerMediaUrl) {
+  // Add header component if media is present (prefer media id over link)
+  if (params.headerMediaId || params.headerMediaUrl) {
     const mediaType = params.headerMediaType || "image";
+    const mediaObj: Record<string, unknown> = params.headerMediaId
+      ? { id: params.headerMediaId }
+      : { link: params.headerMediaUrl };
     components.push({
       type: "header",
       parameters: [
         {
           type: mediaType,
-          [mediaType]: {
-            link: params.headerMediaUrl,
-          },
+          [mediaType]: mediaObj,
         },
       ],
     });
