@@ -1197,8 +1197,13 @@ const CondominiumDetails = () => {
                                           )}
                                         </div>
                                         <p className="text-sm text-muted-foreground">
-                                          {aptResidents.length} morador(es)
+                                          {(() => {
+                                            const tenants = aptResidents.filter((r) => r.property_owner_id);
+                                            const count = tenants.length > 0 ? tenants.length : aptResidents.length;
+                                            return `${count} morador(es)`;
+                                          })()}
                                         </p>
+
                                       </div>
                                     </div>
 
