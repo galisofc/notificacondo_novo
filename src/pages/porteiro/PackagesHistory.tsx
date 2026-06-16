@@ -60,6 +60,7 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
+  Send,
 } from "lucide-react";
 import { DeliveryStatusTracker } from "@/components/packages/DeliveryStatusTracker";
 import { cn } from "@/lib/utils";
@@ -150,6 +151,7 @@ const PorteiroPackagesHistory = () => {
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
   const [notificationLogs, setNotificationLogs] = useState<any[]>([]);
+  const [isResendingNotification, setIsResendingNotification] = useState(false);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const pageSize = 20;
 
@@ -265,6 +267,52 @@ const PorteiroPackagesHistory = () => {
     };
     fetchLogs();
   }, [showDetailsModal, selectedPackage?.id]);
+
+  const refetchNotificationLogs = async () => {
+    if (!selectedPackage?.id) return;
+    const { data, error } = await supabase
+      .from("whatsapp_notification_logs")
+      .select("*")
+      .eq("package_id", selectedPackage.id)
+      .order("created_at", { ascending: false });
+    if (!error) setNotificationLogs(data || []);
+  };
+
+  const handleResendNotification = async () => {
+    if (!selectedPackage) return;
+    setIsResendingNotification(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("notify-package-arrival", {
+        body: {
+          package_id: selectedPackage.id,
+          apartment_id: selectedPackage.apartment?.id,
+          pickup_code: selectedPackage.pickup_code,
+          photo_url: selectedPackage.photo_url,
+        },
+      });
+      if (error) throw error;
+      const count = data?.notifications_sent ?? 0;
+      toast({
+        title: count > 0 ? "Notificação reenviada" : "Nenhuma notificação enviada",
+        description:
+          count > 0
+            ? `Mensagem enviada para ${count} morador(es).`
+            : "Verifique se há moradores com telefone cadastrado.",
+        variant: count > 0 ? "default" : "destructive",
+      });
+      await refetchNotificationLogs();
+    } catch (err) {
+      console.error("Error resending notification:", err);
+      toast({
+        title: "Erro ao reenviar",
+        description: "Não foi possível reenviar a notificação. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResendingNotification(false);
+    }
+  };
+
 
 
   // Fetch total count for pagination
@@ -1509,15 +1557,32 @@ const PorteiroPackagesHistory = () => {
 
                 {/* WhatsApp Notification */}
                 <div className="space-y-3 p-3 rounded-lg bg-muted/30 border">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4" />
-                    Notificação WhatsApp
-                    {notificationLogs.length > 0 && (
-                      <Badge variant="secondary" className="text-xs ml-auto">
-                        {notificationLogs.length} {notificationLogs.length === 1 ? "envio" : "envios"}
-                      </Badge>
-                    )}
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold flex items-center gap-2 flex-1">
+                      <MessageSquare className="w-4 h-4" />
+                      Notificação WhatsApp
+                      {notificationLogs.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {notificationLogs.length} {notificationLogs.length === 1 ? "envio" : "envios"}
+                        </Badge>
+                      )}
+                    </h4>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResendNotification}
+                      disabled={isResendingNotification || !selectedPackage?.apartment?.id}
+                      className="h-8 gap-1.5"
+                    >
+                      {isResendingNotification ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      {isResendingNotification ? "Reenviando..." : "Reenviar"}
+                    </Button>
+                  </div>
+
 
                   {isLoadingLogs ? (
                     <div className="flex items-center justify-center py-4 text-muted-foreground">
