@@ -267,10 +267,21 @@ const DefenseAnalysis = () => {
 
       if (decisionError) throw decisionError;
 
-      // Update occurrence status
+      // Update occurrence status + responsible snapshot
+      const r = selectedDefense.residents;
+      const responsiblePhone =
+        decisionType !== "arquivada"
+          ? (responsibleParty === "inquilino" ? (r?.phone || null) : (r?.owner_phone || r?.phone || null))
+          : null;
+      const occurrenceUpdate: any = { status: decisionType };
+      if (decisionType !== "arquivada") {
+        occurrenceUpdate.responsible_party = responsibleParty;
+        occurrenceUpdate.responsible_name = responsibleName?.trim() || null;
+        occurrenceUpdate.responsible_phone = responsiblePhone;
+      }
       const { error: updateError } = await supabase
         .from("occurrences")
-        .update({ status: decisionType })
+        .update(occurrenceUpdate)
         .eq("id", selectedDefense.occurrence_id);
 
       if (updateError) throw updateError;
@@ -296,6 +307,8 @@ const DefenseAnalysis = () => {
           occurrence_id: selectedDefense.occurrence_id,
           decision: decisionType,
           justification: justification.trim(),
+          responsible_party: decisionType !== "arquivada" ? responsibleParty : undefined,
+          responsible_name: decisionType !== "arquivada" ? (responsibleName?.trim() || undefined) : undefined,
         },
       }).then((result) => {
         if (result.error) {
