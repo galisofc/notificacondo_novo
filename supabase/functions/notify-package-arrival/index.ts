@@ -387,13 +387,14 @@ serve(async (req) => {
       };
 
       let result: MetaSendResult;
+      let imageRetryReason: string | null = null;
 
       // Try to send via WABA template if configured
       if (wabaTemplateName && paramsOrder.length > 0) {
         console.log(`Using WABA template: ${wabaTemplateName}`);
-        
+
         const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
-        
+
         result = await sendMetaTemplate({
           phone: resident.phone!,
           templateName: wabaTemplateName,
@@ -403,10 +404,25 @@ serve(async (req) => {
           headerMediaUrl: signedPhotoUrl || undefined,
           headerMediaType: signedPhotoUrl ? "image" : undefined,
         });
+
+        // Auto-retry without image when Meta rejects the media (131053).
+        if (!result.success && signedPhotoUrl && isMetaMediaError(result)) {
+          imageRetryReason = result.errorCode || "131053";
+          console.warn(
+            `Meta rejected media (${imageRetryReason}) for ${resident.phone}. Retrying template without image.`
+          );
+          result = await sendMetaTemplate({
+            phone: resident.phone!,
+            templateName: wabaTemplateName,
+            language: wabaLanguage,
+            bodyParams,
+            bodyParamNames,
+          });
+        }
       } else {
         // Fallback: Send image with caption
         console.log("Fallback: sending image with caption");
-        
+
         const caption = `🏢 *${sanitize(condoName)}*\n\n` +
           `📦 *Nova Encomenda!*\n\n` +
           `Olá, *${sanitize(resident.full_name || "Morador")}*!\n\n` +
@@ -417,16 +433,25 @@ serve(async (req) => {
           `• Rastreio: ${sanitize(trackingCode)}\n` +
           `• Código de retirada: *${sanitize(pickup_code)}*\n\n` +
           `Recebido por: ${sanitize(porterName)}`;
-        
+
+        const { sendMetaText } = await import("../_shared/meta-whatsapp.ts");
+
         if (signedPhotoUrl) {
           result = await sendMetaImage({
             phone: resident.phone!,
             imageUrl: signedPhotoUrl,
             caption,
           });
+          // Retry as text if Meta rejects the image.
+          if (!result.success && isMetaMediaError(result)) {
+            imageRetryReason = result.errorCode || "131053";
+            console.warn(`Meta rejected image, retrying as text-only.`);
+            result = await sendMetaText({
+              phone: resident.phone!,
+              message: caption,
+            });
+          }
         } else {
-          // Import sendMetaText for text-only fallback
-          const { sendMetaText } = await import("../_shared/meta-whatsapp.ts");
           result = await sendMetaText({
             phone: resident.phone!,
             message: caption,
