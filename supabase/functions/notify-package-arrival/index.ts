@@ -411,18 +411,21 @@ serve(async (req) => {
 
         const { values: bodyParams, names: bodyParamNames } = buildParamsArray(variables, paramsOrder);
 
+        const hasHeaderMedia = Boolean(metaMediaId || signedPhotoUrl);
+
         result = await sendMetaTemplate({
           phone: resident.phone!,
           templateName: wabaTemplateName,
           language: wabaLanguage,
           bodyParams,
           bodyParamNames,
-          headerMediaUrl: signedPhotoUrl || undefined,
-          headerMediaType: signedPhotoUrl ? "image" : undefined,
+          headerMediaId: metaMediaId || undefined,
+          headerMediaUrl: metaMediaId ? undefined : (signedPhotoUrl || undefined),
+          headerMediaType: hasHeaderMedia ? "image" : undefined,
         });
 
         // Auto-retry without image when Meta rejects the media (131053).
-        if (!result.success && signedPhotoUrl && isMetaMediaError(result)) {
+        if (!result.success && hasHeaderMedia && isMetaMediaError(result)) {
           imageRetryReason = result.errorCode || "131053";
           console.warn(
             `Meta rejected media (${imageRetryReason}) for ${resident.phone}. Retrying template without image.`
