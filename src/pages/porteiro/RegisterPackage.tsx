@@ -133,12 +133,10 @@ export default function RegisterPackage() {
           supabase.from("condominiums").select("name").eq("id", selectedCondominium).single(),
           supabase.from("blocks").select("name").eq("id", selectedBlock).single(),
           supabase.from("apartments").select("number").eq("id", selectedApartment).single(),
-          (supabase as any).from("residents").select("full_name, phone, property_owner_id").eq("apartment_id", selectedApartment),
+          supabase.from("residents").select("full_name, phone").eq("apartment_id", selectedApartment),
         ]);
 
-        const allResidents = residentsRes.data || [];
-        const tenants = allResidents.filter((r) => !!r.property_owner_id);
-        const residents = tenants.length > 0 ? tenants : allResidents;
+        const residents = residentsRes.data || [];
         const hasResidents = residents.length > 0;
 
         if (condoRes.data && blockRes.data && aptRes.data) {

@@ -63,8 +63,6 @@ import ResidentCSVImportDialog from "@/components/condominium/ResidentCSVImportD
 import { BulkBlocksApartmentsWizard } from "@/components/condominium/BulkBlocksApartmentsWizard";
 import BulkResidentCSVImportDialog from "@/components/condominium/BulkResidentCSVImportDialog";
 import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApartmentSearch";
-
-import OwnerFormDialog, { PropertyOwner } from "@/components/condominium/OwnerFormDialog";
 import {
   Select,
   SelectContent,
@@ -115,7 +113,6 @@ interface Resident {
   owner_name?: string | null;
   owner_phone?: string | null;
   owner_email?: string | null;
-  property_owner_id?: string | null;
 }
 
 const CondominiumDetails = () => {
@@ -128,8 +125,6 @@ const CondominiumDetails = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
-  const [propertyOwners, setPropertyOwners] = useState<PropertyOwner[]>([]);
-  const [ownerDialogFromResident, setOwnerDialogFromResident] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -179,7 +174,6 @@ const CondominiumDetails = () => {
     owner_name: "",
     owner_phone: "",
     owner_email: "",
-    property_owner_id: "" as string,
   });
 
   const [saving, setSaving] = useState(false);
@@ -397,14 +391,6 @@ const CondominiumDetails = () => {
           setResidents(residentsData || []);
         }
       }
-
-      // Fetch property owners (independent of blocks)
-      const { data: ownersData } = await (supabase as any)
-        .from("property_owners")
-        .select("*")
-        .eq("condominium_id", id)
-        .order("full_name");
-      setPropertyOwners((ownersData as PropertyOwner[]) || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({ title: "Erro", description: "Erro ao carregar dados.", variant: "destructive" });
@@ -591,7 +577,6 @@ const CondominiumDetails = () => {
       owner_name: "",
       owner_phone: "",
       owner_email: "",
-      property_owner_id: "",
     });
     setResidentDialog(true);
   };
@@ -611,39 +596,17 @@ const CondominiumDetails = () => {
     try {
       const normalizedPhone = residentForm.phone?.replace(/\D/g, "") || null;
       const isTenant = residentForm.resident_type === "inquilino";
-
-      let ownerSnapshot: { owner_name: string | null; owner_phone: string | null; owner_email: string | null; property_owner_id: string | null } = {
-        owner_name: null,
-        owner_phone: null,
-        owner_email: null,
-        property_owner_id: null,
-      };
-
-      if (isTenant) {
-        if (!residentForm.property_owner_id) {
-          toast({ title: "Erro", description: "Selecione o proprietário do imóvel.", variant: "destructive" });
-          setSaving(false);
-          return;
-        }
-        const selected = propertyOwners.find((o) => o.id === residentForm.property_owner_id);
-        if (!selected) {
-          toast({ title: "Erro", description: "Proprietário não encontrado.", variant: "destructive" });
-          setSaving(false);
-          return;
-        }
-        ownerSnapshot = {
-          property_owner_id: selected.id,
-          owner_name: selected.full_name,
-          owner_phone: selected.phone,
-          owner_email: selected.email,
-        };
-      }
-
       const ownerPayload = {
         resident_type: residentForm.resident_type,
-        ...ownerSnapshot,
+        owner_name: isTenant ? (residentForm.owner_name || null) : null,
+        owner_phone: isTenant ? (residentForm.owner_phone?.replace(/\D/g, "") || null) : null,
+        owner_email: isTenant ? (residentForm.owner_email || null) : null,
       };
-
+      if (isTenant && (!ownerPayload.owner_name || !ownerPayload.owner_phone)) {
+        toast({ title: "Erro", description: "Para inquilinos, informe nome e telefone do proprietário.", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
       if (editingResident) {
         const { error } = await supabase
           .from("residents")
@@ -653,7 +616,7 @@ const CondominiumDetails = () => {
             email: residentForm.email,
             phone: normalizedPhone,
             cpf: residentForm.cpf || null,
-            is_owner: isTenant ? false : true,
+            is_owner: residentForm.is_owner,
             is_responsible: residentForm.is_responsible,
             ...ownerPayload,
           } as any)
@@ -667,43 +630,12 @@ const CondominiumDetails = () => {
           email: residentForm.email,
           phone: normalizedPhone,
           cpf: residentForm.cpf || null,
-          is_owner: isTenant ? false : true,
+          is_owner: residentForm.is_owner,
           is_responsible: residentForm.is_responsible,
           ...ownerPayload,
         } as any);
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador cadastrado!" });
-      }
-
-      // If tenant, ensure a matching "proprietario" resident row exists in the same apartment
-      if (isTenant && ownerSnapshot.property_owner_id) {
-        const { data: existingOwnerResident } = await (supabase as any)
-          .from("residents")
-          .select("id")
-          .eq("apartment_id", residentForm.apartment_id)
-          .eq("property_owner_id", ownerSnapshot.property_owner_id)
-          .maybeSingle();
-
-        if (!existingOwnerResident) {
-          const { error: ownerResidentError } = await supabase.from("residents").insert({
-            apartment_id: residentForm.apartment_id,
-            full_name: (ownerSnapshot.owner_name || "PROPRIETÁRIO").toUpperCase(),
-            email: ownerSnapshot.owner_email || "",
-            phone: ownerSnapshot.owner_phone || null,
-            cpf: null,
-            is_owner: true,
-            is_responsible: false,
-            resident_type: "proprietario",
-            property_owner_id: ownerSnapshot.property_owner_id,
-            owner_name: null,
-            owner_phone: null,
-            owner_email: null,
-          } as any);
-          if (ownerResidentError) {
-            console.error("Falha ao criar resident do proprietário:", ownerResidentError);
-          }
-        }
-
       }
       setResidentDialog(false);
       setEditingResident(null);
@@ -719,7 +651,6 @@ const CondominiumDetails = () => {
         owner_name: "",
         owner_phone: "",
         owner_email: "",
-        property_owner_id: "",
       });
       fetchData();
     } catch (error: any) {
@@ -905,8 +836,6 @@ const CondominiumDetails = () => {
             </CardContent>
           </Card>
         </div>
-
-
 
         {/* Search and Filters */}
         <Card>
@@ -1175,8 +1104,8 @@ const CondominiumDetails = () => {
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                                        <Home className="w-4 h-4 text-primary" />
+                                      <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
+                                        <Home className="w-4 h-4 text-accent" />
                                       </div>
                                       <div>
                                         <div className="flex items-center gap-2">
@@ -1190,13 +1119,8 @@ const CondominiumDetails = () => {
                                           )}
                                         </div>
                                         <p className="text-sm text-muted-foreground">
-                                          {(() => {
-                                            const tenants = aptResidents.filter((r) => r.property_owner_id);
-                                            const count = tenants.length > 0 ? tenants.length : aptResidents.length;
-                                            return `${count} morador(es)`;
-                                          })()}
+                                          {aptResidents.length} morador(es)
                                         </p>
-
                                       </div>
                                     </div>
 
@@ -1245,17 +1169,17 @@ const CondominiumDetails = () => {
                                       {aptResidents.map((resident) => (
                                         <div
                                           key={resident.id}
-                                          className="flex items-center justify-between p-3 rounded-lg bg-muted border border-border"
+                                          className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
                                         >
                                           <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                               <User className="w-4 h-4 text-primary" />
                                             </div>
                                             <div>
-                                              <p className="font-bold text-sm text-foreground">
+                                              <p className="font-medium text-sm text-foreground">
                                                 {resident.full_name}
                                               </p>
-                                              <div className="flex items-center gap-3 text-xs font-medium text-foreground/80">
+                                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                                 {resident.phone && (
                                                   <span className="flex items-center gap-1">
                                                     <Phone className="w-3 h-3" />
@@ -1264,19 +1188,15 @@ const CondominiumDetails = () => {
                                                 )}
                                               </div>
                                               <div className="flex gap-1 mt-1">
-                                                {resident.is_owner ? (
-                                                  <Badge className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold bg-primary text-primary-foreground border-transparent">
+                                                {resident.is_owner && (
+                                                  <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px]">
                                                     Proprietário
-                                                  </Badge>
-                                                ) : resident.property_owner_id ? (
-                                                  <Badge className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold bg-orange-500 text-white border-transparent hover:bg-orange-500">
-                                                    Inquilino
-                                                  </Badge>
-                                                ) : null}
+                                                  </span>
+                                                )}
                                                 {resident.is_responsible && (
-                                                  <Badge className="h-5 rounded px-1.5 py-0 text-[10px] font-semibold bg-primary text-primary-foreground border-transparent">
+                                                  <span className="px-1.5 py-0.5 rounded bg-accent/10 text-accent text-[10px]">
                                                     Responsável
-                                                  </Badge>
+                                                  </span>
                                                 )}
                                               </div>
                                             </div>
@@ -1304,7 +1224,6 @@ const CondominiumDetails = () => {
                                                     owner_name: resident.owner_name || "",
                                                     owner_phone: resident.owner_phone ? formatPhone(resident.owner_phone.replace(/^55(?=\d{10,11}$)/, "")) : "",
                                                     owner_email: resident.owner_email || "",
-                                                    property_owner_id: resident.property_owner_id || "",
                                                   });
                                                   setResidentDialog(true);
                                                 }}
@@ -1545,38 +1464,36 @@ const CondominiumDetails = () => {
               </div>
               {residentForm.resident_type === "inquilino" && (
                 <div className="space-y-3 rounded-lg border border-border p-3 bg-secondary/30">
-                  <p className="text-sm font-medium">Proprietário do imóvel *</p>
+                  <p className="text-sm font-medium">Dados do proprietário</p>
                   <div className="space-y-2">
-                    <Label htmlFor="ownerSelect">Selecionar proprietário cadastrado</Label>
-                    <select
-                      id="ownerSelect"
-                      value={residentForm.property_owner_id}
-                      onChange={(e) =>
-                        setResidentForm({ ...residentForm, property_owner_id: e.target.value })
-                      }
-                      className="w-full h-10 px-3 rounded-lg bg-secondary/50 border border-border text-foreground"
-                    >
-                      <option value="">Selecione um proprietário...</option>
-                      {propertyOwners.map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.full_name}
-                          {o.phone ? ` — ${formatPhone(o.phone.replace(/^55(?=\d{10,11}$)/, ""))}` : ""}
-                        </option>
-                      ))}
-                    </select>
+                    <Label htmlFor="ownerName">Nome do proprietário *</Label>
+                    <Input
+                      id="ownerName"
+                      value={residentForm.owner_name}
+                      onChange={(e) => setResidentForm({ ...residentForm, owner_name: e.target.value })}
+                      placeholder="Nome completo do proprietário"
+                    />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setOwnerDialogFromResident(true)}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Cadastrar novo proprietário
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Ao excluir o inquilino, o proprietário permanece cadastrado.
-                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerPhone">Telefone do proprietário *</Label>
+                    <MaskedInput
+                      id="ownerPhone"
+                      mask="phone"
+                      value={residentForm.owner_phone}
+                      onChange={(value) => setResidentForm({ ...residentForm, owner_phone: value })}
+                      placeholder="(11) 99999-9999"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerEmail">E-mail do proprietário</Label>
+                    <Input
+                      id="ownerEmail"
+                      type="email"
+                      value={residentForm.owner_email}
+                      onChange={(e) => setResidentForm({ ...residentForm, owner_email: e.target.value })}
+                      placeholder="proprietario@email.com"
+                    />
+                  </div>
                 </div>
               )}
               <div className="flex items-center gap-6">
@@ -1618,19 +1535,6 @@ const CondominiumDetails = () => {
             </form>
           </DialogContent>
         </Dialog>
-
-        {/* Inline Owner Form (from Resident Dialog) */}
-        {id && (
-          <OwnerFormDialog
-            open={ownerDialogFromResident}
-            onOpenChange={setOwnerDialogFromResident}
-            condominiumId={id}
-            onSaved={(owner) => {
-              setPropertyOwners((prev) => [...prev, owner].sort((a, b) => a.full_name.localeCompare(b.full_name)));
-              setResidentForm((prev) => ({ ...prev, property_owner_id: owner.id }));
-            }}
-          />
-        )}
 
         {/* CSV Import Dialog */}
         {csvImportApartment && (
