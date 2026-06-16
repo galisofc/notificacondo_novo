@@ -496,6 +496,7 @@ serve(async (req) => {
         debug_info: {
           original_photo_url: photo_url || null,
           signed_photo_url: signedPhotoUrl || null,
+          meta_media_id: metaMediaId || null,
           photo_skipped_reason: photoSkippedReason,
           image_retry_reason: imageRetryReason,
           sent_by_user_id: user.id,
