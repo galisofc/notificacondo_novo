@@ -1247,7 +1247,7 @@ const CondominiumDetails = () => {
                                       {aptResidents.map((resident) => (
                                         <div
                                           key={resident.id}
-                                          className="flex items-center justify-between p-3 rounded-lg bg-orange-100 dark:bg-orange-950/40 text-foreground border border-orange-300 dark:border-orange-800 shadow-sm"
+                                          className="flex items-center justify-between p-3 rounded-lg bg-muted border border-border"
                                         >
                                           <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
