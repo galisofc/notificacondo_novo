@@ -109,6 +109,10 @@ interface Resident {
   cpf: string | null;
   is_owner: boolean;
   is_responsible: boolean;
+  resident_type?: "proprietario" | "inquilino" | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  owner_email?: string | null;
 }
 
 const CondominiumDetails = () => {
@@ -166,6 +170,10 @@ const CondominiumDetails = () => {
     cpf: "",
     is_owner: false,
     is_responsible: false,
+    resident_type: "proprietario" as "proprietario" | "inquilino",
+    owner_name: "",
+    owner_phone: "",
+    owner_email: "",
   });
 
   const [saving, setSaving] = useState(false);
