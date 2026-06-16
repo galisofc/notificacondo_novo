@@ -726,6 +726,48 @@ const DefenseAnalysis = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {decisionType !== "arquivada" && (
+              <div className="space-y-3 rounded-lg border border-border p-3 bg-secondary/30">
+                <p className="text-sm font-medium">Responsável pela {decisionType === "multado" ? "multa" : "advertência"}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="respParty">Tipo</Label>
+                    <Select
+                      value={responsibleParty}
+                      onValueChange={(v) => {
+                        const party = v as "inquilino" | "proprietario";
+                        setResponsibleParty(party);
+                        const r = selectedDefense?.residents;
+                        setResponsibleName(party === "inquilino" ? (r?.full_name || "") : (r?.owner_name || r?.full_name || ""));
+                      }}
+                    >
+                      <SelectTrigger id="respParty" className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="proprietario">Proprietário</SelectItem>
+                        <SelectItem value="inquilino">Inquilino</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="respName">Nome completo</Label>
+                    <input
+                      id="respName"
+                      value={responsibleName}
+                      onChange={(e) => setResponsibleName(e.target.value)}
+                      placeholder="Nome do responsável"
+                      className="mt-2 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+                {selectedDefense?.residents?.owner_phone && responsibleParty === "inquilino" && (
+                  <p className="text-xs text-muted-foreground">
+                    Notificação será enviada para o inquilino e também para o proprietário cadastrado.
+                  </p>
+                )}
+              </div>
+            )}
             <div>
               <Label htmlFor="justification">Justificativa da decisão *</Label>
               <Textarea
