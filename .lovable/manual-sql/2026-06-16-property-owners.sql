@@ -63,25 +63,27 @@ CREATE INDEX IF NOT EXISTS residents_property_owner_idx
 
 -- 3) Migração dos dados embutidos (apenas inquilinos com owner_phone)
 INSERT INTO public.property_owners (condominium_id, full_name, phone, email)
-SELECT DISTINCT a.condominium_id,
+SELECT DISTINCT b.condominium_id,
                 COALESCE(r.owner_name, 'Proprietário'),
                 r.owner_phone,
                 r.owner_email
 FROM public.residents r
 JOIN public.apartments a ON a.id = r.apartment_id
+JOIN public.blocks b ON b.id = a.block_id
 WHERE r.resident_type = 'inquilino'
   AND r.owner_phone IS NOT NULL
   AND NOT EXISTS (
     SELECT 1 FROM public.property_owners po
-    WHERE po.condominium_id = a.condominium_id
+    WHERE po.condominium_id = b.condominium_id
       AND po.phone = r.owner_phone
   );
 
 UPDATE public.residents r
 SET property_owner_id = po.id
-FROM public.apartments a, public.property_owners po
+FROM public.apartments a
+JOIN public.blocks b ON b.id = a.block_id
+JOIN public.property_owners po ON po.condominium_id = b.condominium_id AND po.phone = r.owner_phone
 WHERE r.apartment_id = a.id
-  AND po.condominium_id = a.condominium_id
-  AND po.phone = r.owner_phone
   AND r.property_owner_id IS NULL
   AND r.owner_phone IS NOT NULL;
+
