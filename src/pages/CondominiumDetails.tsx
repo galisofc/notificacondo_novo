@@ -1254,7 +1254,7 @@ const CondominiumDetails = () => {
                                               <User className="w-4 h-4 text-primary" />
                                             </div>
                                             <div>
-                                              <p className="font-medium text-sm text-foreground">
+                                              <p className="font-semibold text-sm text-foreground">
                                                 {resident.full_name}
                                               </p>
                                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
