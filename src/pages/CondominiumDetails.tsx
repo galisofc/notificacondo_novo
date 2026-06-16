@@ -682,7 +682,6 @@ const CondominiumDetails = () => {
           .select("id")
           .eq("apartment_id", residentForm.apartment_id)
           .eq("property_owner_id", ownerSnapshot.property_owner_id)
-          .eq("resident_type", "proprietario")
           .maybeSingle();
 
         if (!existingOwnerResident) {
@@ -702,15 +701,9 @@ const CondominiumDetails = () => {
           } as any);
           if (ownerResidentError) {
             console.error("Falha ao criar resident do proprietário:", ownerResidentError);
-            toast({
-              title: "Aviso",
-              description: "Inquilino salvo, mas não foi possível criar o cadastro do proprietário nesta unidade.",
-              variant: "destructive",
-            });
-          } else {
-            toast({ title: "Proprietário vinculado", description: "Cadastro do proprietário adicionado ao apartamento." });
           }
         }
+
       }
       setResidentDialog(false);
       setEditingResident(null);
