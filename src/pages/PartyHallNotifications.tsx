@@ -416,6 +416,27 @@ export default function PartyHallNotifications() {
                   )}
                 </div>
 
+                {selectedNotification.message_id && (
+                  <div className="rounded-md border bg-muted/30 p-4">
+                    <div className="text-sm font-medium text-muted-foreground mb-3">
+                      Status de Entrega WhatsApp
+                    </div>
+                    <DeliveryStatusTracker
+                      status={deliveryLog?.status ?? (selectedNotification.status === "failed" ? "failed" : "sent")}
+                      timestamps={{
+                        accepted_at: deliveryLog?.accepted_at ?? null,
+                        sent_at: deliveryLog?.sent_at ?? selectedNotification.sent_at,
+                        delivered_at: deliveryLog?.delivered_at ?? null,
+                        read_at: deliveryLog?.read_at ?? null,
+                      }}
+                    />
+                    {deliveryLog?.error_message && (
+                      <p className="text-destructive text-xs mt-3">{deliveryLog.error_message}</p>
+                    )}
+                  </div>
+                )}
+
+
                 <div>
                   <span className="font-medium text-muted-foreground text-sm">Conteúdo da Mensagem:</span>
                   <ScrollArea className="mt-2 h-[300px] rounded-md border bg-muted/50 p-4">
