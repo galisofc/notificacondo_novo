@@ -496,7 +496,7 @@ export default function PartyHallNotifications() {
                   <span className="font-medium text-muted-foreground text-sm">Conteúdo da Mensagem:</span>
                   <ScrollArea className="mt-2 h-[300px] rounded-md border bg-muted/50 p-4">
                     <pre className="whitespace-pre-wrap text-sm font-sans">
-                      {selectedNotification.message_content}
+                      {renderedMessage ?? selectedNotification.message_content}
                     </pre>
                   </ScrollArea>
                 </div>
