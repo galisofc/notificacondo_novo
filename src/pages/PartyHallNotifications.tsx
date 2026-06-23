@@ -174,7 +174,7 @@ export default function PartyHallNotifications() {
 
       let out = content;
       for (const [k, v] of Object.entries(paramsMap)) {
-        out = out.replaceAll(`{{${k}}}`, String(v ?? ""));
+        out = out.split(`{{${k}}}`).join(String(v ?? ""));
       }
       // Cleanup any remaining placeholders
       out = out.replace(/\{\{[^}]+\}\}/g, "");
