@@ -83,6 +83,56 @@ export default function PartyHallNotifications() {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [deliveryLog, setDeliveryLog] = useState<DeliveryLog | null>(null);
+
+  // Fetch delivery log by message_id whenever a notification is selected
+  useEffect(() => {
+    if (!selectedNotification?.message_id) {
+      setDeliveryLog(null);
+      return;
+    }
+
+    let active = true;
+    const messageId = selectedNotification.message_id;
+
+    const fetchLog = async () => {
+      const { data } = await supabase
+        .from("whatsapp_notification_logs")
+        .select("id, status, accepted_at, sent_at, delivered_at, read_at, error_message")
+        .eq("message_id", messageId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (active) setDeliveryLog(data ?? null);
+    };
+
+    fetchLog();
+
+    const channel = supabase
+      .channel(`waba-log-${messageId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "whatsapp_notification_logs", filter: `message_id=eq.${messageId}` },
+        (payload) => {
+          const u = payload.new as DeliveryLog;
+          setDeliveryLog((prev) => ({
+            id: u.id,
+            status: u.status ?? prev?.status ?? null,
+            accepted_at: u.accepted_at ?? prev?.accepted_at ?? null,
+            sent_at: u.sent_at ?? prev?.sent_at ?? null,
+            delivered_at: u.delivered_at ?? prev?.delivered_at ?? null,
+            read_at: u.read_at ?? prev?.read_at ?? null,
+            error_message: u.error_message ?? prev?.error_message ?? null,
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [selectedNotification?.message_id]);
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
