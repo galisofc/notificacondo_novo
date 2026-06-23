@@ -84,6 +84,7 @@ export default function PartyHallNotifications() {
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [deliveryLog, setDeliveryLog] = useState<DeliveryLog | null>(null);
+  const [renderedMessage, setRenderedMessage] = useState<string | null>(null);
 
   // Fetch delivery log by message_id whenever a notification is selected
   useEffect(() => {
@@ -133,6 +134,60 @@ export default function PartyHallNotifications() {
       supabase.removeChannel(channel);
     };
   }, [selectedNotification?.message_id]);
+
+  // Fetch template content + params and render the full message sent to the resident
+  useEffect(() => {
+    if (!selectedNotification) {
+      setRenderedMessage(null);
+      return;
+    }
+    let active = true;
+
+    const render = async () => {
+      const slug =
+        selectedNotification.notification_type === "cancelled"
+          ? "party_hall_cancelled"
+          : "party_hall_reminder";
+
+      const [{ data: tmpl }, { data: log }] = await Promise.all([
+        supabase
+          .from("whatsapp_templates")
+          .select("content")
+          .eq("slug", slug)
+          .maybeSingle(),
+        selectedNotification.message_id
+          ? supabase
+              .from("whatsapp_notification_logs")
+              .select("request_payload")
+              .eq("message_id", selectedNotification.message_id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      if (!active) return;
+
+      const content = tmpl?.content || "";
+      const payload = (log?.request_payload ?? {}) as { paramsMap?: Record<string, string> };
+      const paramsMap = payload?.paramsMap || {};
+
+      let out = content;
+      for (const [k, v] of Object.entries(paramsMap)) {
+        out = out.replaceAll(`{{${k}}}`, String(v ?? ""));
+      }
+      // Cleanup any remaining placeholders
+      out = out.replace(/\{\{[^}]+\}\}/g, "");
+
+      setRenderedMessage(out.trim() || selectedNotification.message_content);
+    };
+
+    render();
+    return () => {
+      active = false;
+    };
+  }, [selectedNotification]);
+
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
