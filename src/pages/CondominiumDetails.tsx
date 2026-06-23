@@ -109,10 +109,6 @@ interface Resident {
   cpf: string | null;
   is_owner: boolean;
   is_responsible: boolean;
-  resident_type?: "proprietario" | "inquilino" | null;
-  owner_name?: string | null;
-  owner_phone?: string | null;
-  owner_email?: string | null;
 }
 
 const CondominiumDetails = () => {
@@ -170,10 +166,6 @@ const CondominiumDetails = () => {
     cpf: "",
     is_owner: false,
     is_responsible: false,
-    resident_type: "proprietario" as "proprietario" | "inquilino",
-    owner_name: "",
-    owner_phone: "",
-    owner_email: "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -573,17 +565,13 @@ const CondominiumDetails = () => {
       cpf: "",
       is_owner: false,
       is_responsible: false,
-      resident_type: "proprietario",
-      owner_name: "",
-      owner_phone: "",
-      owner_email: "",
     });
     setResidentDialog(true);
   };
 
   const handleResidentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate CPF if provided
     if (residentForm.cpf && residentForm.cpf.replace(/\D/g, "").length > 0) {
       if (!isValidCPF(residentForm.cpf)) {
@@ -591,22 +579,10 @@ const CondominiumDetails = () => {
         return;
       }
     }
-    
+
     setSaving(true);
     try {
       const normalizedPhone = residentForm.phone?.replace(/\D/g, "") || null;
-      const isTenant = residentForm.resident_type === "inquilino";
-      const ownerPayload = {
-        resident_type: residentForm.resident_type,
-        owner_name: isTenant ? (residentForm.owner_name || null) : null,
-        owner_phone: isTenant ? (residentForm.owner_phone?.replace(/\D/g, "") || null) : null,
-        owner_email: isTenant ? (residentForm.owner_email || null) : null,
-      };
-      if (isTenant && (!ownerPayload.owner_name || !ownerPayload.owner_phone)) {
-        toast({ title: "Erro", description: "Para inquilinos, informe nome e telefone do proprietário.", variant: "destructive" });
-        setSaving(false);
-        return;
-      }
       if (editingResident) {
         const { error } = await supabase
           .from("residents")
@@ -618,8 +594,7 @@ const CondominiumDetails = () => {
             cpf: residentForm.cpf || null,
             is_owner: residentForm.is_owner,
             is_responsible: residentForm.is_responsible,
-            ...ownerPayload,
-          } as any)
+          })
           .eq("id", editingResident.id);
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador atualizado!" });
@@ -632,8 +607,7 @@ const CondominiumDetails = () => {
           cpf: residentForm.cpf || null,
           is_owner: residentForm.is_owner,
           is_responsible: residentForm.is_responsible,
-          ...ownerPayload,
-        } as any);
+        });
         if (error) throw error;
         toast({ title: "Sucesso", description: "Morador cadastrado!" });
       }
@@ -647,10 +621,6 @@ const CondominiumDetails = () => {
         cpf: "",
         is_owner: false,
         is_responsible: false,
-        resident_type: "proprietario",
-        owner_name: "",
-        owner_phone: "",
-        owner_email: "",
       });
       fetchData();
     } catch (error: any) {
@@ -1220,10 +1190,6 @@ const CondominiumDetails = () => {
                                                     cpf: resident.cpf || "",
                                                     is_owner: resident.is_owner,
                                                     is_responsible: resident.is_responsible,
-                                                    resident_type: (resident.resident_type as any) || "proprietario",
-                                                    owner_name: resident.owner_name || "",
-                                                    owner_phone: resident.owner_phone ? formatPhone(resident.owner_phone.replace(/^55(?=\d{10,11}$)/, "")) : "",
-                                                    owner_email: resident.owner_email || "",
                                                   });
                                                   setResidentDialog(true);
                                                 }}
@@ -1444,58 +1410,6 @@ const CondominiumDetails = () => {
                   placeholder="(11) 99999-9999"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="resType">Tipo de morador *</Label>
-                <select
-                  id="resType"
-                  value={residentForm.resident_type}
-                  onChange={(e) =>
-                    setResidentForm({
-                      ...residentForm,
-                      resident_type: e.target.value as "proprietario" | "inquilino",
-                      is_owner: e.target.value === "proprietario" ? true : residentForm.is_owner,
-                    })
-                  }
-                  className="w-full h-10 px-3 rounded-lg bg-secondary/50 border border-border text-foreground"
-                >
-                  <option value="proprietario">Proprietário</option>
-                  <option value="inquilino">Inquilino</option>
-                </select>
-              </div>
-              {residentForm.resident_type === "inquilino" && (
-                <div className="space-y-3 rounded-lg border border-border p-3 bg-secondary/30">
-                  <p className="text-sm font-medium">Dados do proprietário</p>
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerName">Nome do proprietário *</Label>
-                    <Input
-                      id="ownerName"
-                      value={residentForm.owner_name}
-                      onChange={(e) => setResidentForm({ ...residentForm, owner_name: e.target.value })}
-                      placeholder="Nome completo do proprietário"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerPhone">Telefone do proprietário *</Label>
-                    <MaskedInput
-                      id="ownerPhone"
-                      mask="phone"
-                      value={residentForm.owner_phone}
-                      onChange={(value) => setResidentForm({ ...residentForm, owner_phone: value })}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerEmail">E-mail do proprietário</Label>
-                    <Input
-                      id="ownerEmail"
-                      type="email"
-                      value={residentForm.owner_email}
-                      onChange={(e) => setResidentForm({ ...residentForm, owner_email: e.target.value })}
-                      placeholder="proprietario@email.com"
-                    />
-                  </div>
-                </div>
-              )}
               <div className="flex items-center gap-6">
                 <div className="flex items-center space-x-2">
                   <Checkbox
