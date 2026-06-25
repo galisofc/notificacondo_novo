@@ -154,6 +154,8 @@ const PorteiroPackagesHistory = () => {
   const [isResendingNotification, setIsResendingNotification] = useState(false);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const pageSize = 20;
+  const selectedPackageStatus = (selectedPackage?.status ?? "").toString().trim().toLowerCase();
+  const canResendSelectedPackageNotification = selectedPackageStatus === "pendente";
 
   // Fetch porter's condominiums
   useEffect(() => {
@@ -280,6 +282,7 @@ const PorteiroPackagesHistory = () => {
 
   const handleResendNotification = async () => {
     if (!selectedPackage) return;
+    if (!canResendSelectedPackageNotification) return;
     setIsResendingNotification(true);
     try {
       const { data, error } = await supabase.functions.invoke("notify-package-arrival", {
@@ -1567,20 +1570,22 @@ const PorteiroPackagesHistory = () => {
                         </Badge>
                       )}
                     </h4>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleResendNotification}
-                      disabled={isResendingNotification || !selectedPackage?.apartment?.id}
-                      className="h-8 gap-1.5"
-                    >
-                      {isResendingNotification ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Send className="w-3.5 h-3.5" />
-                      )}
-                      {isResendingNotification ? "Reenviando..." : "Reenviar"}
-                    </Button>
+                    {canResendSelectedPackageNotification && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleResendNotification}
+                        disabled={isResendingNotification || !selectedPackage?.apartment?.id}
+                        className="h-8 gap-1.5"
+                      >
+                        {isResendingNotification ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Send className="w-3.5 h-3.5" />
+                        )}
+                        {isResendingNotification ? "Reenviando..." : "Reenviar"}
+                      </Button>
+                    )}
                   </div>
 
 
