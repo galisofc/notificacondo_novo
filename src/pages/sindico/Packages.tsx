@@ -158,6 +158,23 @@ const SindicoPackages = () => {
   const [packageToDelete, setPackageToDelete] = useState<PackageWithRelations | null>(null);
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
+
+  const handleDownloadReceipt = async (pkg: PackageWithRelations) => {
+    try {
+      setDownloadingReceiptId(pkg.id);
+      await generatePackageReceiptPdf(pkg);
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Erro ao gerar comprovante",
+        description: "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingReceiptId(null);
+    }
+  };
 
   // Generate signed URL when a package is selected
   useEffect(() => {
