@@ -74,7 +74,44 @@ const Autenticidade = () => {
         .maybeSingle();
 
       if (signedDoc && !docError) {
-        // Se encontrou documento assinado, buscar detalhes da ocorrência
+        const kind = detectDocumentKind(signedDoc.file_name);
+
+        // ---------- PACKAGE ----------
+        if (kind === "package") {
+          const pickupCode = extractPackagePickupCode(signedDoc.file_name);
+          let pkg: any = null;
+
+          if (pickupCode) {
+            const { data: pkgData, error: pkgErr } = await (supabase as any)
+              .from("packages")
+              .select(`
+                id, status, pickup_code, tracking_code, description, photo_url,
+                received_at, picked_up_at, picked_up_by_name, received_by_name,
+                block:blocks(name),
+                apartment:apartments(number),
+                condominium:condominiums(name, address, city, state),
+                resident:residents(full_name, phone),
+                package_type:package_types(name)
+              `)
+              .eq("pickup_code", pickupCode)
+              .maybeSingle();
+
+            if (pkgErr) console.error("Erro ao buscar encomenda:", pkgErr);
+            pkg = pkgData;
+          }
+
+          setVerificationResult({
+            isValid: true,
+            kind: "package",
+            signerName: signedDoc.signer_name,
+            signedAt: formatDateTime(signedDoc.created_at),
+            fileName: signedDoc.file_name,
+            pkg: pkg ? { ...pkg, pickup_code: pkg.pickup_code || pickupCode } : { pickup_code: pickupCode },
+          });
+          return;
+        }
+
+        // ---------- OCCURRENCE (default) ----------
         const occurrenceSelect = `
           *,
           condominium:condominiums(name, address, city, state),
@@ -91,37 +128,26 @@ const Autenticidade = () => {
           .maybeSingle();
 
         let occurrence = directResult.data;
-        let occError = directResult.error;
-
-        if (occError) {
-          console.error("Erro ao buscar ocorrência assinada:", occError);
-        }
+        if (directResult.error) console.error("Erro ao buscar ocorrência assinada:", directResult.error);
 
         if (!occurrence) {
           const protocol = extractOccurrenceProtocol(signedDoc.file_name);
           if (protocol) {
-            const { data: occurrenceByProtocol, error: protocolError } = await (supabase as any)
+            const { data: occurrenceByProtocol } = await (supabase as any)
               .from('porter_occurrences')
               .select(occurrenceSelect)
               .eq('protocol', protocol)
               .maybeSingle();
-
-            if (protocolError) {
-              console.error("Erro ao buscar ocorrência pelo protocolo:", protocolError);
-            } else {
-              occurrence = occurrenceByProtocol;
-            }
+            occurrence = occurrenceByProtocol;
           }
         }
 
         if (!occurrence) {
           const { data: publicOccurrence, error: publicOccurrenceError } = await (supabase as any)
             .rpc('get_signed_porter_occurrence', { _hash: hash });
-
           if (publicOccurrenceError && publicOccurrenceError.code !== "PGRST202") {
             console.error("Erro ao buscar ocorrência pública assinada:", publicOccurrenceError);
           }
-
           occurrence = publicOccurrence;
         }
 
@@ -134,22 +160,20 @@ const Autenticidade = () => {
             .select('full_name')
             .eq('user_id', occurrence.registered_by)
             .maybeSingle();
-          
-          if (profile?.full_name) {
-            creatorName = profile.full_name;
-          }
+          if (profile?.full_name) creatorName = profile.full_name;
         }
 
         setVerificationResult({
           isValid: true,
+          kind: "occurrence",
           signerName: signedDoc.signer_name,
           signedAt: formatDateTime(signedDoc.created_at),
           fileName: signedDoc.file_name,
           occurrence: {
             protocol: extractOccurrenceProtocol(signedDoc.file_name) || hash,
             ...occurrence,
-            creatorName: creatorName
-          }
+            creatorName,
+          },
         });
       } else {
         setVerificationResult({ isValid: false });
