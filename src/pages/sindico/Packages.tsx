@@ -80,6 +80,8 @@ import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApart
 import { DeliveryStatusTracker } from "@/components/packages/DeliveryStatusTracker";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { generatePackageReceiptPdf } from "@/lib/packageReceiptPdf";
+import { FileDown } from "lucide-react";
 
 interface NotificationLog {
   id: string;
