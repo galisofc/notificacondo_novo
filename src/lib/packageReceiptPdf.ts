@@ -196,6 +196,61 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
     });
   }
 
+  // Authenticity signature: register in signed_documents and render QR + hash
+  const signatureHash = generateSignatureHash();
+  const fileName = `comprovante_encomenda_${pkg.pickup_code}.pdf`;
+
+  try {
+    const { data: userRes } = await supabase.auth.getUser();
+    const signerId = userRes?.user?.id ?? null;
+    let signerName = "Sistema NotificaCondo";
+    if (signerId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", signerId)
+        .maybeSingle();
+      if (profile?.full_name) signerName = profile.full_name;
+    }
+
+    await (supabase as any).from("signed_documents").insert({
+      signer_id: signerId,
+      signer_name: signerName,
+      file_hash: signatureHash,
+      file_name: fileName,
+    });
+  } catch (err) {
+    console.warn("Falha ao registrar autenticidade do comprovante", err);
+  }
+
+  // QR + hash block
+  try {
+    const pageHeight2 = doc.internal.pageSize.getHeight();
+    // @ts-expect-error lastAutoTable injected by plugin
+    let cursorY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : afterTableY + 20;
+    const qrSize = 30;
+    const blockHeight = qrSize + 14;
+    if (cursorY + blockHeight > pageHeight2 - margin) {
+      doc.addPage();
+      cursorY = margin;
+    }
+    const authUrl = `https://notificacondo.com.br/autenticidade?code=${signatureHash}`;
+    const qrDataUrl = await QRCode.toDataURL(authUrl, { margin: 1, width: 200 });
+    const qrX = (pageWidth - qrSize) / 2;
+    doc.addImage(qrDataUrl, "PNG", qrX, cursorY, qrSize, qrSize);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(33, 33, 33);
+    doc.text("Autenticação", pageWidth / 2, cursorY + qrSize + 3, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6);
+    doc.text("notificacondo.com.br/autenticidade", pageWidth / 2, cursorY + qrSize + 5.5, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text(`HASH: ${signatureHash}`, pageWidth / 2, cursorY + qrSize + 9, { align: "center" });
+  } catch (err) {
+    console.warn("Falha ao gerar QR Code de autenticidade", err);
+  }
 
   doc.save(`comprovante-encomenda-${pkg.pickup_code}.pdf`);
 }
