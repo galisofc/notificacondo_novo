@@ -1,9 +1,15 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import QRCode from "qrcode";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPackagePhotoUrl } from "@/lib/packageStorage";
+
+const generateSignatureHash = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 9 }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+};
 
 interface PackageData {
   id: string;
