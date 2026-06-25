@@ -80,6 +80,8 @@ import { QuickBlockApartmentSearch } from "@/components/packages/QuickBlockApart
 import { DeliveryStatusTracker } from "@/components/packages/DeliveryStatusTracker";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { generatePackageReceiptPdf } from "@/lib/packageReceiptPdf";
+import { FileDown } from "lucide-react";
 
 interface NotificationLog {
   id: string;
@@ -156,6 +158,23 @@ const SindicoPackages = () => {
   const [packageToDelete, setPackageToDelete] = useState<PackageWithRelations | null>(null);
   const [signedPhotoUrl, setSignedPhotoUrl] = useState<string | null>(null);
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
+
+  const handleDownloadReceipt = async (pkg: PackageWithRelations) => {
+    try {
+      setDownloadingReceiptId(pkg.id);
+      await generatePackageReceiptPdf(pkg);
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Erro ao gerar comprovante",
+        description: "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingReceiptId(null);
+    }
+  };
 
   // Generate signed URL when a package is selected
   useEffect(() => {
@@ -916,6 +935,20 @@ const SindicoPackages = () => {
                             <Eye className="w-4 h-4 mr-1" />
                             Detalhes
                           </Button>
+                          {pkg.status === "retirada" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadReceipt(pkg)}
+                              disabled={downloadingReceiptId === pkg.id}
+                            >
+                              {downloadingReceiptId === pkg.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <FileDown className="w-4 h-4" />
+                              )}
+                            </Button>
+                          )}
                           {pkg.status === "pendente" && (
                             <Button
                               variant="outline"
@@ -1027,6 +1060,24 @@ const SindicoPackages = () => {
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Button>
+                                {pkg.status === "retirada" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    title="Baixar comprovante"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownloadReceipt(pkg);
+                                    }}
+                                    disabled={downloadingReceiptId === pkg.id}
+                                  >
+                                    {downloadingReceiptId === pkg.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <FileDown className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                )}
                                 {pkg.status === "pendente" && (
                                   <Button
                                     variant="ghost"
