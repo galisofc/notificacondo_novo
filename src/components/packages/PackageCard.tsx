@@ -66,8 +66,7 @@ export function PackageCard({
   showPickupCode = true,
 }: PackageCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const isPendente = (status ?? "").toString().trim().toLowerCase() === "pendente";
-  const canResend = Boolean(onResendNotification) && isPendente;
+  const canResend = Boolean(onResendNotification);
 
   const formattedDate = format(new Date(receivedAt), "dd/MM/yyyy 'às' HH:mm", {
     locale: ptBR,

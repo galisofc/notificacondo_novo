@@ -382,45 +382,42 @@ export function PackageDetailsDialog({
                 )}
               </h4>
 
-              {/* Action button - apenas para encomendas pendentes */}
-              {(package_.status ?? "").toString().trim().toLowerCase() === "pendente" && (
-                <Button
-                  onClick={handleResendNotification}
-                  disabled={notificationStatus === "sending"}
-                  variant={notificationStatus === "error" ? "default" : "outline"}
-                  className={cn(
-                    "w-full gap-2",
-                    notificationStatus === "success" && "border-primary/50 text-primary"
-                  )}
-                >
-                  {notificationStatus === "sending" ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Enviando...
-                    </>
-                  ) : notificationStatus === "success" ? (
-                    <>
-                      <RefreshCw className="w-4 h-4" />
-                      Reenviar Notificação
-                    </>
-                  ) : notificationStatus === "error" ? (
-                    <>
-                      <RefreshCw className="w-4 h-4" />
-                      Tentar Novamente
-                    </>
-                  ) : notificationLogs.length > 0 ? (
-                    <>
-                      <RefreshCw className="w-4 h-4" />
-                      Reenviar Notificação via WhatsApp
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Enviar Notificação via WhatsApp
-                    </>
-                  )}
-                </Button>
-              )}
+              <Button
+                onClick={handleResendNotification}
+                disabled={notificationStatus === "sending"}
+                variant={notificationStatus === "error" ? "default" : "outline"}
+                className={cn(
+                  "w-full gap-2",
+                  notificationStatus === "success" && "border-primary/50 text-primary"
+                )}
+              >
+                {notificationStatus === "sending" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : notificationStatus === "success" ? (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Reenviar Notificação
+                  </>
+                ) : notificationStatus === "error" ? (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Tentar Novamente
+                  </>
+                ) : notificationLogs.length > 0 ? (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Reenviar Notificação via WhatsApp
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Enviar Notificação via WhatsApp
+                  </>
+                )}
+              </Button>
 
               {/* Notification history cards */}
               {isLoadingLogs ? (
