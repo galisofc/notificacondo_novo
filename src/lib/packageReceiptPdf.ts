@@ -175,24 +175,59 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
     margin: { left: margin, right: margin },
   });
 
-  // Signature
+  // WhatsApp timeline
   // @ts-expect-error lastAutoTable injected by plugin
-  const afterTableY = doc.lastAutoTable?.finalY || y + 30;
-  const sigY = Math.max(afterTableY + 25, doc.internal.pageSize.getHeight() - 40);
+  let afterTableY = doc.lastAutoTable?.finalY || y + 30;
 
-  doc.setDrawColor(0);
-  doc.line(margin, sigY, margin + 80, sigY);
-  doc.setFontSize(9);
-  doc.text("Assinatura de quem retirou", margin, sigY + 5);
-  doc.text(`Nome: ${pkg.picked_up_by_name || "—"}`, margin, sigY + 10);
+  const { data: waLogs } = await supabase
+    .from("whatsapp_notification_logs")
+    .select("created_at, success, template_name, status, error_message, accepted_at, sent_at, delivered_at, read_at")
+    .eq("package_id", pkg.id)
+    .order("created_at", { ascending: true });
 
-  doc.line(pageWidth - margin - 80, sigY, pageWidth - margin, sigY);
-  doc.text("Responsável pela entrega", pageWidth - margin - 80, sigY + 5);
-  doc.text(
-    `${pkg.received_by_name || pkg.received_by_profile?.full_name || "—"}`,
-    pageWidth - margin - 80,
-    sigY + 10,
-  );
+  const timeline: Array<{ when: string; label: string; detail: string }> = [];
+  (waLogs || []).forEach((log: any, idx: number) => {
+    const prefix = `Envio #${idx + 1}`;
+    timeline.push({
+      when: fmt(log.created_at),
+      label: `${prefix} — ${log.success ? "Enviada" : "Falhou"}`,
+      detail: log.template_name || log.error_message || "",
+    });
+    if (log.accepted_at) timeline.push({ when: fmt(log.accepted_at), label: `${prefix} — Aceita pela Meta`, detail: "" });
+    if (log.sent_at) timeline.push({ when: fmt(log.sent_at), label: `${prefix} — Enviada ao WhatsApp`, detail: "" });
+    if (log.delivered_at) timeline.push({ when: fmt(log.delivered_at), label: `${prefix} — Entregue`, detail: "" });
+    if (log.read_at) timeline.push({ when: fmt(log.read_at), label: `${prefix} — Lida`, detail: "" });
+  });
+
+  const pageHeight = doc.internal.pageSize.getHeight();
+  if (afterTableY + 20 > pageHeight - margin) {
+    doc.addPage();
+    afterTableY = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Linha do tempo — Notificações WhatsApp", margin, afterTableY + 10);
+  doc.setDrawColor(200);
+  doc.line(margin, afterTableY + 12, pageWidth - margin, afterTableY + 12);
+
+  if (timeline.length === 0) {
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text("Nenhuma notificação registrada para esta encomenda.", margin, afterTableY + 20);
+    doc.setTextColor(0);
+  } else {
+    autoTable(doc, {
+      startY: afterTableY + 14,
+      head: [["Data/Hora", "Evento", "Detalhes"]],
+      body: timeline.map((t) => [t.when, t.label, t.detail]),
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [16, 185, 129], textColor: 255 },
+      margin: { left: margin, right: margin },
+    });
+  }
+
 
   doc.save(`comprovante-encomenda-${pkg.pickup_code}.pdf`);
 }
