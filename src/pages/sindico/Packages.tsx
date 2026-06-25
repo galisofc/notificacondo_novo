@@ -935,6 +935,20 @@ const SindicoPackages = () => {
                             <Eye className="w-4 h-4 mr-1" />
                             Detalhes
                           </Button>
+                          {pkg.status === "retirada" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadReceipt(pkg)}
+                              disabled={downloadingReceiptId === pkg.id}
+                            >
+                              {downloadingReceiptId === pkg.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <FileDown className="w-4 h-4" />
+                              )}
+                            </Button>
+                          )}
                           {pkg.status === "pendente" && (
                             <Button
                               variant="outline"
