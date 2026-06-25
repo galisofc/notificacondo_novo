@@ -383,7 +383,7 @@ export function PackageDetailsDialog({
               </h4>
 
               {/* Action button */}
-              {package_.status === "pendente" && (
+              {(
                 <Button
                   onClick={handleResendNotification}
                   disabled={notificationStatus === "sending"}
