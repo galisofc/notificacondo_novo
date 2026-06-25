@@ -125,59 +125,9 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
 
   y += 6;
 
-  // History
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("Histórico de Recebimentos do Morador", margin, y);
-  y += 2;
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 4;
-
-  let history: Array<{
-    received_at: string;
-    picked_up_at: string | null;
-    pickup_code: string;
-    status: string;
-    type: string;
-    picked_up_by_name: string | null;
-  }> = [];
-
-  if (pkg.resident?.id) {
-    const { data } = await supabase
-      .from("packages")
-      .select("received_at, picked_up_at, pickup_code, status, picked_up_by_name, package_type:package_types(name)")
-      .eq("resident_id", pkg.resident.id)
-      .order("received_at", { ascending: false })
-      .limit(50);
-    history = (data || []).map((r: any) => ({
-      received_at: r.received_at,
-      picked_up_at: r.picked_up_at,
-      pickup_code: r.pickup_code,
-      status: r.status,
-      type: r.package_type?.name || "Encomenda",
-      picked_up_by_name: r.picked_up_by_name,
-    }));
-  }
-
-  autoTable(doc, {
-    startY: y,
-    head: [["Recebida", "Tipo", "Código", "Status", "Retirada", "Retirado por"]],
-    body: history.map((h) => [
-      fmt(h.received_at),
-      h.type,
-      h.pickup_code,
-      h.status === "retirada" ? "Entregue" : "Pendente",
-      fmt(h.picked_up_at),
-      h.picked_up_by_name || "—",
-    ]),
-    styles: { fontSize: 8, cellPadding: 2 },
-    headStyles: { fillColor: [30, 41, 59], textColor: 255 },
-    margin: { left: margin, right: margin },
-  });
-
   // WhatsApp timeline
-  // @ts-expect-error lastAutoTable injected by plugin
-  let afterTableY = doc.lastAutoTable?.finalY || y + 30;
+  let afterTableY = y;
+
 
   const { data: waLogs } = await supabase
     .from("whatsapp_notification_logs")
