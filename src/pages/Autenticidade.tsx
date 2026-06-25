@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, ShieldAlert, FileText, CheckCircle2, User, Calendar, Loader2, Search, Building2, ClipboardList, Clock } from "lucide-react";
+import { ShieldCheck, ShieldAlert, FileText, CheckCircle2, User, Calendar, Loader2, Search, Building2, ClipboardList, Clock, Package as PackageIcon, Hash, Home, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -28,6 +28,20 @@ const extractOccurrenceProtocol = (fileName?: string | null) => {
   return match?.[1] || null;
 };
 
+const extractPackagePickupCode = (fileName?: string | null) => {
+  const match = fileName?.match(/comprovante[_-]encomenda[_-]([^./]+)\.pdf/i);
+  return match?.[1] || null;
+};
+
+type DocumentKind = "occurrence" | "package" | "unknown";
+
+const detectDocumentKind = (fileName?: string | null): DocumentKind => {
+  if (!fileName) return "unknown";
+  if (/comprovante[_-]encomenda/i.test(fileName)) return "package";
+  if (/ocorrencia/i.test(fileName)) return "occurrence";
+  return "unknown";
+};
+
 const Autenticidade = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const fileHash = searchParams.get("hash") || searchParams.get("code");
@@ -35,10 +49,12 @@ const Autenticidade = () => {
   const [loading, setLoading] = useState(!!fileHash);
   const [verificationResult, setVerificationResult] = useState<{
     isValid: boolean;
+    kind?: DocumentKind;
     signerName?: string;
     signedAt?: string;
     fileName?: string;
     occurrence?: any;
+    pkg?: any;
   } | null>(null);
 
   useEffect(() => {
@@ -58,7 +74,44 @@ const Autenticidade = () => {
         .maybeSingle();
 
       if (signedDoc && !docError) {
-        // Se encontrou documento assinado, buscar detalhes da ocorrência
+        const kind = detectDocumentKind(signedDoc.file_name);
+
+        // ---------- PACKAGE ----------
+        if (kind === "package") {
+          const pickupCode = extractPackagePickupCode(signedDoc.file_name);
+          let pkg: any = null;
+
+          if (pickupCode) {
+            const { data: pkgData, error: pkgErr } = await (supabase as any)
+              .from("packages")
+              .select(`
+                id, status, pickup_code, tracking_code, description, photo_url,
+                received_at, picked_up_at, picked_up_by_name, received_by_name,
+                block:blocks(name),
+                apartment:apartments(number),
+                condominium:condominiums(name, address, city, state),
+                resident:residents(full_name, phone),
+                package_type:package_types(name)
+              `)
+              .eq("pickup_code", pickupCode)
+              .maybeSingle();
+
+            if (pkgErr) console.error("Erro ao buscar encomenda:", pkgErr);
+            pkg = pkgData;
+          }
+
+          setVerificationResult({
+            isValid: true,
+            kind: "package",
+            signerName: signedDoc.signer_name,
+            signedAt: formatDateTime(signedDoc.created_at),
+            fileName: signedDoc.file_name,
+            pkg: pkg ? { ...pkg, pickup_code: pkg.pickup_code || pickupCode } : { pickup_code: pickupCode },
+          });
+          return;
+        }
+
+        // ---------- OCCURRENCE (default) ----------
         const occurrenceSelect = `
           *,
           condominium:condominiums(name, address, city, state),
@@ -75,37 +128,26 @@ const Autenticidade = () => {
           .maybeSingle();
 
         let occurrence = directResult.data;
-        let occError = directResult.error;
-
-        if (occError) {
-          console.error("Erro ao buscar ocorrência assinada:", occError);
-        }
+        if (directResult.error) console.error("Erro ao buscar ocorrência assinada:", directResult.error);
 
         if (!occurrence) {
           const protocol = extractOccurrenceProtocol(signedDoc.file_name);
           if (protocol) {
-            const { data: occurrenceByProtocol, error: protocolError } = await (supabase as any)
+            const { data: occurrenceByProtocol } = await (supabase as any)
               .from('porter_occurrences')
               .select(occurrenceSelect)
               .eq('protocol', protocol)
               .maybeSingle();
-
-            if (protocolError) {
-              console.error("Erro ao buscar ocorrência pelo protocolo:", protocolError);
-            } else {
-              occurrence = occurrenceByProtocol;
-            }
+            occurrence = occurrenceByProtocol;
           }
         }
 
         if (!occurrence) {
           const { data: publicOccurrence, error: publicOccurrenceError } = await (supabase as any)
             .rpc('get_signed_porter_occurrence', { _hash: hash });
-
           if (publicOccurrenceError && publicOccurrenceError.code !== "PGRST202") {
             console.error("Erro ao buscar ocorrência pública assinada:", publicOccurrenceError);
           }
-
           occurrence = publicOccurrence;
         }
 
@@ -118,22 +160,20 @@ const Autenticidade = () => {
             .select('full_name')
             .eq('user_id', occurrence.registered_by)
             .maybeSingle();
-          
-          if (profile?.full_name) {
-            creatorName = profile.full_name;
-          }
+          if (profile?.full_name) creatorName = profile.full_name;
         }
 
         setVerificationResult({
           isValid: true,
+          kind: "occurrence",
           signerName: signedDoc.signer_name,
           signedAt: formatDateTime(signedDoc.created_at),
           fileName: signedDoc.file_name,
           occurrence: {
             protocol: extractOccurrenceProtocol(signedDoc.file_name) || hash,
             ...occurrence,
-            creatorName: creatorName
-          }
+            creatorName,
+          },
         });
       } else {
         setVerificationResult({ isValid: false });
@@ -279,7 +319,88 @@ const Autenticidade = () => {
                     </div>
                   </div>
 
-                  {verificationResult.occurrence && (
+                  {verificationResult.kind === "package" && verificationResult.pkg && (
+                    <div className="mt-8 pt-8 border-t border-emerald-500/10">
+                      <div className="flex items-center gap-2 mb-6">
+                        <PackageIcon className="w-5 h-5 text-primary" />
+                        <h3 className="text-xl font-bold text-foreground">Comprovante de Entrega de Encomenda</h3>
+                      </div>
+
+                      <Card className="bg-background border-border shadow-sm">
+                        <CardContent className="p-6 space-y-6">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                              <Badge variant="outline" className="mb-2">
+                                {verificationResult.pkg.package_type?.name || "Encomenda"}
+                              </Badge>
+                              <h4 className="text-2xl font-bold text-foreground">
+                                {verificationResult.pkg.resident?.full_name || "Destinatário não informado"}
+                              </h4>
+                              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                <Building2 className="w-3 h-3" />
+                                {verificationResult.pkg.condominium?.name || "Condomínio não informado"}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Código de Retirada</p>
+                              <p className="font-mono text-lg font-bold text-primary">{verificationResult.pkg.pickup_code}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/30 rounded-xl">
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Unidade</p>
+                              <div className="flex items-center gap-2">
+                                <Home className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {verificationResult.pkg.block?.name ? `${verificationResult.pkg.block.name} • ` : ""}
+                                  Apto {verificationResult.pkg.apartment?.number || "—"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Código de Rastreio</p>
+                              <div className="flex items-center gap-2">
+                                <Hash className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-mono font-medium">{verificationResult.pkg.tracking_code || "Não informado"}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Recebida na Portaria</p>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">{formatDateTime(verificationResult.pkg.received_at)}</span>
+                              </div>
+                              {verificationResult.pkg.received_by_name && (
+                                <p className="text-xs text-muted-foreground pl-6">por {verificationResult.pkg.received_by_name}</p>
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Entregue ao Morador</p>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                <span className="font-medium">{formatDateTime(verificationResult.pkg.picked_up_at)}</span>
+                              </div>
+                              {verificationResult.pkg.picked_up_by_name && (
+                                <p className="text-xs text-muted-foreground pl-6">retirado por {verificationResult.pkg.picked_up_by_name}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {verificationResult.pkg.description && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Descrição</p>
+                              <div className="p-4 bg-background border border-border rounded-xl text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {verificationResult.pkg.description}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {verificationResult.kind !== "package" && verificationResult.occurrence && (
                     <div className="mt-8 pt-8 border-t border-emerald-500/10">
                       <div className="flex items-center gap-2 mb-6">
                         <ClipboardList className="w-5 h-5 text-primary" />
