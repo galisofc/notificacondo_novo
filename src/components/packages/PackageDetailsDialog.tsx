@@ -383,7 +383,7 @@ export function PackageDetailsDialog({
               </h4>
 
               {/* Action button - apenas para encomendas pendentes */}
-              {package_.status === "pendente" && (
+              {(package_.status ?? "").toString().trim().toLowerCase() === "pendente" && (
                 <Button
                   onClick={handleResendNotification}
                   disabled={notificationStatus === "sending"}
