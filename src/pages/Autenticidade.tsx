@@ -333,9 +333,11 @@ const Autenticidade = () => {
                               <Badge variant="outline" className="mb-2">
                                 {verificationResult.pkg.package_type?.name || "Encomenda"}
                               </Badge>
-                              <h4 className="text-2xl font-bold text-foreground">
-                                {verificationResult.pkg.resident?.full_name || "Destinatário não informado"}
-                              </h4>
+                              {verificationResult.pkg.resident?.full_name && (
+                                <h4 className="text-2xl font-bold text-foreground">
+                                  {verificationResult.pkg.resident.full_name}
+                                </h4>
+                              )}
                               <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                                 <Building2 className="w-3 h-3" />
                                 {verificationResult.pkg.condominium?.name || "Condomínio não informado"}
