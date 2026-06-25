@@ -49,10 +49,12 @@ const Autenticidade = () => {
   const [loading, setLoading] = useState(!!fileHash);
   const [verificationResult, setVerificationResult] = useState<{
     isValid: boolean;
+    kind?: DocumentKind;
     signerName?: string;
     signedAt?: string;
     fileName?: string;
     occurrence?: any;
+    pkg?: any;
   } | null>(null);
 
   useEffect(() => {
