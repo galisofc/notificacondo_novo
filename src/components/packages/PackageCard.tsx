@@ -131,9 +131,7 @@ export function PackageCard({
               </div>
             </CardContent>
           </Card>
-          {onResendNotification && status === "pendente" && (
-            <ResendButton />
-          )}
+          {canResend && <ResendButton />}
         </div>
 
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
