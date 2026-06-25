@@ -28,6 +28,20 @@ const extractOccurrenceProtocol = (fileName?: string | null) => {
   return match?.[1] || null;
 };
 
+const extractPackagePickupCode = (fileName?: string | null) => {
+  const match = fileName?.match(/comprovante[_-]encomenda[_-]([^./]+)\.pdf/i);
+  return match?.[1] || null;
+};
+
+type DocumentKind = "occurrence" | "package" | "unknown";
+
+const detectDocumentKind = (fileName?: string | null): DocumentKind => {
+  if (!fileName) return "unknown";
+  if (/comprovante[_-]encomenda/i.test(fileName)) return "package";
+  if (/ocorrencia/i.test(fileName)) return "occurrence";
+  return "unknown";
+};
+
 const Autenticidade = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const fileHash = searchParams.get("hash") || searchParams.get("code");
