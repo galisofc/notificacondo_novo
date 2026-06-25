@@ -484,11 +484,17 @@ Acesse o sistema pelo link:
 Em caso de dúvidas, entre em contato com o síndico do seu condomínio.`;
 
         const provider = providers[whatsappProvider];
-        const result = await provider.sendMessage(phone, message, {
-          apiUrl: whatsappConfig.api_url,
-          apiKey: whatsappConfig.api_key,
-          instanceId: whatsappConfig.instance_id,
-        });
+        if (!provider) {
+          whatsappError = `Provider "${whatsappProvider}" não suportado por esta função (use zpro, zapi, evolution ou wppconnect)`;
+          console.error(whatsappError);
+        }
+        const result = provider
+          ? await provider.sendMessage(phone, message, {
+              apiUrl: whatsappConfig.api_url,
+              apiKey: whatsappConfig.api_key,
+              instanceId: whatsappConfig.instance_id,
+            })
+          : { success: false, error: whatsappError ?? "Provider indisponível" };
 
         if (result.success) {
           whatsappSent = true;
