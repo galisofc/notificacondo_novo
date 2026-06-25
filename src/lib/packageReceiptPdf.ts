@@ -103,6 +103,18 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
     y,
   );
   y += 5;
+
+  y += 4;
+  // Delivery section
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Entrega", margin, y);
+  y += 2;
+  doc.setDrawColor(200);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
   doc.text(`Entregue em: ${fmt(pkg.picked_up_at)}`, margin, y); y += 5;
   doc.text(`Retirada por: ${pkg.picked_up_by_name || "—"}`, margin, y); y += 5;
 
