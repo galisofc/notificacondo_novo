@@ -382,8 +382,8 @@ export function PackageDetailsDialog({
                 )}
               </h4>
 
-              {/* Action button */}
-              {(
+              {/* Action button - apenas para encomendas pendentes */}
+              {package_.status === "pendente" && (
                 <Button
                   onClick={handleResendNotification}
                   disabled={notificationStatus === "sending"}
