@@ -1060,6 +1060,24 @@ const SindicoPackages = () => {
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Button>
+                                {pkg.status === "retirada" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    title="Baixar comprovante"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownloadReceipt(pkg);
+                                    }}
+                                    disabled={downloadingReceiptId === pkg.id}
+                                  >
+                                    {downloadingReceiptId === pkg.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <FileDown className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                )}
                                 {pkg.status === "pendente" && (
                                   <Button
                                     variant="ghost"
