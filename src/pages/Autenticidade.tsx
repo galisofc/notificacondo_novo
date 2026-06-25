@@ -319,7 +319,88 @@ const Autenticidade = () => {
                     </div>
                   </div>
 
-                  {verificationResult.occurrence && (
+                  {verificationResult.kind === "package" && verificationResult.pkg && (
+                    <div className="mt-8 pt-8 border-t border-emerald-500/10">
+                      <div className="flex items-center gap-2 mb-6">
+                        <PackageIcon className="w-5 h-5 text-primary" />
+                        <h3 className="text-xl font-bold text-foreground">Comprovante de Entrega de Encomenda</h3>
+                      </div>
+
+                      <Card className="bg-background border-border shadow-sm">
+                        <CardContent className="p-6 space-y-6">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                              <Badge variant="outline" className="mb-2">
+                                {verificationResult.pkg.package_type?.name || "Encomenda"}
+                              </Badge>
+                              <h4 className="text-2xl font-bold text-foreground">
+                                {verificationResult.pkg.resident?.full_name || "Destinatário não informado"}
+                              </h4>
+                              <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                <Building2 className="w-3 h-3" />
+                                {verificationResult.pkg.condominium?.name || "Condomínio não informado"}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Código de Retirada</p>
+                              <p className="font-mono text-lg font-bold text-primary">{verificationResult.pkg.pickup_code}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-muted/30 rounded-xl">
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Unidade</p>
+                              <div className="flex items-center gap-2">
+                                <Home className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {verificationResult.pkg.block?.name ? `${verificationResult.pkg.block.name} • ` : ""}
+                                  Apto {verificationResult.pkg.apartment?.number || "—"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Código de Rastreio</p>
+                              <div className="flex items-center gap-2">
+                                <Hash className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-mono font-medium">{verificationResult.pkg.tracking_code || "Não informado"}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Recebida na Portaria</p>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">{formatDateTime(verificationResult.pkg.received_at)}</span>
+                              </div>
+                              {verificationResult.pkg.received_by_name && (
+                                <p className="text-xs text-muted-foreground pl-6">por {verificationResult.pkg.received_by_name}</p>
+                              )}
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Entregue ao Morador</p>
+                              <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                <span className="font-medium">{formatDateTime(verificationResult.pkg.picked_up_at)}</span>
+                              </div>
+                              {verificationResult.pkg.picked_up_by_name && (
+                                <p className="text-xs text-muted-foreground pl-6">retirado por {verificationResult.pkg.picked_up_by_name}</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {verificationResult.pkg.description && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Descrição</p>
+                              <div className="p-4 bg-background border border-border rounded-xl text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {verificationResult.pkg.description}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {verificationResult.kind !== "package" && verificationResult.occurrence && (
                     <div className="mt-8 pt-8 border-t border-emerald-500/10">
                       <div className="flex items-center gap-2 mb-6">
                         <ClipboardList className="w-5 h-5 text-primary" />
