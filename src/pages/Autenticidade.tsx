@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, ShieldAlert, FileText, CheckCircle2, User, Calendar, Loader2, Search, Building2, ClipboardList, Clock } from "lucide-react";
+import { ShieldCheck, ShieldAlert, FileText, CheckCircle2, User, Calendar, Loader2, Search, Building2, ClipboardList, Clock, Package as PackageIcon, Hash, Home, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
