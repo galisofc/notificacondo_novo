@@ -287,25 +287,47 @@ export default function ManutencoesCalendario() {
   );
 }
 
-function DayCellContent({ events }: { events?: DayEvents }) {
-  if (!events) return null;
-  const items: Array<{ label: string; color: string }> = [];
-  if (events.vencidas > 0) items.push({ label: `${events.vencidas} vencida${events.vencidas > 1 ? "s" : ""}`, color: "bg-red-500" });
-  if (events.pendentes > 0) items.push({ label: `${events.pendentes} a fazer`, color: "bg-amber-500" });
-  if (events.concluidas > 0) items.push({ label: `${events.concluidas} concluída${events.concluidas > 1 ? "s" : ""}`, color: "bg-emerald-500" });
+const KIND_BAR: Record<CalendarEvent["kind"], string> = {
+  pendente: "bg-amber-500",
+  vencida: "bg-red-500",
+  concluida: "bg-emerald-500",
+};
+const KIND_BADGE: Record<CalendarEvent["kind"], string> = {
+  pendente: "bg-amber-500 text-white",
+  vencida: "bg-red-500 text-white",
+  concluida: "bg-emerald-500 text-white",
+};
+const KIND_LABEL: Record<CalendarEvent["kind"], string> = {
+  pendente: "Pendente",
+  vencida: "Vencida",
+  concluida: "Concluída",
+};
+
+function EventCard({ ev, compact = false }: { ev: CalendarEvent; compact?: boolean }) {
   return (
-    <div className="mt-1 space-y-1">
-      {items.map((it, i) => (
-        <div key={i} className="flex items-center gap-1.5 text-[11px] bg-muted/50 rounded-sm pr-1 overflow-hidden">
-          <span className={cn("w-1 h-3.5 shrink-0", it.color)} />
-          <span className="truncate">{it.label}</span>
+    <div className="flex bg-muted/40 rounded-sm overflow-hidden">
+      <span className={cn("w-1 shrink-0", KIND_BAR[ev.kind])} />
+      <div className="flex-1 min-w-0 px-1.5 py-1">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[11px] font-semibold truncate text-foreground">{ev.condoName}</span>
+          <span className="text-[10px] text-muted-foreground">{ev.ref}</span>
         </div>
-      ))}
+        {!compact && (
+          <div className="flex flex-wrap gap-1 my-0.5">
+            <span className={cn("text-[9px] px-1 rounded", KIND_BADGE[ev.kind])}>{KIND_LABEL[ev.kind]}</span>
+            <span className="text-[9px] px-1 rounded bg-blue-500 text-white capitalize">{ev.type}</span>
+          </div>
+        )}
+        <div className="text-[11px] leading-tight text-foreground line-clamp-2">{ev.title}</div>
+        {!compact && ev.periodicityLabel && (
+          <div className="text-[10px] text-muted-foreground mt-0.5">{ev.periodicityLabel}</div>
+        )}
+      </div>
     </div>
   );
 }
 
-function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, DayEvents> }) {
+function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
@@ -319,21 +341,27 @@ function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<str
           <div key={d} className="px-3 py-2 text-xs text-muted-foreground text-center border-r border-border last:border-r-0">{d}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 auto-rows-[110px]">
+      <div className="grid grid-cols-7 auto-rows-[130px]">
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const inMonth = isSameMonth(day, cursor);
           const isToday = isSameDay(day, today);
+          const evs = eventsByDay.get(key) || [];
+          const shown = evs.slice(0, 2);
+          const extra = evs.length - shown.length;
           return (
             <div
               key={key}
               className={cn(
-                "border-r border-b border-border p-1.5 overflow-hidden",
+                "border-r border-b border-border p-1 overflow-hidden flex flex-col gap-1",
                 !inMonth && "bg-muted/20 text-muted-foreground",
               )}
             >
-              <div className={cn("text-xs text-right", isToday && "font-bold text-primary")}>{format(day, "d")}</div>
-              <DayCellContent events={eventsByDay.get(key)} />
+              <div className={cn("text-xs text-right px-1", isToday && "font-bold text-primary")}>{format(day, "d")}</div>
+              <div className="flex flex-col gap-0.5 overflow-hidden">
+                {shown.map((ev) => <EventCard key={ev.key} ev={ev} compact />)}
+                {extra > 0 && <div className="text-[10px] text-muted-foreground px-1">+{extra} mais</div>}
+              </div>
             </div>
           );
         })}
@@ -342,7 +370,7 @@ function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<str
   );
 }
 
-function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, DayEvents> }) {
+function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
   const start = startOfWeek(cursor, { weekStartsOn: 0 });
   const end = endOfWeek(cursor, { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
@@ -352,11 +380,17 @@ function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<stri
       {days.map((day) => {
         const key = format(day, "yyyy-MM-dd");
         const isToday = isSameDay(day, today);
+        const evs = eventsByDay.get(key) || [];
         return (
-          <div key={key} className="border-r border-border last:border-r-0 min-h-[280px] p-2">
-            <div className="text-xs text-muted-foreground">{format(day, "EEE", { locale: ptBR })}</div>
-            <div className={cn("text-lg font-semibold", isToday && "text-primary")}>{format(day, "d")}</div>
-            <DayCellContent events={eventsByDay.get(key)} />
+          <div key={key} className="border-r border-border last:border-r-0 min-h-[500px] p-2 bg-card">
+            <div className="text-center pb-2 border-b border-border mb-2">
+              <div className={cn("text-sm font-medium capitalize", isToday && "text-primary")}>
+                {format(day, "EEE dd/MM", { locale: ptBR })}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              {evs.map((ev) => <EventCard key={ev.key} ev={ev} />)}
+            </div>
           </div>
         );
       })}
@@ -364,28 +398,35 @@ function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<stri
   );
 }
 
-function YearGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, DayEvents> }) {
+function YearGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
   const months = eachMonthOfInterval({ start: startOfYear(cursor), end: endOfYear(cursor) });
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {months.map((m) => {
-        const totals: DayEvents = { pendentes: 0, concluidas: 0, vencidas: 0 };
+        let pendentes = 0, vencidas = 0, concluidas = 0;
         eachDayOfInterval({ start: startOfMonth(m), end: endOfMonth(m) }).forEach((d) => {
-          const ev = eventsByDay.get(format(d, "yyyy-MM-dd"));
-          if (!ev) return;
-          totals.pendentes += ev.pendentes;
-          totals.concluidas += ev.concluidas;
-          totals.vencidas += ev.vencidas;
+          const evs = eventsByDay.get(format(d, "yyyy-MM-dd")) || [];
+          evs.forEach((e) => {
+            if (e.kind === "pendente") pendentes++;
+            else if (e.kind === "vencida") vencidas++;
+            else concluidas++;
+          });
         });
         return (
           <Card key={m.toISOString()} className="p-3">
             <div className="text-sm font-semibold capitalize text-foreground mb-2">
               {format(m, "MMMM", { locale: ptBR })}
             </div>
-            <DayCellContent events={totals} />
+            <div className="space-y-1 text-xs">
+              {vencidas > 0 && <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500" />{vencidas} vencida{vencidas > 1 ? "s" : ""}</div>}
+              {pendentes > 0 && <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" />{pendentes} a fazer</div>}
+              {concluidas > 0 && <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" />{concluidas} concluída{concluidas > 1 ? "s" : ""}</div>}
+              {vencidas + pendentes + concluidas === 0 && <div className="text-muted-foreground">Sem eventos</div>}
+            </div>
           </Card>
         );
       })}
     </div>
   );
 }
+
