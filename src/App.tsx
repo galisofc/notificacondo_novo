@@ -153,6 +153,7 @@ const App = () => (
               <Route path="/sindico/profile" element={<Navigate to="/sindico/settings" replace />} />
               <Route path="/sindico/zeladores" element={<ProtectedRoute requiredRole="sindico"><SindicoZeladores /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes" element={<ProtectedRoute requiredRole="sindico"><SindicoManutencoes /></ProtectedRoute>} />
+              <Route path="/sindico/manutencoes/tarefas" element={<ProtectedRoute requiredRole="sindico"><SindicoManutencoesTarefas /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/categorias" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCategorias /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/historico" element={<ProtectedRoute requiredRole="sindico"><ManutencoesHistorico /></ProtectedRoute>} />
 
