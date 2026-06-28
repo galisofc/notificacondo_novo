@@ -85,6 +85,7 @@ const SindicoManutencoes = lazy(() => import("./pages/sindico/Manutencoes"));
 const SindicoManutencoesTarefas = lazy(() => import("./pages/sindico/ManutencoesTarefas"));
 const ManutencoesCalendario = lazy(() => import("./pages/sindico/ManutencoesCalendario"));
 const ManutencoesCondominios = lazy(() => import("./pages/sindico/ManutencoesCondominios"));
+const ManutencoesCondominioDetalhes = lazy(() => import("./pages/sindico/ManutencoesCondominioDetalhes"));
 const ManutencoesCategorias = lazy(() => import("./pages/sindico/ManutencoesCategorias"));
 const ManutencoesHistorico = lazy(() => import("./pages/sindico/ManutencoesHistorico"));
 const ZeladorDashboard = lazy(() => import("./pages/zelador/Dashboard"));
