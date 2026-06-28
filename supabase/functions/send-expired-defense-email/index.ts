@@ -224,8 +224,13 @@ serve(async (req) => {
         secure: !!smtpConfig.secure,
         auth: { user: smtpConfig.username, pass: smtpConfig.password },
       });
+      const senderAddr = (smtpConfig.username && smtpConfig.username.includes("@"))
+        ? smtpConfig.username
+        : smtpConfig.from_email;
       const result = await transporter.sendMail({
-        from: `"${smtpConfig.from_name}" <${smtpConfig.from_email}>`,
+        from: `"${smtpConfig.from_name}" <${senderAddr}>`,
+        sender: senderAddr,
+        replyTo: smtpConfig.from_email,
         to: body.to,
         subject: "Teste SMTP — NotificaCondo",
         html: `<p>Este é um e-mail de teste enviado pela configuração SMTP do NotificaCondo.</p><p>Host: <b>${smtpConfig.host}</b><br/>Porta: <b>${smtpConfig.port}</b></p>`,
