@@ -291,7 +291,7 @@ export default function SindicoManutencoesTarefas() {
         <SindicoBreadcrumbs
           items={[
             { label: "Manutenção", href: "/sindico/manutencoes" },
-            { label: "Dashboard" },
+            { label: "Tarefas" },
           ]}
         />
 
