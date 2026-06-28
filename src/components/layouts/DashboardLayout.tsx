@@ -505,6 +505,7 @@ function SidebarNavigation() {
       items: [
         { title: "Dashboard", url: "/sindico/manutencoes", icon: LayoutDashboard },
         { title: "Calendário", url: "/sindico/manutencoes/calendario", icon: CalendarDays },
+        { title: "Condomínios", url: "/sindico/manutencoes/condominios", icon: Building2 },
         { title: "Tarefas", url: "/sindico/manutencoes/tarefas", icon: ListChecks },
         { title: "Categorias", url: "/sindico/manutencoes/categorias", icon: ClipboardList },
         { title: "Histórico", url: "/sindico/manutencoes/historico", icon: Clock },
