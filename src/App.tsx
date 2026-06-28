@@ -157,6 +157,7 @@ const App = () => (
               <Route path="/sindico/manutencoes" element={<ProtectedRoute requiredRole="sindico"><SindicoManutencoes /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/tarefas" element={<ProtectedRoute requiredRole="sindico"><SindicoManutencoesTarefas /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/calendario" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCalendario /></ProtectedRoute>} />
+              <Route path="/sindico/manutencoes/condominios" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCondominios /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/categorias" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCategorias /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/historico" element={<ProtectedRoute requiredRole="sindico"><ManutencoesHistorico /></ProtectedRoute>} />
 
