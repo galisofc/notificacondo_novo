@@ -449,7 +449,7 @@ const PackagesDashboard = () => {
                       payload={[
                         { value: "Pendentes", type: "square", color: COLORS.pendente },
                         { value: "Retiradas", type: "square", color: COLORS.retirada },
-                      ]}
+                      ] as any}
                     />
                   </PieChart>
                 </ResponsiveContainer>
