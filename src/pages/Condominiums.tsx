@@ -417,6 +417,7 @@ const Condominiums = () => {
       cnpj: condo.cnpj ? formatCNPJ(condo.cnpj) : "",
       phone: condo.phone ? formatPhone(condo.phone) : "",
       gatehouse_phone: condo.gatehouse_phone ? formatPhone(condo.gatehouse_phone) : "",
+      administradora_email: (condo as any).administradora_email || "",
       zip_code: condo.zip_code ? formatCEP(condo.zip_code) : "",
       address: condo.address || "",
       address_number: condo.address_number || "",
