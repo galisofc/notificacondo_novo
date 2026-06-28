@@ -18,6 +18,8 @@ interface Body {
   mode: "auto" | "manual" | "test";
   occurrence_id?: string;
   to?: string;
+  pdf_base64?: string;
+  pdf_filename?: string;
 }
 
 const json = (status: number, data: unknown) =>
@@ -88,8 +90,10 @@ async function sendOne(opts: {
   recipient: string;
   triggered_by: "auto" | "manual";
   triggered_by_user: string | null;
+  pdfBase64?: string;
+  pdfFilename?: string;
 }) {
-  const { supabase, smtpConfig, occurrence, recipient, triggered_by, triggered_by_user } = opts;
+  const { supabase, smtpConfig, occurrence, recipient, triggered_by, triggered_by_user, pdfBase64, pdfFilename } = opts;
   const condo = occurrence.condominiums || {};
 
   const transporter = nodemailer.createTransport({
@@ -99,7 +103,12 @@ async function sendOne(opts: {
     auth: { user: smtpConfig.username, pass: smtpConfig.password },
   });
 
-  const pdf = buildPdf(occurrence);
+  // Use client-provided PDF when available (parity with downloaded file); otherwise fallback to server-built summary PDF.
+  const pdfContent: Uint8Array = pdfBase64
+    ? Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0))
+    : buildPdf(occurrence);
+  const attachmentFilename = pdfFilename
+    || `${(TYPE_LABELS[occurrence.type] || "ocorrencia").toLowerCase()}_${occurrence.protocol || occurrence.id.slice(0,8)}.pdf`;
   const subject = `[${condo.name || "Condomínio"}] Defesa expirada — ${TYPE_LABELS[occurrence.type] || occurrence.type} ${occurrence.protocol ? `#${occurrence.protocol}` : ""}`.trim();
 
   const html = `
@@ -144,8 +153,8 @@ async function sendOne(opts: {
     subject,
     html,
     attachments: [{
-      filename: `${(TYPE_LABELS[occurrence.type] || "ocorrencia").toLowerCase()}_${occurrence.protocol || occurrence.id.slice(0,8)}.pdf`,
-      content: pdf,
+      filename: attachmentFilename,
+      content: pdfContent,
       contentType: "application/pdf",
     }],
   });
@@ -262,7 +271,7 @@ serve(async (req) => {
         return json(400, { error: "Condomínio sem e-mail da administradora cadastrado." });
       }
       try {
-        const r = await sendOne({ supabase, smtpConfig, occurrence: occ, recipient, triggered_by: "manual", triggered_by_user });
+        const r = await sendOne({ supabase, smtpConfig, occurrence: occ, recipient, triggered_by: "manual", triggered_by_user, pdfBase64: body.pdf_base64, pdfFilename: body.pdf_filename });
         return json(200, r);
       } catch (e: any) {
         const msg = e?.message || String(e);

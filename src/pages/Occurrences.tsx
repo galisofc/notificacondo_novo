@@ -824,8 +824,17 @@ const AdvertenciasEMultas = () => {
   const handleSendToAdministradora = async (occurrence: any) => {
     setSendingEmail(occurrence.id);
     try {
+      const { generateOccurrencePdfBase64 } = await import("@/lib/occurrencePdf");
+      const pdf = await generateOccurrencePdfBase64(occurrence.id);
+      if (!pdf) throw new Error("Falha ao gerar o PDF da ocorrência.");
+
       const { data, error } = await supabase.functions.invoke("send-expired-defense-email", {
-        body: { mode: "manual", occurrence_id: occurrence.id },
+        body: {
+          mode: "manual",
+          occurrence_id: occurrence.id,
+          pdf_base64: pdf.base64,
+          pdf_filename: pdf.filename,
+        },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
