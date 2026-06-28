@@ -125,7 +125,7 @@ export default function ManutencoesCalendario() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("maintenance_executions")
-        .select("id, executed_at, status, condominium_id, maintenance_tasks(title, category_id)")
+        .select("id, task_id, executed_at, status, condominium_id, maintenance_tasks(title, category_id)")
         .in("condominium_id", condoIds);
       if (error) throw error;
       return (data || []) as unknown as ExecItem[];
