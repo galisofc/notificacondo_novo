@@ -445,12 +445,12 @@ const PackagesDashboard = () => {
                         borderRadius: "8px",
                       }}
                     />
-                    <Legend
-                      payload={[
+                    {(Legend as any)({
+                      payload: [
                         { value: "Pendentes", type: "square", color: COLORS.pendente },
                         { value: "Retiradas", type: "square", color: COLORS.retirada },
-                      ] as any}
-                    />
+                      ],
+                    })}
                   </PieChart>
                 </ResponsiveContainer>
               )}
