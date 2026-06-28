@@ -271,7 +271,7 @@ serve(async (req) => {
         return json(400, { error: "Condomínio sem e-mail da administradora cadastrado." });
       }
       try {
-        const r = await sendOne({ supabase, smtpConfig, occurrence: occ, recipient, triggered_by: "manual", triggered_by_user });
+        const r = await sendOne({ supabase, smtpConfig, occurrence: occ, recipient, triggered_by: "manual", triggered_by_user, pdfBase64: body.pdf_base64, pdfFilename: body.pdf_filename });
         return json(200, r);
       } catch (e: any) {
         const msg = e?.message || String(e);
