@@ -383,7 +383,7 @@ function MonthGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; events
   );
 }
 
-function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
+function WeekGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]>; onEventClick?: (ev: CalendarEvent) => void }) {
   const start = startOfWeek(cursor, { weekStartsOn: 0 });
   const end = endOfWeek(cursor, { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
