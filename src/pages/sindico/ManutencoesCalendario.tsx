@@ -49,6 +49,7 @@ type TaskItem = {
 
 type ExecItem = {
   id: string;
+  task_id: string | null;
   executed_at: string;
   status: string;
   condominium_id: string;
@@ -57,6 +58,7 @@ type ExecItem = {
 
 type CalendarEvent = {
   key: string;
+  taskId: string | null;
   kind: "pendente" | "vencida" | "concluida";
   title: string;
   condoName: string;
