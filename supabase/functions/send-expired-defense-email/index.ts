@@ -133,8 +133,13 @@ async function sendOne(opts: {
       <p style="margin:24px 0 0;color:#888;font-size:12px">PDF da ${TYPE_LABELS[occurrence.type] || "ocorrência"} segue em anexo.</p>
     </div>`;
 
+  const senderAddr = (smtpConfig.username && smtpConfig.username.includes("@"))
+    ? smtpConfig.username
+    : smtpConfig.from_email;
   const result = await transporter.sendMail({
-    from: `"${smtpConfig.from_name}" <${smtpConfig.from_email}>`,
+    from: `"${smtpConfig.from_name}" <${senderAddr}>`,
+    sender: senderAddr,
+    replyTo: smtpConfig.from_email,
     to: recipient,
     subject,
     html,
