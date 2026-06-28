@@ -202,6 +202,7 @@ const App = () => (
               <Route path="/superadmin/package-types" element={<ProtectedRoute requiredRole="super_admin"><PackageTypes /></ProtectedRoute>} />
               
               <Route path="/superadmin/pdf-template" element={<ProtectedRoute requiredRole="super_admin"><OccurrencePdfTemplate /></ProtectedRoute>} />
+              <Route path="/superadmin/smtp" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminSmtp /></ProtectedRoute>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
