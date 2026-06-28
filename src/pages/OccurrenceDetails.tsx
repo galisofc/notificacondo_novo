@@ -57,13 +57,10 @@ import {
   ChevronDown,
   ChevronsUpDown,
 } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import SindicoBreadcrumbs from "@/components/sindico/SindicoBreadcrumbs";
 import { useDateFormatter } from "@/hooks/useFormattedDate";
-import { fetchOccurrencePdfTemplate, interpolate } from "@/hooks/useOccurrencePdfTemplate";
 
 interface Occurrence {
   id: string;
