@@ -284,8 +284,8 @@ export default function ManutencoesCalendario() {
             </div>
           </div>
 
-          {view === "month" && <MonthGrid cursor={cursor} eventsByDay={eventsByDay} />}
-          {view === "week" && <WeekGrid cursor={cursor} eventsByDay={eventsByDay} />}
+          {view === "month" && <MonthGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={(ev) => ev.taskId && navigate(`/sindico/manutencoes/tarefas?edit=${ev.taskId}`)} />}
+          {view === "week" && <WeekGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={(ev) => ev.taskId && navigate(`/sindico/manutencoes/tarefas?edit=${ev.taskId}`)} />}
           {view === "year" && <YearGrid cursor={cursor} eventsByDay={eventsByDay} />}
         </Card>
       </div>
