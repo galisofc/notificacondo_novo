@@ -103,7 +103,12 @@ async function sendOne(opts: {
     auth: { user: smtpConfig.username, pass: smtpConfig.password },
   });
 
-  const pdf = buildPdf(occurrence);
+  // Use client-provided PDF when available (parity with downloaded file); otherwise fallback to server-built summary PDF.
+  const pdfContent: Uint8Array = pdfBase64
+    ? Uint8Array.from(atob(pdfBase64), (c) => c.charCodeAt(0))
+    : buildPdf(occurrence);
+  const attachmentFilename = pdfFilename
+    || `${(TYPE_LABELS[occurrence.type] || "ocorrencia").toLowerCase()}_${occurrence.protocol || occurrence.id.slice(0,8)}.pdf`;
   const subject = `[${condo.name || "Condomínio"}] Defesa expirada — ${TYPE_LABELS[occurrence.type] || occurrence.type} ${occurrence.protocol ? `#${occurrence.protocol}` : ""}`.trim();
 
   const html = `
