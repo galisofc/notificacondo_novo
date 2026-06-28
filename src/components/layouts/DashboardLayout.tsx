@@ -58,6 +58,7 @@ import {
   Megaphone,
   Search,
   Menu,
+  ListChecks,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -502,6 +503,7 @@ function SidebarNavigation() {
       icon: Wrench,
       items: [
         { title: "Dashboard", url: "/sindico/manutencoes", icon: LayoutDashboard },
+        { title: "Tarefas", url: "/sindico/manutencoes/tarefas", icon: ListChecks },
         { title: "Categorias", url: "/sindico/manutencoes/categorias", icon: ClipboardList },
         { title: "Histórico", url: "/sindico/manutencoes/historico", icon: Clock },
       ],

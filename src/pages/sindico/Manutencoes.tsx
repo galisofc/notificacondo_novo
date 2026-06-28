@@ -1,630 +1,438 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import SindicoBreadcrumbs from "@/components/sindico/SindicoBreadcrumbs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  Wrench, Plus, Search, CheckCircle2, Clock, AlertTriangle, Pencil, Trash2, Calendar, Filter,
-} from "lucide-react";
-import { format, differenceInDays, parseISO } from "date-fns";
+import { Printer, Wrench, Activity, ShieldCheck, AlertTriangle, ListChecks } from "lucide-react";
+import { format, parseISO, subMonths, startOfMonth, endOfMonth, isWithinInterval, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from "recharts";
 
-interface MaintenanceTask {
-  id: string;
-  condominium_id: string;
-  category_id: string | null;
-  title: string;
-  description: string | null;
-  priority: string;
-  periodicity: string;
-  periodicity_days: number | null;
-  next_due_date: string;
-  last_completed_at: string | null;
-  notification_days_before: number;
-  status: string;
-  responsible_notes: string | null;
-  estimated_cost: number | null;
-  is_active: boolean;
-  created_at: string;
-  maintenance_categories?: { name: string } | null;
-}
-
-const periodicityLabels: Record<string, string> = {
-  unica: "Única",
-  semanal: "Semanal",
-  quinzenal: "Quinzenal",
-  mensal: "Mensal",
-  bimestral: "Bimestral",
-  trimestral: "Trimestral",
-  semestral: "Semestral",
-  anual: "Anual",
-  personalizado: "Personalizado",
+const COLORS = {
+  concluida: "#22c55e",
+  vencida: "#ef4444",
+  pendente: "#f59e0b",
+  andamento: "#3b82f6",
 };
 
-const priorityConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  baixa: { label: "Baixa", variant: "secondary" },
-  media: { label: "Média", variant: "outline" },
-  alta: { label: "Alta", variant: "default" },
-  critica: { label: "Crítica", variant: "destructive" },
-};
-
-function getTaskStatus(nextDueDate: string, notificationDaysBefore: number, maintenanceType?: string, lastCompletedAt?: string | null) {
-  // Corrective tasks that have been completed are finalized (one-time)
-  if (maintenanceType === "corretiva" && lastCompletedAt) {
-    return { label: "Finalizada", color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/10", icon: CheckCircle2 };
-  }
-
-  const today = new Date();
-  const dueDate = parseISO(nextDueDate);
-  const daysUntilDue = differenceInDays(dueDate, today);
-
-  if (daysUntilDue < 0) return { label: "Atrasada", color: "text-destructive", bgColor: "bg-destructive/10", icon: AlertTriangle };
-  if (daysUntilDue <= notificationDaysBefore) return { label: "Próxima", color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/10", icon: Clock };
-  return { label: "Em dia", color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/10", icon: CheckCircle2 };
+function formatBRL(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-export default function SindicoManutencoes() {
+export default function SindicoManutencoesDashboard() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedCondominium, setSelectedCondominium] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
-  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    priority: "media",
-    periodicity: "mensal",
-    periodicity_days: "",
-    next_due_date: "",
-    notification_days_before: "7",
-    responsible_notes: "",
-    estimated_cost: "",
-    category_id: "",
-    maintenance_type: "preventiva",
-  });
+  const [condominium, setCondominium] = useState<string>("all");
+  const [category, setCategory] = useState<string>("all");
+  const [startDate, setStartDate] = useState<string>(format(subMonths(new Date(), 3), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
 
   const { data: condominiums = [] } = useQuery({
-    queryKey: ["condominiums", user?.id],
+    queryKey: ["sindico-dash-condos", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("condominiums")
         .select("id, name")
         .eq("owner_id", user!.id)
         .order("name");
-      if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!user?.id,
   });
 
-  const condoIds = selectedCondominium === "all"
-    ? condominiums.map((c) => c.id)
-    : [selectedCondominium];
+  const condoIds = condominium === "all" ? condominiums.map((c) => c.id) : [condominium];
 
   const { data: categories = [] } = useQuery({
-    queryKey: ["maintenance-categories", condoIds],
+    queryKey: ["sindico-dash-categories", condoIds],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("maintenance_categories")
         .select("id, name, condominium_id")
         .in("condominium_id", condoIds)
         .eq("is_active", true)
         .order("display_order");
-      if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: condoIds.length > 0,
   });
 
-  const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["maintenance-tasks", condoIds, statusFilter, priorityFilter],
+  const { data: tasks = [], isLoading: loadingTasks } = useQuery({
+    queryKey: ["sindico-dash-tasks", condoIds, category, startDate, endDate],
     queryFn: async () => {
-      let query = supabase
+      let q = supabase
         .from("maintenance_tasks")
-        .select("*, maintenance_categories(name)")
+        .select("id, title, next_due_date, last_completed_at, notification_days_before, periodicity, estimated_cost, category_id, condominium_id, maintenance_type, maintenance_categories(name)")
         .in("condominium_id", condoIds)
-        .eq("is_active", true)
-        .order("next_due_date", { ascending: true });
-
-      if (priorityFilter !== "all") {
-        query = query.eq("priority", priorityFilter);
-      }
-
-      const { data, error } = await query;
+        .eq("is_active", true);
+      if (category !== "all") q = q.eq("category_id", category);
+      const { data, error } = await q;
       if (error) throw error;
-      return data as MaintenanceTask[];
+      return data || [];
     },
     enabled: condoIds.length > 0,
   });
 
-  // Filter tasks by computed status and search
-  const filteredTasks = tasks.filter((task) => {
-    const status = getTaskStatus(task.next_due_date, task.notification_days_before, (task as any).maintenance_type, task.last_completed_at);
-    const statusKey = status.label === "Atrasada" ? "atrasado" : status.label === "Próxima" ? "proximo" : status.label === "Finalizada" ? "finalizada" : "em_dia";
-    if (statusFilter !== "all" && statusKey !== statusFilter) return false;
-    if (typeFilter !== "all" && (task as any).maintenance_type !== typeFilter) return false;
-    if (searchTerm && !task.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    return true;
-  });
-
-  const statusCounts = tasks.reduce(
-    (acc, task) => {
-      const s = getTaskStatus(task.next_due_date, task.notification_days_before, (task as any).maintenance_type, task.last_completed_at);
-      if (s.label === "Finalizada") acc.em_dia++;
-      else if (s.label === "Atrasada") acc.atrasado++;
-      else if (s.label === "Próxima") acc.proximo++;
-      else acc.em_dia++;
-      return acc;
-    },
-    { em_dia: 0, proximo: 0, atrasado: 0 }
-  );
-
-  const resetForm = () => {
-    setForm({
-      title: "",
-      description: "",
-      priority: "media",
-      periodicity: "mensal",
-      periodicity_days: "",
-      next_due_date: "",
-      notification_days_before: "7",
-      responsible_notes: "",
-      estimated_cost: "",
-      category_id: "",
-      maintenance_type: "preventiva",
-    });
-    setEditingTask(null);
-  };
-
-  const openNewDialog = () => {
-    resetForm();
-    setDialogOpen(true);
-  };
-
-  const openEditDialog = (task: MaintenanceTask) => {
-    setEditingTask(task);
-    setForm({
-      title: task.title,
-      description: task.description || "",
-      priority: task.priority,
-      periodicity: task.periodicity,
-      periodicity_days: task.periodicity_days?.toString() || "",
-      next_due_date: task.next_due_date,
-      notification_days_before: task.notification_days_before.toString(),
-      responsible_notes: task.responsible_notes || "",
-      estimated_cost: task.estimated_cost?.toString() || "",
-      category_id: task.category_id || "",
-      maintenance_type: (task as any).maintenance_type || "preventiva",
-    });
-    setDialogOpen(true);
-  };
-
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      const condoId = editingTask
-        ? editingTask.condominium_id
-        : selectedCondominium !== "all"
-        ? selectedCondominium
-        : condominiums[0]?.id;
-
-      if (!condoId) throw new Error("Selecione um condomínio");
-
-      const payload = {
-        condominium_id: condoId,
-        title: form.title,
-        description: form.description || null,
-        priority: form.priority,
-        periodicity: form.periodicity as any,
-        periodicity_days: form.periodicity === "personalizado" ? parseInt(form.periodicity_days) || null : null,
-        next_due_date: form.next_due_date,
-        notification_days_before: parseInt(form.notification_days_before) || 7,
-        responsible_notes: form.responsible_notes || null,
-        estimated_cost: form.estimated_cost ? parseFloat(form.estimated_cost) : null,
-        category_id: form.category_id || null,
-        created_by: user!.id,
-        maintenance_type: form.maintenance_type,
-      };
-
-      if (editingTask) {
-        const { error } = await supabase
-          .from("maintenance_tasks")
-          .update(payload)
-          .eq("id", editingTask.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("maintenance_tasks").insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["maintenance-tasks"] });
-      setDialogOpen(false);
-      resetForm();
-      toast({ title: editingTask ? "Tarefa atualizada!" : "Tarefa criada!" });
-    },
-    onError: (error) => {
-      toast({ title: "Erro ao salvar tarefa", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("maintenance_tasks")
-        .update({ is_active: false })
-        .eq("id", id);
+  const { data: executions = [], isLoading: loadingExec } = useQuery({
+    queryKey: ["sindico-dash-execs", condoIds, startDate, endDate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("maintenance_executions")
+        .select("id, executed_at, status, cost, executed_by, executed_by_name, maintenance_tasks(title, maintenance_type, category_id)")
+        .in("condominium_id", condoIds)
+        .gte("executed_at", startDate)
+        .lte("executed_at", `${endDate}T23:59:59`);
       if (error) throw error;
+      return data || [];
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["maintenance-tasks"] });
-      setDeleteTaskId(null);
-      toast({ title: "Tarefa removida!" });
-    },
-    onError: (error) => {
-      toast({ title: "Erro ao remover", description: error.message, variant: "destructive" });
-    },
+    enabled: condoIds.length > 0,
   });
+
+  const loading = loadingTasks || loadingExec;
+
+  // Filter execs by category if set
+  const filteredExecs = useMemo(() => {
+    if (category === "all") return executions;
+    return executions.filter((e: any) => e.maintenance_tasks?.category_id === category);
+  }, [executions, category]);
+
+  // KPIs
+  const totalTasks = tasks.length;
+  const preventivas = tasks.filter((t: any) => (t.maintenance_type || "preventiva") === "preventiva");
+  const corretivas = tasks.filter((t: any) => t.maintenance_type === "corretiva");
+  const totalCost = filteredExecs.reduce((s, e: any) => s + (Number(e.cost) || 0), 0);
+  const preventivasCost = preventivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
+  const corretivasCost = corretivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
+
+  const today = new Date();
+  const atrasadas = tasks.filter((t: any) => {
+    if (t.maintenance_type === "corretiva" && t.last_completed_at) return false;
+    return differenceInDays(parseISO(t.next_due_date), today) < 0;
+  }).length;
+
+  // Score donuts (concluídas / vencidas / pendentes)
+  const computeScore = (type: "preventiva" | "corretiva") => {
+    const typed = tasks.filter((t: any) => (t.maintenance_type || "preventiva") === type);
+    const completedIds = new Set(
+      filteredExecs
+        .filter((e: any) => e.status === "concluida" && (e.maintenance_tasks?.maintenance_type || "preventiva") === type)
+        .map((e: any) => e.maintenance_tasks?.title)
+    );
+    const concluidas = filteredExecs.filter((e: any) => e.status === "concluida" && (e.maintenance_tasks?.maintenance_type || "preventiva") === type).length;
+    let vencidas = 0;
+    let pendentes = 0;
+    typed.forEach((t: any) => {
+      if (completedIds.has(t.title)) return;
+      const diff = differenceInDays(parseISO(t.next_due_date), today);
+      if (diff < 0) vencidas++;
+      else pendentes++;
+    });
+    const total = concluidas + vencidas + pendentes;
+    const data = [
+      { name: "Concluídas", value: concluidas, fill: COLORS.concluida },
+      { name: "Vencidas", value: vencidas, fill: COLORS.vencida },
+      { name: "Pendentes", value: pendentes, fill: COLORS.pendente },
+    ].filter((d) => d.value > 0);
+    const dominant = data.sort((a, b) => b.value - a.value)[0];
+    const dominantPct = total > 0 && dominant ? Math.round((dominant.value / total) * 100) : 0;
+    return { data, total, dominant: dominant?.name || "—", dominantPct };
+  };
+
+  const scorePrev = useMemo(() => computeScore("preventiva"), [tasks, filteredExecs]);
+  const scoreCorr = useMemo(() => computeScore("corretiva"), [tasks, filteredExecs]);
+
+  // Timeline (last 4 months in range)
+  const timelineData = useMemo(() => {
+    const months: Array<{ month: string; start: Date; end: Date }> = [];
+    const monthsCount = 4;
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const d = subMonths(parseISO(endDate), i);
+      months.push({ month: format(d, "MMM/yyyy", { locale: ptBR }), start: startOfMonth(d), end: endOfMonth(d) });
+    }
+    return months.map(({ month, start, end }) => {
+      const monthExecs = filteredExecs.filter((e: any) => isWithinInterval(parseISO(e.executed_at), { start, end }) && e.status === "concluida");
+      const completedTitles = new Set(monthExecs.map((e: any) => e.maintenance_tasks?.title));
+      const monthTasks = tasks.filter((t: any) => isWithinInterval(parseISO(t.next_due_date), { start, end }));
+      const concluidas = monthExecs.length;
+      const vencidas = monthTasks.filter((t: any) => !completedTitles.has(t.title) && parseISO(t.next_due_date) < today).length;
+      const pendentes = monthTasks.filter((t: any) => !completedTitles.has(t.title) && parseISO(t.next_due_date) >= today).length;
+      return { month, Concluídas: concluidas, Vencidas: vencidas, Pendentes: pendentes };
+    });
+  }, [tasks, filteredExecs, endDate]);
+
+  // Category lists
+  const buildCategoryList = (type: "preventiva" | "corretiva") => {
+    const map = new Map<string, number>();
+    tasks.filter((t: any) => (t.maintenance_type || "preventiva") === type).forEach((t: any) => {
+      const name = t.maintenance_categories?.name || "Sem categoria";
+      map.set(name, (map.get(name) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  };
+  const catsPrev = useMemo(() => buildCategoryList("preventiva"), [tasks]);
+  const catsCorr = useMemo(() => buildCategoryList("corretiva"), [tasks]);
+
+  // Activities per user (based on executions)
+  const userActivity = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredExecs.forEach((e: any) => {
+      const name = e.executed_by_name || "—";
+      map.set(name, (map.get(name) || 0) + 1);
+    });
+    return Array.from(map.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  }, [filteredExecs]);
+
+  const clearFilters = () => {
+    setCondominium("all");
+    setCategory("all");
+    setStartDate(format(subMonths(new Date(), 3), "yyyy-MM-dd"));
+    setEndDate(format(new Date(), "yyyy-MM-dd"));
+  };
 
   return (
     <DashboardLayout>
-      <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6">
-        <SindicoBreadcrumbs
-          items={[
-            { label: "Manutenção", href: "/sindico/manutencoes" },
-            { label: "Dashboard" },
-          ]}
-        />
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Manutenções</h2>
-            <p className="text-muted-foreground">Gerencie as tarefas de manutenção preventiva e corretiva</p>
-          </div>
-          <div className="flex gap-2">
-            <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Todos os condomínios" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {condominiums.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={openNewDialog} disabled={condominiums.length === 0}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Tarefa
-            </Button>
-          </div>
+      <div className="flex-1 space-y-4 p-4 md:p-6 lg:p-8 pt-6 print:p-0">
+        <div className="print:hidden">
+          <SindicoBreadcrumbs items={[{ label: "Manutenção", href: "/sindico/manutencoes" }, { label: "Dashboard" }]} />
         </div>
 
-        {/* Status Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card
-            className={`cursor-pointer transition-colors ${statusFilter === "em_dia" ? "ring-2 ring-emerald-500" : ""}`}
-            onClick={() => setStatusFilter(statusFilter === "em_dia" ? "all" : "em_dia")}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Em dia</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">{statusCounts.em_dia}</div>
-            </CardContent>
-          </Card>
-          <Card
-            className={`cursor-pointer transition-colors ${statusFilter === "proximo" ? "ring-2 ring-amber-500" : ""}`}
-            onClick={() => setStatusFilter(statusFilter === "proximo" ? "all" : "proximo")}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Próximas</CardTitle>
-              <Clock className="h-4 w-4 text-amber-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-amber-600">{statusCounts.proximo}</div>
-            </CardContent>
-          </Card>
-          <Card
-            className={`cursor-pointer transition-colors ${statusFilter === "atrasado" ? "ring-2 ring-destructive" : ""}`}
-            onClick={() => setStatusFilter(statusFilter === "atrasado" ? "all" : "atrasado")}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Atrasadas</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{statusCounts.atrasado}</div>
-            </CardContent>
-          </Card>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
+              <Wrench className="w-6 h-6 text-primary" />
+              Dashboard de Manutenções
+            </h1>
+            <p className="text-muted-foreground text-sm">Visão geral das tarefas, custos e execuções</p>
+          </div>
+          <Button variant="outline" onClick={() => window.print()} className="print:hidden">
+            <Printer className="w-4 h-4 mr-2" /> Imprimir
+          </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar tarefa..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[160px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="preventiva">Preventiva</SelectItem>
-              <SelectItem value="corretiva">Corretiva</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[160px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Prioridade" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="baixa">Baixa</SelectItem>
-              <SelectItem value="media">Média</SelectItem>
-              <SelectItem value="alta">Alta</SelectItem>
-              <SelectItem value="critica">Crítica</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Card className="print:hidden">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label className="mb-1.5 block text-xs text-muted-foreground">Edificação</Label>
+                <Select value={condominium} onValueChange={setCondominium}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {condominiums.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1.5 block text-xs text-muted-foreground">Categoria</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {categories.map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1.5 block text-xs text-muted-foreground">Data inicial</Label>
+                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              </div>
+              <div>
+                <Label className="mb-1.5 block text-xs text-muted-foreground">Data final</Label>
+                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button variant="ghost" onClick={clearFilters}>Limpar filtros</Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Task List */}
-        {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+        {/* KPIs */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28 w-full" />)}
           </div>
-        ) : filteredTasks.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                {tasks.length === 0 ? "Nenhuma tarefa cadastrada. Crie sua primeira tarefa de manutenção." : "Nenhuma tarefa encontrada com os filtros selecionados."}
-              </p>
-            </CardContent>
-          </Card>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tarefa</TableHead>
-                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                  <TableHead className="hidden md:table-cell">Categoria</TableHead>
-                  <TableHead className="hidden md:table-cell">Periodicidade</TableHead>
-                  <TableHead>Próx. Vencimento</TableHead>
-                  <TableHead className="hidden md:table-cell">Prioridade</TableHead>
-                  <TableHead className="w-[100px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTasks.map((task) => {
-                  const statusInfo = getTaskStatus(task.next_due_date, task.notification_days_before, (task as any).maintenance_type, task.last_completed_at);
-                  const StatusIcon = statusInfo.icon;
-                  const pConfig = priorityConfig[task.priority] || priorityConfig.media;
-                  return (
-                    <TableRow key={task.id}>
-                      <TableCell>
-                        <div className={`flex items-center gap-1.5 ${statusInfo.color}`}>
-                          <StatusIcon className="h-4 w-4" />
-                          <span className="text-xs font-medium hidden sm:inline">{statusInfo.label}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">{task.title}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant={(task as any).maintenance_type === "corretiva" ? "destructive" : "default"} className="text-xs">
-                          {(task as any).maintenance_type === "corretiva" ? "Corretiva" : "Preventiva"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">
-                        {task.maintenance_categories?.name || "—"}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-muted-foreground">
-                        {periodicityLabels[task.periodicity] || task.periodicity}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-sm">
-                            {format(parseISO(task.next_due_date), "dd/MM/yyyy")}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <Badge variant={pConfig.variant}>{pConfig.label}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => openEditDialog(task)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => setDeleteTaskId(task.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total de manutenções</CardTitle>
+                <ListChecks className="w-5 h-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{totalTasks}</div>
+                <p className="text-xs text-muted-foreground mt-1">Investido nas execuções: {formatBRL(totalCost)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Preventivas</CardTitle>
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{preventivas.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">Custo estimado: {formatBRL(preventivasCost)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Corretivas</CardTitle>
+                <Activity className="w-5 h-5 text-amber-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{corretivas.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">Custo estimado: {formatBRL(corretivasCost)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Atrasadas</CardTitle>
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-destructive">{atrasadas}</div>
+                <p className="text-xs text-muted-foreground mt-1">Tarefas com vencimento expirado</p>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        {/* Create/Edit Dialog */}
-        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setDialogOpen(open); }}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingTask ? "Editar Tarefa" : "Nova Tarefa de Manutenção"}</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              {!editingTask && selectedCondominium === "all" && (
-                <div className="grid gap-2">
-                  <Label>Condomínio *</Label>
-                  <Select
-                    value={form.category_id ? undefined : undefined}
-                    onValueChange={(v) => setForm({ ...form, category_id: "" })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {condominiums.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="text-base">Linha do tempo de manutenções</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <Skeleton className="h-64 w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={timelineData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                    <YAxis dataKey="month" type="category" width={70} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                    <Tooltip contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="Concluídas" fill={COLORS.concluida} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="Vencidas" fill={COLORS.vencida} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="Pendentes" fill={COLORS.pendente} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               )}
-              <div className="grid gap-2">
-                <Label>Título *</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: Troca de óleo do gerador" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Descrição</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalhes da tarefa..." rows={3} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Tipo *</Label>
-                  <Select value={form.maintenance_type} onValueChange={(v) => setForm({ ...form, maintenance_type: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="preventiva">Preventiva</SelectItem>
-                      <SelectItem value="corretiva">Corretiva</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Categoria</Label>
-                  <Select value={form.category_id || "none"} onValueChange={(v) => setForm({ ...form, category_id: v === "none" ? "" : v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Nenhuma" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Nenhuma</SelectItem>
-                      {categories.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+            </CardContent>
+          </Card>
+
+          {[
+            { title: "Score de manutenções preventivas", score: scorePrev },
+            { title: "Score de manutenções corretivas", score: scoreCorr },
+          ].map(({ title, score }) => (
+            <Card key={title}>
+              <CardHeader>
+                <CardTitle className="text-base">{title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <Skeleton className="h-64 w-full" />
+                ) : score.total === 0 ? (
+                  <div className="flex items-center justify-center h-64 text-sm text-muted-foreground">Sem dados no período</div>
+                ) : (
+                  <div className="relative">
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Pie data={score.data} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={2} dataKey="value" strokeWidth={0}>
+                          {score.data.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ marginBottom: 20 }}>
+                      <div className="text-center">
+                        <div className="text-xl font-bold">{score.dominant}</div>
+                        <div className="text-sm text-muted-foreground">{score.dominantPct}%</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-3 mt-2">
+                      {score.data.map((entry, i) => (
+                        <div key={i} className="flex items-center gap-1.5 text-xs">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.fill }} />
+                          <span className="text-muted-foreground">{entry.name} ({entry.value})</span>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Prioridade</Label>
-                  <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="baixa">Baixa</SelectItem>
-                      <SelectItem value="media">Média</SelectItem>
-                      <SelectItem value="alta">Alta</SelectItem>
-                      <SelectItem value="critica">Crítica</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Periodicidade *</Label>
-                  <Select value={form.periodicity} onValueChange={(v) => setForm({ ...form, periodicity: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(periodicityLabels).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {form.periodicity === "personalizado" && (
-                  <div className="grid gap-2">
-                    <Label>Dias</Label>
-                    <Input type="number" value={form.periodicity_days} onChange={(e) => setForm({ ...form, periodicity_days: e.target.value })} placeholder="Ex: 45" />
+                    </div>
                   </div>
                 )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Próximo Vencimento *</Label>
-                  <Input type="date" value={form.next_due_date} onChange={(e) => setForm({ ...form, next_due_date: e.target.value })} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Alertar (dias antes)</Label>
-                  <Input type="number" value={form.notification_days_before} onChange={(e) => setForm({ ...form, notification_days_before: e.target.value })} />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Custo Estimado (R$)</Label>
-                <Input type="number" step="0.01" value={form.estimated_cost} onChange={(e) => setForm({ ...form, estimated_cost: e.target.value })} placeholder="0,00" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Instruções para o Zelador</Label>
-                <Textarea value={form.responsible_notes} onChange={(e) => setForm({ ...form, responsible_notes: e.target.value })} placeholder="Instruções detalhadas..." rows={3} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancelar</Button>
-              <Button
-                onClick={() => saveMutation.mutate()}
-                disabled={!form.title || !form.next_due_date || saveMutation.isPending}
-              >
-                {saveMutation.isPending ? "Salvando..." : editingTask ? "Atualizar" : "Criar Tarefa"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-        {/* Delete Confirmation */}
-        <AlertDialog open={!!deleteTaskId} onOpenChange={() => setDeleteTaskId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remover tarefa?</AlertDialogTitle>
-              <AlertDialogDescription>
-                A tarefa será desativada e não aparecerá mais na listagem.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={() => deleteTaskId && deleteMutation.mutate(deleteTaskId)}>
-                Remover
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Bottom lists */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Manutenções preventivas <span className="text-muted-foreground font-normal text-sm">(Categorias)</span></CardTitle></CardHeader>
+            <CardContent>
+              {catsPrev.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Sem categorias</p>
+              ) : (
+                <div className="space-y-2">
+                  {catsPrev.map((c) => (
+                    <div key={c.name} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">{c.name}</span>
+                      <Badge variant="secondary">{c.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Manutenções corretivas <span className="text-muted-foreground font-normal text-sm">(Categorias)</span></CardTitle></CardHeader>
+            <CardContent>
+              {catsCorr.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Sem categorias</p>
+              ) : (
+                <div className="space-y-2">
+                  {catsCorr.map((c) => (
+                    <div key={c.name} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">{c.name}</span>
+                      <Badge variant="secondary">{c.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Atividades por usuário <span className="text-muted-foreground font-normal text-sm">Total: {filteredExecs.length}</span></CardTitle>
+            </CardHeader>
+            <CardContent>
+              {userActivity.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Sem execuções no período</p>
+              ) : (
+                <div className="space-y-2">
+                  {userActivity.map((u) => (
+                    <div key={u.name} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg">
+                      <span className="text-sm font-medium">{u.name}</span>
+                      <Badge variant="secondary">{u.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
