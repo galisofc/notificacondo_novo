@@ -384,6 +384,7 @@ const Condominiums = () => {
         cnpj: "", 
         phone: "",
         gatehouse_phone: "",
+        administradora_email: "",
         zip_code: "",
         address: "", 
         address_number: "",
