@@ -90,8 +90,10 @@ async function sendOne(opts: {
   recipient: string;
   triggered_by: "auto" | "manual";
   triggered_by_user: string | null;
+  pdfBase64?: string;
+  pdfFilename?: string;
 }) {
-  const { supabase, smtpConfig, occurrence, recipient, triggered_by, triggered_by_user } = opts;
+  const { supabase, smtpConfig, occurrence, recipient, triggered_by, triggered_by_user, pdfBase64, pdfFilename } = opts;
   const condo = occurrence.condominiums || {};
 
   const transporter = nodemailer.createTransport({
