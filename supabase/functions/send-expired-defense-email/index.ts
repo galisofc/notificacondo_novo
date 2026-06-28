@@ -109,7 +109,7 @@ async function sendOne(opts: {
     : buildPdf(occurrence);
   const attachmentFilename = pdfFilename
     || `${(TYPE_LABELS[occurrence.type] || "ocorrencia").toLowerCase()}_${occurrence.protocol || occurrence.id.slice(0,8)}.pdf`;
-  const subject = `[${condo.name || "Condomínio"}] Defesa expirada — ${TYPE_LABELS[occurrence.type] || occurrence.type} ${occurrence.protocol ? `#${occurrence.protocol}` : ""}`.trim();
+  const subject = `Aplicação de Multa para Lançamento — ${condo.name || "Condomínio"}${occurrence.protocol ? ` (#${occurrence.protocol})` : ""}`;
 
   const typeLabel = TYPE_LABELS[occurrence.type] || occurrence.type;
   const rows: [string, string][] = [
