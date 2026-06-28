@@ -182,11 +182,11 @@ export default function ManutencoesCondominios() {
                 key={c.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => navigate(`/sindico/manutencoes/tarefas?condo=${c.id}`)}
+                onClick={() => navigate(`/condominiums/${c.id}`)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    navigate(`/sindico/manutencoes/tarefas?condo=${c.id}`);
+                    navigate(`/condominiums/${c.id}`);
                   }
                 }}
                 className="p-4 cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 group"
