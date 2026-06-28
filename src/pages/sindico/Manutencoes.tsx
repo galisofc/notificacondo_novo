@@ -85,7 +85,7 @@ export default function SindicoManutencoesDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("maintenance_executions")
-        .select("id, executed_at, status, cost, executed_by, maintenance_tasks(title, maintenance_type, category_id), profiles:executed_by(full_name)")
+        .select("id, executed_at, status, cost, executed_by, executed_by_name, maintenance_tasks(title, maintenance_type, category_id)")
         .in("condominium_id", condoIds)
         .gte("executed_at", startDate)
         .lte("executed_at", `${endDate}T23:59:59`);
