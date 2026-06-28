@@ -167,6 +167,7 @@ export default function ManutencoesCalendario() {
       const k = format(d, "yyyy-MM-dd");
       push(k, {
         key: t.id,
+        taskId: t.id,
         kind: d < today ? "vencida" : "pendente",
         title: t.title,
         condoName: t.condominiums?.name || "—",
