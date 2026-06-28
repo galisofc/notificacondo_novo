@@ -52,6 +52,7 @@ import {
   Trash2,
   Pencil,
   Search,
+  Mail,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
