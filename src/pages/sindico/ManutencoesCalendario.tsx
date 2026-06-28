@@ -181,6 +181,7 @@ export default function ManutencoesCalendario() {
       const k = format(parseISO(e.executed_at), "yyyy-MM-dd");
       push(k, {
         key: e.id,
+        taskId: e.task_id,
         kind: "concluida",
         title: e.maintenance_tasks?.title || "Concluída",
         condoName: "—",
