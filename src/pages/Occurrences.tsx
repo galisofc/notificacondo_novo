@@ -1149,6 +1149,25 @@ const AdvertenciasEMultas = () => {
                       </Button>
                     )}
 
+                    {isDefenseExpired(occurrence) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider border-red-500/30 text-red-600 hover:bg-red-500/5 dark:text-red-400"
+                        onClick={() => handleSendToAdministradora(occurrence)}
+                        disabled={sendingEmail === occurrence.id}
+                        title={emailLogs[occurrence.id] ? `Último envio: ${formatDate(emailLogs[occurrence.id])}` : "Enviar à administradora"}
+                      >
+                        {sendingEmail === occurrence.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+                        ) : (
+                          <Mail className="w-3 h-3 mr-1.5" />
+                        )}
+                        {emailLogs[occurrence.id] ? "Reenviar à Adm." : "Enviar à Adm."}
+                      </Button>
+                    )}
+
+
                     <Button 
                       variant="ghost" 
                       size="icon" 
