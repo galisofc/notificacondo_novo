@@ -83,6 +83,7 @@ const SindicoPortariaShiftHandovers = lazy(() => import("./pages/sindico/Portari
 const SindicoZeladores = lazy(() => import("./pages/sindico/Zeladores"));
 const SindicoManutencoes = lazy(() => import("./pages/sindico/Manutencoes"));
 const SindicoManutencoesTarefas = lazy(() => import("./pages/sindico/ManutencoesTarefas"));
+const ManutencoesCalendario = lazy(() => import("./pages/sindico/ManutencoesCalendario"));
 const ManutencoesCategorias = lazy(() => import("./pages/sindico/ManutencoesCategorias"));
 const ManutencoesHistorico = lazy(() => import("./pages/sindico/ManutencoesHistorico"));
 const ZeladorDashboard = lazy(() => import("./pages/zelador/Dashboard"));
@@ -154,6 +155,7 @@ const App = () => (
               <Route path="/sindico/zeladores" element={<ProtectedRoute requiredRole="sindico"><SindicoZeladores /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes" element={<ProtectedRoute requiredRole="sindico"><SindicoManutencoes /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/tarefas" element={<ProtectedRoute requiredRole="sindico"><SindicoManutencoesTarefas /></ProtectedRoute>} />
+              <Route path="/sindico/manutencoes/calendario" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCalendario /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/categorias" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCategorias /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/historico" element={<ProtectedRoute requiredRole="sindico"><ManutencoesHistorico /></ProtectedRoute>} />
 
