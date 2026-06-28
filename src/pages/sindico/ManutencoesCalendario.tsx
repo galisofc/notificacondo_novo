@@ -340,7 +340,7 @@ function EventCard({ ev, compact = false, onClick }: { ev: CalendarEvent; compac
   );
 }
 
-function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
+function MonthGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]>; onEventClick?: (ev: CalendarEvent) => void }) {
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
