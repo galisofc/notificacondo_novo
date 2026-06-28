@@ -222,6 +222,20 @@ export default function SindicoManutencoesTarefas() {
     setDialogOpen(true);
   };
 
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId || autoOpenedRef.current === editId) return;
+    const task = tasks.find((t) => t.id === editId);
+    if (task) {
+      autoOpenedRef.current = editId;
+      openEditDialog(task);
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, tasks]);
+
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const condoId = editingTask
