@@ -618,32 +618,6 @@ const OccurrenceDetails = () => {
     }
   };
 
-  // Helper: load image URL into base64 data URL for jsPDF
-  const loadImageAsDataUrl = async (
-    url: string
-  ): Promise<{ dataUrl: string; format: "JPEG" | "PNG"; width: number; height: number } | null> => {
-    try {
-      const response = await fetch(url, { mode: "cors" });
-      if (!response.ok) return null;
-      const blob = await response.blob();
-      const dataUrl: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      const dims: { width: number; height: number } = await new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-        img.onerror = () => resolve({ width: 0, height: 0 });
-        img.src = dataUrl;
-      });
-      const isPng = blob.type.includes("png");
-      return { dataUrl, format: isPng ? "PNG" : "JPEG", width: dims.width, height: dims.height };
-    } catch {
-      return null;
-    }
-  };
 
   const generatePDF = async () => {
     if (!occurrence) return;
