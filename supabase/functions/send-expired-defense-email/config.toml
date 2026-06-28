@@ -1,0 +1,2 @@
+[functions.send-expired-defense-email]
+verify_jwt = false

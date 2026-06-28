@@ -87,6 +87,7 @@ const Condominiums = () => {
     cnpj: "",
     phone: "",
     gatehouse_phone: "",
+    administradora_email: "",
     zip_code: "",
     address: "",
     address_number: "",
@@ -293,6 +294,7 @@ const Condominiums = () => {
             cnpj: formData.cnpj.replace(/\D/g, "") || null,
             phone: formData.phone.replace(/\D/g, "") || null,
             gatehouse_phone: formData.gatehouse_phone.replace(/\D/g, "") || null,
+            administradora_email: formData.administradora_email.trim() || null,
             zip_code: formData.zip_code.replace(/\D/g, "") || null,
             address: formData.address || null,
             address_number: formData.address_number || null,
@@ -337,6 +339,7 @@ const Condominiums = () => {
             cnpj: formData.cnpj.replace(/\D/g, "") || null,
             phone: formData.phone.replace(/\D/g, "") || null,
             gatehouse_phone: formData.gatehouse_phone.replace(/\D/g, "") || null,
+            administradora_email: formData.administradora_email.trim() || null,
             zip_code: formData.zip_code.replace(/\D/g, "") || null,
             address: formData.address || null,
             address_number: formData.address_number || null,
@@ -381,6 +384,7 @@ const Condominiums = () => {
         cnpj: "", 
         phone: "",
         gatehouse_phone: "",
+        administradora_email: "",
         zip_code: "",
         address: "", 
         address_number: "",
@@ -413,6 +417,7 @@ const Condominiums = () => {
       cnpj: condo.cnpj ? formatCNPJ(condo.cnpj) : "",
       phone: condo.phone ? formatPhone(condo.phone) : "",
       gatehouse_phone: condo.gatehouse_phone ? formatPhone(condo.gatehouse_phone) : "",
+      administradora_email: (condo as any).administradora_email || "",
       zip_code: condo.zip_code ? formatCEP(condo.zip_code) : "",
       address: condo.address || "",
       address_number: condo.address_number || "",
@@ -460,6 +465,7 @@ const Condominiums = () => {
       cnpj: "", 
       phone: "",
       gatehouse_phone: "",
+      administradora_email: "",
       zip_code: "",
       address: "", 
       address_number: "",
@@ -657,6 +663,21 @@ const Condominiums = () => {
                       />
                       <p className="text-xs text-muted-foreground">
                         Número que receberá os avisos do salão de festas no dia da reserva.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="administradora_email">E-mail da Administradora</Label>
+                      <Input
+                        id="administradora_email"
+                        type="email"
+                        value={formData.administradora_email}
+                        onChange={(e) => setFormData({ ...formData, administradora_email: e.target.value })}
+                        className="bg-secondary/50"
+                        placeholder="administradora@empresa.com"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        E-mail que receberá as multas com defesa expirada (automaticamente e manualmente).
                       </p>
                     </div>
                   </div>

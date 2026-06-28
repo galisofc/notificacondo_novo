@@ -64,6 +64,7 @@ const WhatsApp = lazy(() => import("./pages/superadmin/WhatsApp"));
 const WhatsAppConfig = lazy(() => import("./pages/superadmin/WhatsAppConfig"));
 const WhatsAppChat = lazy(() => import("./pages/superadmin/WhatsAppChat"));
 const SuperAdminSettings = lazy(() => import("./pages/superadmin/Settings"));
+const SuperAdminSmtp = lazy(() => import("./pages/superadmin/SmtpConfig"));
 const PorteiroSettings = lazy(() => import("./pages/porteiro/Settings"));
 const ContactMessages = lazy(() => import("./pages/superadmin/ContactMessages"));
 const PackageTypes = lazy(() => import("./pages/superadmin/PackageTypes"));
@@ -201,6 +202,7 @@ const App = () => (
               <Route path="/superadmin/package-types" element={<ProtectedRoute requiredRole="super_admin"><PackageTypes /></ProtectedRoute>} />
               
               <Route path="/superadmin/pdf-template" element={<ProtectedRoute requiredRole="super_admin"><OccurrencePdfTemplate /></ProtectedRoute>} />
+              <Route path="/superadmin/smtp" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminSmtp /></ProtectedRoute>} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

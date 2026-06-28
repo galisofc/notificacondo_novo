@@ -52,6 +52,7 @@ import {
   Trash2,
   Pencil,
   Search,
+  Mail,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
@@ -135,6 +136,8 @@ const AdvertenciasEMultas = () => {
   const [confirmNotifyDialog, setConfirmNotifyDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [emailLogs, setEmailLogs] = useState<Record<string, string>>({}); // occurrence_id -> last success ISO
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [existingEvidences, setExistingEvidences] = useState<Array<{ id: string; file_url: string; file_type: string }>>([]);
   const [removedEvidenceIds, setRemovedEvidenceIds] = useState<string[]>([]);
@@ -265,6 +268,22 @@ const AdvertenciasEMultas = () => {
           .in("condominium_id", condoIds)
           .order("created_at", { ascending: false });
         setOccurrences(occurrencesData || []);
+
+        // Fetch last successful email logs to administradora
+        const occIds = (occurrencesData || []).map((o: any) => o.id);
+        if (occIds.length > 0) {
+          const { data: logs } = await supabase
+            .from("expired_defense_email_logs" as any)
+            .select("occurrence_id, sent_at, success")
+            .in("occurrence_id", occIds)
+            .eq("success", true)
+            .order("sent_at", { ascending: false });
+          const map: Record<string, string> = {};
+          (logs || []).forEach((l: any) => {
+            if (!map[l.occurrence_id]) map[l.occurrence_id] = l.sent_at;
+          });
+          setEmailLogs(map);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -793,6 +812,37 @@ const AdvertenciasEMultas = () => {
     );
   };
 
+  const isDefenseExpired = (occurrence: any): boolean => {
+    if (occurrence.type !== "multa") return false;
+    if (!["notificado", "em_defesa"].includes(occurrence.status)) return false;
+    const days = occurrence.condominiums?.defense_deadline_days;
+    const start = occurrence.notified_at || occurrence.created_at;
+    if (!days || !start) return false;
+    return new Date(start).getTime() + days * 86400000 <= Date.now();
+  };
+
+  const handleSendToAdministradora = async (occurrence: any) => {
+    setSendingEmail(occurrence.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-expired-defense-email", {
+        body: { mode: "manual", occurrence_id: occurrence.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "E-mail enviado à administradora!" });
+      setEmailLogs((prev) => ({ ...prev, [occurrence.id]: new Date().toISOString() }));
+    } catch (e: any) {
+      toast({
+        title: "Falha no envio",
+        description: e.message || "Verifique a configuração SMTP e o e-mail da administradora.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
+
   const getTypeBadge = (type: string) => {
     const styles: Record<string, string> = {
       advertencia: "bg-amber-500/10 text-amber-500",
@@ -1098,6 +1148,25 @@ const AdvertenciasEMultas = () => {
                         Notificar
                       </Button>
                     )}
+
+                    {isDefenseExpired(occurrence) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-[10px] font-bold uppercase tracking-wider border-red-500/30 text-red-600 hover:bg-red-500/5 dark:text-red-400"
+                        onClick={() => handleSendToAdministradora(occurrence)}
+                        disabled={sendingEmail === occurrence.id}
+                        title={emailLogs[occurrence.id] ? `Último envio: ${formatDate(emailLogs[occurrence.id])}` : "Enviar à administradora"}
+                      >
+                        {sendingEmail === occurrence.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+                        ) : (
+                          <Mail className="w-3 h-3 mr-1.5" />
+                        )}
+                        {emailLogs[occurrence.id] ? "Reenviar à Adm." : "Enviar à Adm."}
+                      </Button>
+                    )}
+
 
                     <Button 
                       variant="ghost" 

@@ -124,6 +124,7 @@ const getBaseSuperAdminNavItems = (): NavStructure => [
     icon: Settings,
     items: [
       { title: "Geral", url: "/superadmin/settings", icon: Cog },
+      { title: "SMTP / E-mail", url: "/superadmin/smtp", icon: Mail },
       { title: "Template PDF Ocorrência", url: "/superadmin/pdf-template", icon: FileText },
       { title: "Tipos de Encomenda", url: "/superadmin/package-types", icon: Package },
       { title: "Logs", url: "/superadmin/logs", icon: FileText },
