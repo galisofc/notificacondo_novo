@@ -105,28 +105,26 @@ export default function ManutencoesCondominioDetalhes() {
       const userIds = (uc || []).map((u) => u.user_id);
       if (userIds.length === 0) return [] as ResponsibleUser[];
 
-      const [{ data: profiles }, { data: roles }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("id, full_name, email, phone")
-          .in("id", userIds),
-        supabase.from("user_roles").select("user_id, role").in("user_id", userIds),
-      ]);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds)
+        .eq("role", "zelador");
 
-      const roleMap = new Map<string, string>();
-      (roles || []).forEach((r: any) => {
-        const prev = roleMap.get(r.user_id);
-        if (!prev || r.role === "zelador" || r.role === "porteiro") {
-          roleMap.set(r.user_id, r.role);
-        }
-      });
+      const zeladorIds = (roles || []).map((r: any) => r.user_id);
+      if (zeladorIds.length === 0) return [] as ResponsibleUser[];
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, phone")
+        .in("user_id", zeladorIds);
 
       return (profiles || []).map((p: any) => ({
-        user_id: p.id,
+        user_id: p.user_id,
         full_name: p.full_name,
         email: p.email,
         phone: p.phone,
-        role: roleMap.get(p.id) || "—",
+        role: "zelador",
       })) as ResponsibleUser[];
     },
     enabled: !!id,
