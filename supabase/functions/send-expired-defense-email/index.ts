@@ -111,36 +111,49 @@ async function sendOne(opts: {
     || `${(TYPE_LABELS[occurrence.type] || "ocorrencia").toLowerCase()}_${occurrence.protocol || occurrence.id.slice(0,8)}.pdf`;
   const subject = `[${condo.name || "Condomínio"}] Defesa expirada — ${TYPE_LABELS[occurrence.type] || occurrence.type} ${occurrence.protocol ? `#${occurrence.protocol}` : ""}`.trim();
 
+  const typeLabel = TYPE_LABELS[occurrence.type] || occurrence.type;
+  const rows: [string, string][] = [
+    ["Condomínio", condo.name || "-"],
+    ["Tipo", typeLabel],
+    ["Protocolo", occurrence.protocol ? `#${occurrence.protocol}` : "-"],
+    ["Título", occurrence.title || "-"],
+    ["Morador", occurrence.residents?.full_name || occurrence.resident_name || "-"],
+    ["Responsável", occurrence.responsible_name || "-"],
+    ["Bloco / Apto", `${occurrence.blocks?.name || "-"} / ${occurrence.apartments?.number || "-"}`],
+    ["Data da ocorrência", fmtDate(occurrence.occurred_at)],
+    ["Prazo da defesa", condo.defense_deadline_days ? `${condo.defense_deadline_days} dias` : "-"],
+  ];
+
   const html = `
-    <div style="font-family:Arial,sans-serif;color:#111;max-width:640px;margin:0 auto">
-      <h2 style="margin:0 0 8px">Defesa com prazo expirado</h2>
-      <p style="margin:0 0 16px;color:#555">Encaminhamento automático à administradora do condomínio.</p>
-      <table style="width:100%;border-collapse:collapse;font-size:14px">
-        <tbody>
-          ${[
-            ["Condomínio", condo.name],
-            ["Tipo", TYPE_LABELS[occurrence.type] || occurrence.type],
-            ["Protocolo", occurrence.protocol ? `#${occurrence.protocol}` : "-"],
-            ["Título", occurrence.title],
-            ["Morador", occurrence.residents?.full_name || occurrence.resident_name || "-"],
-            ["Responsável", occurrence.responsible_name || "-"],
-            ["Bloco / Apto", `${occurrence.blocks?.name || "-"} / ${occurrence.apartments?.number || "-"}`],
-            ["Data da ocorrência", fmtDate(occurrence.occurred_at)],
-            ["Notificada em", fmtDate(occurrence.notified_at)],
-            ["Prazo (dias)", condo.defense_deadline_days || "-"],
-          ].map(([k, v]) => `
-            <tr>
-              <td style="padding:6px 8px;border-bottom:1px solid #eee;color:#666;width:180px"><b>${k}</b></td>
-              <td style="padding:6px 8px;border-bottom:1px solid #eee">${String(v ?? "-")}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
-      <p style="margin:16px 0 4px"><b>Descrição:</b></p>
-      <p style="margin:0;white-space:pre-wrap;background:#f7f7f8;padding:12px;border-radius:6px;font-size:14px">${
-        String(occurrence.description || "-").replace(/[<>&]/g, (c) => ({ "<":"&lt;",">":"&gt;","&":"&amp;" } as any)[c])
-      }</p>
-      <p style="margin:24px 0 0;color:#888;font-size:12px">PDF da ${TYPE_LABELS[occurrence.type] || "ocorrência"} segue em anexo.</p>
-    </div>`;
+  <div style="background:#f4f6f8;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+    <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
+      <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:28px 32px;color:#ffffff">
+        <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.85;margin-bottom:6px">NotificaCondo</div>
+        <h1 style="margin:0;font-size:22px;font-weight:600">Defesa com prazo expirado</h1>
+        <p style="margin:6px 0 0;font-size:14px;opacity:0.9">Encaminhamento à administradora do condomínio</p>
+      </div>
+      <div style="padding:28px 32px">
+        <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6">
+          Prezados, segue em anexo o documento referente à <b>${typeLabel.toLowerCase()}</b> cujo prazo de defesa expirou sem manifestação do morador. Abaixo um resumo dos dados:
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+          <tbody>
+            ${rows.map(([k, v], i) => `
+              <tr style="background:${i % 2 === 0 ? "#f9fafb" : "#ffffff"}">
+                <td style="padding:10px 14px;color:#6b7280;width:180px;font-weight:600;border-bottom:1px solid #e5e7eb">${k}</td>
+                <td style="padding:10px 14px;color:#111827;border-bottom:1px solid #e5e7eb">${String(v ?? "-")}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+        <div style="margin-top:24px;padding:14px 16px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:4px;font-size:13px;color:#1e3a8a">
+          📎 O documento completo da ${typeLabel.toLowerCase()} está em anexo neste e-mail.
+        </div>
+      </div>
+      <div style="padding:18px 32px;background:#f9fafb;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;text-align:center">
+        Mensagem automática gerada pelo NotificaCondo · ${condo.name || ""}
+      </div>
+    </div>
+  </div>`;
 
   const senderAddr = (smtpConfig.username && smtpConfig.username.includes("@"))
     ? smtpConfig.username
