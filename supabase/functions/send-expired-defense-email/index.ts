@@ -153,8 +153,8 @@ async function sendOne(opts: {
     subject,
     html,
     attachments: [{
-      filename: `${(TYPE_LABELS[occurrence.type] || "ocorrencia").toLowerCase()}_${occurrence.protocol || occurrence.id.slice(0,8)}.pdf`,
-      content: pdf,
+      filename: attachmentFilename,
+      content: pdfContent,
       contentType: "application/pdf",
     }],
   });
