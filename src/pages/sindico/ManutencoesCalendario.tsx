@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +49,7 @@ type TaskItem = {
 
 type ExecItem = {
   id: string;
+  task_id: string | null;
   executed_at: string;
   status: string;
   condominium_id: string;
@@ -56,6 +58,7 @@ type ExecItem = {
 
 type CalendarEvent = {
   key: string;
+  taskId: string | null;
   kind: "pendente" | "vencida" | "concluida";
   title: string;
   condoName: string;
@@ -67,6 +70,7 @@ type CalendarEvent = {
 
 export default function ManutencoesCalendario() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewMode>("month");
   const [cursor, setCursor] = useState<Date>(new Date());
   const [condominium, setCondominium] = useState<string>("all");
@@ -122,7 +126,7 @@ export default function ManutencoesCalendario() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("maintenance_executions")
-        .select("id, executed_at, status, condominium_id, maintenance_tasks(title, category_id)")
+        .select("id, task_id, executed_at, status, condominium_id, maintenance_tasks(title, category_id)")
         .in("condominium_id", condoIds);
       if (error) throw error;
       return (data || []) as unknown as ExecItem[];
@@ -164,6 +168,7 @@ export default function ManutencoesCalendario() {
       const k = format(d, "yyyy-MM-dd");
       push(k, {
         key: t.id,
+        taskId: t.id,
         kind: d < today ? "vencida" : "pendente",
         title: t.title,
         condoName: t.condominiums?.name || "—",
@@ -177,6 +182,7 @@ export default function ManutencoesCalendario() {
       const k = format(parseISO(e.executed_at), "yyyy-MM-dd");
       push(k, {
         key: e.id,
+        taskId: e.task_id,
         kind: "concluida",
         title: e.maintenance_tasks?.title || "Concluída",
         condoName: "—",
@@ -278,8 +284,8 @@ export default function ManutencoesCalendario() {
             </div>
           </div>
 
-          {view === "month" && <MonthGrid cursor={cursor} eventsByDay={eventsByDay} />}
-          {view === "week" && <WeekGrid cursor={cursor} eventsByDay={eventsByDay} />}
+          {view === "month" && <MonthGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={(ev) => ev.taskId && navigate(`/sindico/manutencoes/tarefas?edit=${ev.taskId}`)} />}
+          {view === "week" && <WeekGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={(ev) => ev.taskId && navigate(`/sindico/manutencoes/tarefas?edit=${ev.taskId}`)} />}
           {view === "year" && <YearGrid cursor={cursor} eventsByDay={eventsByDay} />}
         </Card>
       </div>
@@ -303,9 +309,16 @@ const KIND_LABEL: Record<CalendarEvent["kind"], string> = {
   concluida: "Concluída",
 };
 
-function EventCard({ ev, compact = false }: { ev: CalendarEvent; compact?: boolean }) {
+function EventCard({ ev, compact = false, onClick }: { ev: CalendarEvent; compact?: boolean; onClick?: (ev: CalendarEvent) => void }) {
+  const clickable = !!ev.taskId && !!onClick;
   return (
-    <div className="flex bg-muted/40 rounded-sm overflow-hidden">
+    <div
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onClick!(ev) : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick!(ev); } } : undefined}
+      className={cn("flex bg-muted/40 rounded-sm overflow-hidden", clickable && "cursor-pointer hover:bg-muted/70 transition-colors focus:outline-none focus:ring-2 focus:ring-ring")}
+    >
       <span className={cn("w-1 shrink-0", KIND_BAR[ev.kind])} />
       <div className="flex-1 min-w-0 px-1.5 py-1">
         <div className="flex items-center justify-between gap-1">
@@ -327,7 +340,7 @@ function EventCard({ ev, compact = false }: { ev: CalendarEvent; compact?: boole
   );
 }
 
-function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
+function MonthGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]>; onEventClick?: (ev: CalendarEvent) => void }) {
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 0 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
@@ -359,7 +372,7 @@ function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<str
             >
               <div className={cn("text-xs text-right px-1", isToday && "font-bold text-primary")}>{format(day, "d")}</div>
               <div className="flex flex-col gap-0.5 overflow-hidden">
-                {shown.map((ev) => <EventCard key={ev.key} ev={ev} compact />)}
+                {shown.map((ev) => <EventCard key={ev.key} ev={ev} compact onClick={onEventClick} />)}
                 {extra > 0 && <div className="text-[10px] text-muted-foreground px-1">+{extra} mais</div>}
               </div>
             </div>
@@ -370,7 +383,7 @@ function MonthGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<str
   );
 }
 
-function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]> }) {
+function WeekGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; eventsByDay: Map<string, CalendarEvent[]>; onEventClick?: (ev: CalendarEvent) => void }) {
   const start = startOfWeek(cursor, { weekStartsOn: 0 });
   const end = endOfWeek(cursor, { weekStartsOn: 0 });
   const days = eachDayOfInterval({ start, end });
@@ -389,7 +402,7 @@ function WeekGrid({ cursor, eventsByDay }: { cursor: Date; eventsByDay: Map<stri
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {evs.map((ev) => <EventCard key={ev.key} ev={ev} />)}
+              {evs.map((ev) => <EventCard key={ev.key} ev={ev} onClick={onEventClick} />)}
             </div>
           </div>
         );

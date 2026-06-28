@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -88,6 +89,8 @@ export default function SindicoManutencoesTarefas() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoOpenedRef = useRef<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -218,6 +221,20 @@ export default function SindicoManutencoesTarefas() {
     });
     setDialogOpen(true);
   };
+
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId || autoOpenedRef.current === editId) return;
+    const task = tasks.find((t) => t.id === editId);
+    if (task) {
+      autoOpenedRef.current = editId;
+      openEditDialog(task);
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, tasks]);
+
 
   const saveMutation = useMutation({
     mutationFn: async () => {
