@@ -59,6 +59,7 @@ import {
   Search,
   Menu,
   ListChecks,
+  CalendarDays,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";

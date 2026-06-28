@@ -179,7 +179,7 @@ export default function ManutencoesCalendario() {
         <title>NotificaCondo - Calendário de Manutenções</title>
       </Helmet>
       <div className="p-4 sm:p-6 space-y-4">
-        <SindicoBreadcrumbs items={[{ label: "Manutenções", to: "/sindico/manutencoes" }, { label: "Calendário" }]} />
+        <SindicoBreadcrumbs items={[{ label: "Manutenções", href: "/sindico/manutencoes" }, { label: "Calendário" }]} />
 
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
