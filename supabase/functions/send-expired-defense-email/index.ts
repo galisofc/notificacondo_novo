@@ -127,11 +127,15 @@ async function sendOne(opts: {
   const html = `
   <div style="background:#f4f6f8;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
     <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08)">
-      <div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);padding:28px 32px;color:#ffffff">
-        <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.85;margin-bottom:6px">NotificaCondo</div>
-        <h1 style="margin:0;font-size:22px;font-weight:600">Defesa com prazo expirado</h1>
-        <p style="margin:6px 0 0;font-size:14px;opacity:0.9">Encaminhamento à administradora do condomínio</p>
-      </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#1e3a8a" style="background-color:#1e3a8a;background-image:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%)">
+        <tr>
+          <td style="padding:28px 32px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+            <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#dbeafe;margin-bottom:6px">NotificaCondo</div>
+            <h1 style="margin:0;font-size:22px;font-weight:600;color:#ffffff">Defesa com prazo expirado</h1>
+            <p style="margin:6px 0 0;font-size:14px;color:#e0e7ff">Encaminhamento à administradora do condomínio</p>
+          </td>
+        </tr>
+      </table>
       <div style="padding:28px 32px">
         <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6">
           Prezados, segue em anexo o documento referente à <b>${typeLabel.toLowerCase()}</b> cujo prazo de defesa expirou sem manifestação do morador. Abaixo um resumo dos dados:
