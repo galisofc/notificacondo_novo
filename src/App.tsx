@@ -64,6 +64,7 @@ const WhatsApp = lazy(() => import("./pages/superadmin/WhatsApp"));
 const WhatsAppConfig = lazy(() => import("./pages/superadmin/WhatsAppConfig"));
 const WhatsAppChat = lazy(() => import("./pages/superadmin/WhatsAppChat"));
 const SuperAdminSettings = lazy(() => import("./pages/superadmin/Settings"));
+const SuperAdminSmtp = lazy(() => import("./pages/superadmin/SmtpConfig"));
 const PorteiroSettings = lazy(() => import("./pages/porteiro/Settings"));
 const ContactMessages = lazy(() => import("./pages/superadmin/ContactMessages"));
 const PackageTypes = lazy(() => import("./pages/superadmin/PackageTypes"));
