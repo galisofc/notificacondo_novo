@@ -812,6 +812,37 @@ const AdvertenciasEMultas = () => {
     );
   };
 
+  const isDefenseExpired = (occurrence: any): boolean => {
+    if (occurrence.type !== "multa") return false;
+    if (!["notificado", "em_defesa"].includes(occurrence.status)) return false;
+    const days = occurrence.condominiums?.defense_deadline_days;
+    const start = occurrence.notified_at || occurrence.created_at;
+    if (!days || !start) return false;
+    return new Date(start).getTime() + days * 86400000 <= Date.now();
+  };
+
+  const handleSendToAdministradora = async (occurrence: any) => {
+    setSendingEmail(occurrence.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-expired-defense-email", {
+        body: { mode: "manual", occurrence_id: occurrence.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "E-mail enviado à administradora!" });
+      setEmailLogs((prev) => ({ ...prev, [occurrence.id]: new Date().toISOString() }));
+    } catch (e: any) {
+      toast({
+        title: "Falha no envio",
+        description: e.message || "Verifique a configuração SMTP e o e-mail da administradora.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
+
   const getTypeBadge = (type: string) => {
     const styles: Record<string, string> = {
       advertencia: "bg-amber-500/10 text-amber-500",
