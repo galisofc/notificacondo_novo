@@ -665,6 +665,21 @@ const Condominiums = () => {
                         Número que receberá os avisos do salão de festas no dia da reserva.
                       </p>
                     </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="administradora_email">E-mail da Administradora</Label>
+                      <Input
+                        id="administradora_email"
+                        type="email"
+                        value={formData.administradora_email}
+                        onChange={(e) => setFormData({ ...formData, administradora_email: e.target.value })}
+                        className="bg-secondary/50"
+                        placeholder="administradora@empresa.com"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        E-mail que receberá as multas com defesa expirada (automaticamente e manualmente).
+                      </p>
+                    </div>
                   </div>
                 </div>
 
