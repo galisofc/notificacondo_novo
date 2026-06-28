@@ -402,7 +402,7 @@ function WeekGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; eventsB
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {evs.map((ev) => <EventCard key={ev.key} ev={ev} />)}
+              {evs.map((ev) => <EventCard key={ev.key} ev={ev} onClick={onEventClick} />)}
             </div>
           </div>
         );
