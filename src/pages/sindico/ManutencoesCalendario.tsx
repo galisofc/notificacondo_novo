@@ -41,6 +41,9 @@ type TaskItem = {
   condominium_id: string;
   category_id: string | null;
   maintenance_type: string | null;
+  periodicity: string | null;
+  periodicity_days: number | null;
+  condominiums?: { name: string } | null;
 };
 
 type ExecItem = {
@@ -51,11 +54,16 @@ type ExecItem = {
   maintenance_tasks: { title: string; category_id: string | null } | null;
 };
 
-type DayEvents = {
-  pendentes: number;
-  concluidas: number;
-  vencidas: number;
+type CalendarEvent = {
+  key: string;
+  kind: "pendente" | "vencida" | "concluida";
+  title: string;
+  condoName: string;
+  ref: string;
+  type: "preventiva" | "corretiva";
+  periodicityLabel: string;
 };
+
 
 export default function ManutencoesCalendario() {
   const { user } = useAuth();
@@ -98,13 +106,13 @@ export default function ManutencoesCalendario() {
     queryFn: async () => {
       let q = supabase
         .from("maintenance_tasks")
-        .select("id, title, next_due_date, last_completed_at, condominium_id, category_id, maintenance_type")
+        .select("id, title, next_due_date, last_completed_at, condominium_id, category_id, maintenance_type, periodicity, periodicity_days, condominiums(name)")
         .in("condominium_id", condoIds)
         .eq("is_active", true);
       if (category !== "all") q = q.eq("category_id", category);
       const { data, error } = await q;
       if (error) throw error;
-      return (data || []) as TaskItem[];
+      return (data || []) as unknown as TaskItem[];
     },
     enabled: condoIds.length > 0,
   });
@@ -134,26 +142,52 @@ export default function ManutencoesCalendario() {
   today.setHours(0, 0, 0, 0);
 
   const eventsByDay = useMemo(() => {
-    const map = new Map<string, DayEvents>();
-    const get = (k: string) => {
-      if (!map.has(k)) map.set(k, { pendentes: 0, concluidas: 0, vencidas: 0 });
-      return map.get(k)!;
+    const map = new Map<string, CalendarEvent[]>();
+    const push = (k: string, ev: CalendarEvent) => {
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(ev);
+    };
+    const periodicityLabel = (t: TaskItem) => {
+      const p = t.periodicity || "";
+      const map: Record<string, string> = {
+        diaria: "Diária", semanal: "A cada 1 semana", quinzenal: "A cada 15 dias",
+        mensal: "A cada 1 mês", bimestral: "A cada 2 meses", trimestral: "A cada 3 meses",
+        semestral: "A cada 6 meses", anual: "Anual",
+      };
+      if (map[p]) return map[p];
+      if (t.periodicity_days) return `A cada ${t.periodicity_days} dias`;
+      return p || "—";
     };
     tasks.forEach((t) => {
       if (!t.next_due_date) return;
       const d = parseISO(t.next_due_date);
       const k = format(d, "yyyy-MM-dd");
-      const bucket = get(k);
-      if (d < today) bucket.vencidas++;
-      else bucket.pendentes++;
+      push(k, {
+        key: t.id,
+        kind: d < today ? "vencida" : "pendente",
+        title: t.title,
+        condoName: t.condominiums?.name || "—",
+        ref: `#${t.id.slice(0, 4).toUpperCase()}`,
+        type: (t.maintenance_type === "corretiva" ? "corretiva" : "preventiva"),
+        periodicityLabel: periodicityLabel(t),
+      });
     });
     filteredExecs.forEach((e) => {
       if (!e.executed_at || e.status !== "concluida") return;
       const k = format(parseISO(e.executed_at), "yyyy-MM-dd");
-      get(k).concluidas++;
+      push(k, {
+        key: e.id,
+        kind: "concluida",
+        title: e.maintenance_tasks?.title || "Concluída",
+        condoName: "—",
+        ref: `#${e.id.slice(0, 4).toUpperCase()}`,
+        type: "preventiva",
+        periodicityLabel: "",
+      });
     });
     return map;
   }, [tasks, filteredExecs, today]);
+
 
   const goPrev = () => {
     if (view === "month") setCursor(addMonths(cursor, -1));
