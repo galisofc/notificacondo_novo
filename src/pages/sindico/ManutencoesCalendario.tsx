@@ -372,7 +372,7 @@ function MonthGrid({ cursor, eventsByDay, onEventClick }: { cursor: Date; events
             >
               <div className={cn("text-xs text-right px-1", isToday && "font-bold text-primary")}>{format(day, "d")}</div>
               <div className="flex flex-col gap-0.5 overflow-hidden">
-                {shown.map((ev) => <EventCard key={ev.key} ev={ev} compact />)}
+                {shown.map((ev) => <EventCard key={ev.key} ev={ev} compact onClick={onEventClick} />)}
                 {extra > 0 && <div className="text-[10px] text-muted-foreground px-1">+{extra} mais</div>}
               </div>
             </div>
