@@ -70,6 +70,7 @@ type CalendarEvent = {
 
 export default function ManutencoesCalendario() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewMode>("month");
   const [cursor, setCursor] = useState<Date>(new Date());
   const [condominium, setCondominium] = useState<string>("all");
