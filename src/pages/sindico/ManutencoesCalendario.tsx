@@ -309,9 +309,16 @@ const KIND_LABEL: Record<CalendarEvent["kind"], string> = {
   concluida: "Concluída",
 };
 
-function EventCard({ ev, compact = false }: { ev: CalendarEvent; compact?: boolean }) {
+function EventCard({ ev, compact = false, onClick }: { ev: CalendarEvent; compact?: boolean; onClick?: (ev: CalendarEvent) => void }) {
+  const clickable = !!ev.taskId && !!onClick;
   return (
-    <div className="flex bg-muted/40 rounded-sm overflow-hidden">
+    <div
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={clickable ? () => onClick!(ev) : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick!(ev); } } : undefined}
+      className={cn("flex bg-muted/40 rounded-sm overflow-hidden", clickable && "cursor-pointer hover:bg-muted/70 transition-colors focus:outline-none focus:ring-2 focus:ring-ring")}
+    >
       <span className={cn("w-1 shrink-0", KIND_BAR[ev.kind])} />
       <div className="flex-1 min-w-0 px-1.5 py-1">
         <div className="flex items-center justify-between gap-1">
