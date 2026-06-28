@@ -131,7 +131,7 @@ async function sendOne(opts: {
         <tr>
           <td style="padding:28px 32px;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
             <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#dbeafe;margin-bottom:6px">NotificaCondo</div>
-            <h1 style="margin:0;font-size:22px;font-weight:600;color:#ffffff">Defesa com prazo expirado</h1>
+            <h1 style="margin:0;font-size:22px;font-weight:600;color:#ffffff">Aplicação de Multa para Lançamento</h1>
             <p style="margin:6px 0 0;font-size:14px;color:#e0e7ff">Encaminhamento à administradora do condomínio</p>
           </td>
         </tr>
