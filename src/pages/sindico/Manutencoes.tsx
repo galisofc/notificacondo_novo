@@ -183,7 +183,7 @@ export default function SindicoManutencoesDashboard() {
   const userActivity = useMemo(() => {
     const map = new Map<string, number>();
     filteredExecs.forEach((e: any) => {
-      const name = e.profiles?.full_name || "—";
+      const name = e.executed_by_name || "—";
       map.set(name, (map.get(name) || 0) + 1);
     });
     return Array.from(map.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
