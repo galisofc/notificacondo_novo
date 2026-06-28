@@ -89,6 +89,8 @@ export default function SindicoManutencoesTarefas() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoOpenedRef = useRef<string | null>(null);
 
   const [form, setForm] = useState({
     title: "",
