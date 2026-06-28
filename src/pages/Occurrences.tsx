@@ -136,6 +136,8 @@ const AdvertenciasEMultas = () => {
   const [confirmNotifyDialog, setConfirmNotifyDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState<{ open: boolean; occurrence: any | null }>({ open: false, occurrence: null });
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [emailLogs, setEmailLogs] = useState<Record<string, string>>({}); // occurrence_id -> last success ISO
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [existingEvidences, setExistingEvidences] = useState<Array<{ id: string; file_url: string; file_type: string }>>([]);
   const [removedEvidenceIds, setRemovedEvidenceIds] = useState<string[]>([]);
