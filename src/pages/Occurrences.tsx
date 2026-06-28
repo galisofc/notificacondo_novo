@@ -268,8 +268,23 @@ const AdvertenciasEMultas = () => {
           .in("condominium_id", condoIds)
           .order("created_at", { ascending: false });
         setOccurrences(occurrencesData || []);
+
+        // Fetch last successful email logs to administradora
+        const occIds = (occurrencesData || []).map((o: any) => o.id);
+        if (occIds.length > 0) {
+          const { data: logs } = await supabase
+            .from("expired_defense_email_logs" as any)
+            .select("occurrence_id, sent_at, success")
+            .in("occurrence_id", occIds)
+            .eq("success", true)
+            .order("sent_at", { ascending: false });
+          const map: Record<string, string> = {};
+          (logs || []).forEach((l: any) => {
+            if (!map[l.occurrence_id]) map[l.occurrence_id] = l.sent_at;
+          });
+          setEmailLogs(map);
+        }
       }
-    } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
