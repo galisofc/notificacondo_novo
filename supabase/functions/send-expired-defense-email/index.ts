@@ -18,6 +18,8 @@ interface Body {
   mode: "auto" | "manual" | "test";
   occurrence_id?: string;
   to?: string;
+  pdf_base64?: string;
+  pdf_filename?: string;
 }
 
 const json = (status: number, data: unknown) =>
