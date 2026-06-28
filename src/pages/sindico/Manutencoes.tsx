@@ -69,7 +69,7 @@ export default function SindicoManutencoesDashboard() {
     queryFn: async () => {
       let q = supabase
         .from("maintenance_tasks")
-        .select("id, title, next_due_date, last_completed_at, notification_days_before, periodicity, estimated_cost, category_id, condominium_id, maintenance_type, maintenance_categories(name), profiles:created_by(full_name)")
+        .select("id, title, next_due_date, last_completed_at, notification_days_before, periodicity, estimated_cost, category_id, condominium_id, maintenance_type, maintenance_categories(name)")
         .in("condominium_id", condoIds)
         .eq("is_active", true);
       if (category !== "all") q = q.eq("category_id", category);
