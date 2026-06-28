@@ -82,6 +82,7 @@ const SindicoPortariaOccurrences = lazy(() => import("./pages/sindico/PortariaOc
 const SindicoPortariaShiftHandovers = lazy(() => import("./pages/sindico/PortariaShiftHandovers"));
 const SindicoZeladores = lazy(() => import("./pages/sindico/Zeladores"));
 const SindicoManutencoes = lazy(() => import("./pages/sindico/Manutencoes"));
+const SindicoManutencoesTarefas = lazy(() => import("./pages/sindico/ManutencoesTarefas"));
 const ManutencoesCategorias = lazy(() => import("./pages/sindico/ManutencoesCategorias"));
 const ManutencoesHistorico = lazy(() => import("./pages/sindico/ManutencoesHistorico"));
 const ZeladorDashboard = lazy(() => import("./pages/zelador/Dashboard"));
