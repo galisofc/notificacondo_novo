@@ -191,7 +191,7 @@ export default function ManutencoesCondominioDetalhes() {
 
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-foreground">
-          Detalhes de edificação – {condo.name}
+          Detalhes - {condo.name}
         </h1>
         <button
           onClick={() => navigate(-1)}
