@@ -104,14 +104,6 @@ export default function SindicoManutencoesDashboard() {
   }, [executions, category]);
 
   // KPIs
-  const totalTasks = tasks.length;
-  const preventivas = tasks.filter((t: any) => (t.maintenance_type || "preventiva") === "preventiva");
-  const corretivas = tasks.filter((t: any) => t.maintenance_type === "corretiva");
-  const totalCost = filteredExecs.reduce((s, e: any) => s + (Number(e.cost) || 0), 0);
-  const preventivasCost = preventivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
-  const corretivasCost = corretivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
-
-  const today = new Date();
   const safeParse = (v: any): Date | null => {
     if (!v) return null;
     try {
@@ -122,7 +114,28 @@ export default function SindicoManutencoesDashboard() {
     }
   };
 
-  const atrasadas = tasks.filter((t: any) => {
+  const rangeStart = safeParse(startDate);
+  const rangeEnd = safeParse(endDate);
+
+  const dateFilteredTasks = useMemo(() => {
+    if (!rangeStart || !rangeEnd) return tasks;
+    return tasks.filter((t: any) => {
+      const d = safeParse(t.next_due_date);
+      if (!d) return false;
+      return d >= rangeStart && d <= new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000 - 1);
+    });
+  }, [tasks, startDate, endDate]);
+
+  const totalTasks = dateFilteredTasks.length;
+  const preventivas = dateFilteredTasks.filter((t: any) => (t.maintenance_type || "preventiva") === "preventiva");
+  const corretivas = dateFilteredTasks.filter((t: any) => t.maintenance_type === "corretiva");
+  const totalCost = filteredExecs.reduce((s, e: any) => s + (Number(e.cost) || 0), 0);
+  const preventivasCost = preventivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
+  const corretivasCost = corretivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
+
+  const today = new Date();
+
+  const atrasadas = dateFilteredTasks.filter((t: any) => {
     if (t.maintenance_type === "corretiva" && t.last_completed_at) return false;
     const d = safeParse(t.next_due_date);
     if (!d) return false;
