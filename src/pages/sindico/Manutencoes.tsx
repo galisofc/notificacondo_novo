@@ -104,14 +104,6 @@ export default function SindicoManutencoesDashboard() {
   }, [executions, category]);
 
   // KPIs
-  const totalTasks = tasks.length;
-  const preventivas = tasks.filter((t: any) => (t.maintenance_type || "preventiva") === "preventiva");
-  const corretivas = tasks.filter((t: any) => t.maintenance_type === "corretiva");
-  const totalCost = filteredExecs.reduce((s, e: any) => s + (Number(e.cost) || 0), 0);
-  const preventivasCost = preventivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
-  const corretivasCost = corretivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
-
-  const today = new Date();
   const safeParse = (v: any): Date | null => {
     if (!v) return null;
     try {
@@ -122,7 +114,28 @@ export default function SindicoManutencoesDashboard() {
     }
   };
 
-  const atrasadas = tasks.filter((t: any) => {
+  const rangeStart = safeParse(startDate);
+  const rangeEnd = safeParse(endDate);
+
+  const dateFilteredTasks = useMemo(() => {
+    if (!rangeStart || !rangeEnd) return tasks;
+    return tasks.filter((t: any) => {
+      const d = safeParse(t.next_due_date);
+      if (!d) return false;
+      return d >= rangeStart && d <= new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000 - 1);
+    });
+  }, [tasks, startDate, endDate]);
+
+  const totalTasks = dateFilteredTasks.length;
+  const preventivas = dateFilteredTasks.filter((t: any) => (t.maintenance_type || "preventiva") === "preventiva");
+  const corretivas = dateFilteredTasks.filter((t: any) => t.maintenance_type === "corretiva");
+  const totalCost = filteredExecs.reduce((s, e: any) => s + (Number(e.cost) || 0), 0);
+  const preventivasCost = preventivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
+  const corretivasCost = corretivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
+
+  const today = new Date();
+
+  const atrasadas = dateFilteredTasks.filter((t: any) => {
     if (t.maintenance_type === "corretiva" && t.last_completed_at) return false;
     const d = safeParse(t.next_due_date);
     if (!d) return false;
@@ -131,7 +144,7 @@ export default function SindicoManutencoesDashboard() {
 
   // Score donuts (concluídas / vencidas / pendentes)
   const computeScore = (type: "preventiva" | "corretiva") => {
-    const typed = tasks.filter((t: any) => (t.maintenance_type || "preventiva") === type);
+    const typed = dateFilteredTasks.filter((t: any) => (t.maintenance_type || "preventiva") === type);
     const completedIds = new Set(
       filteredExecs
         .filter((e: any) => e.status === "concluida" && (e.maintenance_tasks?.maintenance_type || "preventiva") === type)
@@ -159,8 +172,8 @@ export default function SindicoManutencoesDashboard() {
     return { data, total, dominant: dominant?.name || "—", dominantPct };
   };
 
-  const scorePrev = useMemo(() => computeScore("preventiva"), [tasks, filteredExecs]);
-  const scoreCorr = useMemo(() => computeScore("corretiva"), [tasks, filteredExecs]);
+  const scorePrev = useMemo(() => computeScore("preventiva"), [dateFilteredTasks, filteredExecs]);
+  const scoreCorr = useMemo(() => computeScore("corretiva"), [dateFilteredTasks, filteredExecs]);
 
   // Timeline (last 4 months in range)
   const timelineData = useMemo(() => {
@@ -197,14 +210,14 @@ export default function SindicoManutencoesDashboard() {
   // Category lists
   const buildCategoryList = (type: "preventiva" | "corretiva") => {
     const map = new Map<string, number>();
-    tasks.filter((t: any) => (t.maintenance_type || "preventiva") === type).forEach((t: any) => {
+    dateFilteredTasks.filter((t: any) => (t.maintenance_type || "preventiva") === type).forEach((t: any) => {
       const name = t.maintenance_categories?.name || "Sem categoria";
       map.set(name, (map.get(name) || 0) + 1);
     });
     return Array.from(map.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   };
-  const catsPrev = useMemo(() => buildCategoryList("preventiva"), [tasks]);
-  const catsCorr = useMemo(() => buildCategoryList("corretiva"), [tasks]);
+  const catsPrev = useMemo(() => buildCategoryList("preventiva"), [dateFilteredTasks]);
+  const catsCorr = useMemo(() => buildCategoryList("corretiva"), [dateFilteredTasks]);
 
   // Activities per user (based on executions)
   const userActivity = useMemo(() => {
