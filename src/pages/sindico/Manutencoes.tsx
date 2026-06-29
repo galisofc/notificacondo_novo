@@ -112,9 +112,21 @@ export default function SindicoManutencoesDashboard() {
   const corretivasCost = corretivas.reduce((s, t: any) => s + (Number(t.estimated_cost) || 0), 0);
 
   const today = new Date();
+  const safeParse = (v: any): Date | null => {
+    if (!v) return null;
+    try {
+      const d = typeof v === "string" ? parseISO(v) : new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    } catch {
+      return null;
+    }
+  };
+
   const atrasadas = tasks.filter((t: any) => {
     if (t.maintenance_type === "corretiva" && t.last_completed_at) return false;
-    return differenceInDays(parseISO(t.next_due_date), today) < 0;
+    const d = safeParse(t.next_due_date);
+    if (!d) return false;
+    return differenceInDays(d, today) < 0;
   }).length;
 
   // Score donuts (concluídas / vencidas / pendentes)
@@ -130,7 +142,9 @@ export default function SindicoManutencoesDashboard() {
     let pendentes = 0;
     typed.forEach((t: any) => {
       if (completedIds.has(t.title)) return;
-      const diff = differenceInDays(parseISO(t.next_due_date), today);
+      const d = safeParse(t.next_due_date);
+      if (!d) return;
+      const diff = differenceInDays(d, today);
       if (diff < 0) vencidas++;
       else pendentes++;
     });
@@ -150,19 +164,32 @@ export default function SindicoManutencoesDashboard() {
 
   // Timeline (last 4 months in range)
   const timelineData = useMemo(() => {
+    const base = safeParse(endDate) ?? new Date();
     const months: Array<{ month: string; start: Date; end: Date }> = [];
     const monthsCount = 4;
     for (let i = monthsCount - 1; i >= 0; i--) {
-      const d = subMonths(parseISO(endDate), i);
+      const d = subMonths(base, i);
       months.push({ month: format(d, "MMM/yyyy", { locale: ptBR }), start: startOfMonth(d), end: endOfMonth(d) });
     }
     return months.map(({ month, start, end }) => {
-      const monthExecs = filteredExecs.filter((e: any) => isWithinInterval(parseISO(e.executed_at), { start, end }) && e.status === "concluida");
+      const monthExecs = filteredExecs.filter((e: any) => {
+        const ed = safeParse(e.executed_at);
+        return ed && isWithinInterval(ed, { start, end }) && e.status === "concluida";
+      });
       const completedTitles = new Set(monthExecs.map((e: any) => e.maintenance_tasks?.title));
-      const monthTasks = tasks.filter((t: any) => isWithinInterval(parseISO(t.next_due_date), { start, end }));
+      const monthTasks = tasks.filter((t: any) => {
+        const td = safeParse(t.next_due_date);
+        return td && isWithinInterval(td, { start, end });
+      });
       const concluidas = monthExecs.length;
-      const vencidas = monthTasks.filter((t: any) => !completedTitles.has(t.title) && parseISO(t.next_due_date) < today).length;
-      const pendentes = monthTasks.filter((t: any) => !completedTitles.has(t.title) && parseISO(t.next_due_date) >= today).length;
+      const vencidas = monthTasks.filter((t: any) => {
+        const td = safeParse(t.next_due_date);
+        return !completedTitles.has(t.title) && td && td < today;
+      }).length;
+      const pendentes = monthTasks.filter((t: any) => {
+        const td = safeParse(t.next_due_date);
+        return !completedTitles.has(t.title) && td && td >= today;
+      }).length;
       return { month, Concluídas: concluidas, Vencidas: vencidas, Pendentes: pendentes };
     });
   }, [tasks, filteredExecs, endDate]);
