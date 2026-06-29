@@ -172,8 +172,8 @@ export default function SindicoManutencoesDashboard() {
     return { data, total, dominant: dominant?.name || "—", dominantPct };
   };
 
-  const scorePrev = useMemo(() => computeScore("preventiva"), [tasks, filteredExecs]);
-  const scoreCorr = useMemo(() => computeScore("corretiva"), [tasks, filteredExecs]);
+  const scorePrev = useMemo(() => computeScore("preventiva"), [dateFilteredTasks, filteredExecs]);
+  const scoreCorr = useMemo(() => computeScore("corretiva"), [dateFilteredTasks, filteredExecs]);
 
   // Timeline (last 4 months in range)
   const timelineData = useMemo(() => {
