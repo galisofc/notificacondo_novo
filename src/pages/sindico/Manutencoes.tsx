@@ -144,7 +144,7 @@ export default function SindicoManutencoesDashboard() {
 
   // Score donuts (concluídas / vencidas / pendentes)
   const computeScore = (type: "preventiva" | "corretiva") => {
-    const typed = tasks.filter((t: any) => (t.maintenance_type || "preventiva") === type);
+    const typed = dateFilteredTasks.filter((t: any) => (t.maintenance_type || "preventiva") === type);
     const completedIds = new Set(
       filteredExecs
         .filter((e: any) => e.status === "concluida" && (e.maintenance_tasks?.maintenance_type || "preventiva") === type)
