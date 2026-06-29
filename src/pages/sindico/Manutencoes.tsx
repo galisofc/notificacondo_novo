@@ -210,14 +210,14 @@ export default function SindicoManutencoesDashboard() {
   // Category lists
   const buildCategoryList = (type: "preventiva" | "corretiva") => {
     const map = new Map<string, number>();
-    tasks.filter((t: any) => (t.maintenance_type || "preventiva") === type).forEach((t: any) => {
+    dateFilteredTasks.filter((t: any) => (t.maintenance_type || "preventiva") === type).forEach((t: any) => {
       const name = t.maintenance_categories?.name || "Sem categoria";
       map.set(name, (map.get(name) || 0) + 1);
     });
     return Array.from(map.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   };
-  const catsPrev = useMemo(() => buildCategoryList("preventiva"), [tasks]);
-  const catsCorr = useMemo(() => buildCategoryList("corretiva"), [tasks]);
+  const catsPrev = useMemo(() => buildCategoryList("preventiva"), [dateFilteredTasks]);
+  const catsCorr = useMemo(() => buildCategoryList("corretiva"), [dateFilteredTasks]);
 
   // Activities per user (based on executions)
   const userActivity = useMemo(() => {
