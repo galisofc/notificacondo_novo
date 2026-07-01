@@ -1,49 +1,65 @@
-import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const sora = { fontFamily: "'Sora', sans-serif" };
+const manrope = { fontFamily: "'Manrope', sans-serif" };
+
 const CTA = () => {
   return (
-    <section className="py-24 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-3xl" />
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 mb-8">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm text-foreground">Comece em menos de 5 minutos</span>
+    <section className="relative py-28 px-6 overflow-hidden bg-[#020617]" style={manrope}>
+      {/* Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none" />
+      {/* Grid */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      <div className="container mx-auto relative z-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-medium mb-8">
+            <Zap className="w-3.5 h-3.5" />
+            Comece em menos de 5 minutos
           </div>
 
-          <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold mb-6">
-            Gestão condominial completa,{" "}
-            <span className="text-gradient">em uma só plataforma.</span>
+          <h2
+            style={sora}
+            className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-[1.05]"
+          >
+            Pronto para uma portaria{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-violet-400">
+              sem ruídos?
+            </span>
           </h2>
 
-          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Ocorrências, encomendas, salão de festas, portaria e manutenção — 
-            5 módulos integrados com WhatsApp WABA para eliminar o "não fui avisado".
+          <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">
+            Ative os 5 módulos em minutos. Cancele quando quiser.
+            Sem cartão de crédito no teste.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button variant="hero" size="xl" className="group" asChild>
-              <Link to="/auth">
-                Teste Grátis por 7 Dias
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </Button>
-            <Button variant="glass" size="xl" asChild>
-              <Link to="/contato">Agendar Demonstração</Link>
-            </Button>
+            <Link
+              to="/auth"
+              className="group px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-600/25 hover:scale-105 active:scale-95 inline-flex items-center gap-2"
+            >
+              Teste grátis 7 dias
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            <Link
+              to="/contato"
+              className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-all"
+            >
+              Agendar demonstração
+            </Link>
           </div>
 
-          {/* Trust Badge */}
-          <div className="mt-12 flex items-center justify-center gap-3 text-muted-foreground">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="text-sm">
-              Seus dados protegidos conforme LGPD • Sem cartão de crédito
-            </span>
+          <div className="mt-10 inline-flex items-center gap-2 text-slate-500 text-sm">
+            <Shield className="w-4 h-4" />
+            Conformidade LGPD • WhatsApp WABA oficial
           </div>
         </div>
       </div>
