@@ -256,8 +256,9 @@ const Plans = () => {
         />
       </Helmet>
       
-      <div className="min-h-screen bg-background">
+      <div className="dark min-h-screen bg-background text-foreground" style={midnightTokens}>
         <Header />
+
         
         <main className="pt-24 pb-16">
           {/* Hero Section */}
