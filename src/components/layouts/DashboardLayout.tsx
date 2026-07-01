@@ -65,7 +65,8 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import logoImage from "@/assets/logo.webp";
-import logoIcon from "@/assets/logo-icon.png";
+import logoIconAsset from "@/assets/logo-icon-v2.png.asset.json";
+const logoIcon = logoIconAsset.url;
 import logoDarkAsset from "@/assets/logo-branco-v2.png.asset.json";
 const logoDark = logoDarkAsset.url;
 import { Button } from "@/components/ui/button";
