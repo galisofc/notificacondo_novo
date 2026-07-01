@@ -557,7 +557,7 @@ export default function PorteiroPackages() {
                     ))}
                   </div>
                 )}
-                {hasMore && filteredPackages.length > 0 && (
+                {activeTab !== "pendente" && hasMore && filteredPackages.length > 0 && (
                   <div className="flex justify-center mt-6">
                     <Button
                       variant="outline"
