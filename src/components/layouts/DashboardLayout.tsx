@@ -916,12 +916,46 @@ function SidebarNavigation() {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, signOut } = useAuth();
-  const { profileInfo, role } = useUserRole();
+  const { profileInfo, role, porteiroCondominiums } = useUserRole();
   const navigate = useNavigate();
   const savedState = localStorage.getItem("sidebar-open");
   const initialOpen = savedState !== null ? savedState === "true" : false;
 
   const [open, setOpen] = useState(initialOpen);
+
+  const porteiroCondoIds = porteiroCondominiums.map((c) => c.id);
+
+  const { data: pendingPackages = 0 } = useQuery({
+    queryKey: ["header-pending-packages", porteiroCondoIds],
+    queryFn: async () => {
+      if (porteiroCondoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("packages")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", porteiroCondoIds)
+        .eq("status", "pendente");
+      return count || 0;
+    },
+    enabled: !!user && role === "porteiro" && porteiroCondoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+  });
+
+  const { data: openPorterOccurrencesPorteiro = 0 } = useQuery({
+    queryKey: ["header-porter-occurrences-porteiro", porteiroCondoIds],
+    queryFn: async () => {
+      if (porteiroCondoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("porter_occurrences")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", porteiroCondoIds)
+        .eq("status", "aberta");
+      return count || 0;
+    },
+    enabled: !!user && role === "porteiro" && porteiroCondoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+  });
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
