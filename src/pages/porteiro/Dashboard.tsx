@@ -521,6 +521,30 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
     staleTime: 1000 * 60 * 2,
   });
 
+  const authorIds = useMemo(
+    () => Array.from(new Set(messages.map((m: any) => m.author_id).filter(Boolean))),
+    [messages]
+  );
+
+  const { data: authorProfiles = {} } = useQuery({
+    queryKey: ["porter-message-authors", authorIds],
+    queryFn: async () => {
+      if (authorIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", authorIds as string[]);
+      if (error) throw error;
+      const map: Record<string, { full_name: string; avatar_url: string | null }> = {};
+      (data || []).forEach((p: any) => {
+        map[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+      });
+      return map;
+    },
+    enabled: authorIds.length > 0,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const sendMutation = useMutation({
     mutationFn: async () => {
       if (!user || !newMessage.trim() || condominiumIds.length === 0) return;
@@ -548,60 +572,105 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
     },
   });
 
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((n) => n[0]?.toUpperCase())
+      .join("") || "?";
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3 bg-gradient-to-r from-primary/5 to-transparent border-b">
         <CardTitle className="text-lg flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-primary" />
-          Livro de Recados
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+            <BookOpen className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="leading-tight">Livro de Recados</p>
+            <p className="text-xs font-normal text-muted-foreground">Comunicação entre plantões</p>
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Messages */}
+      <CardContent className="space-y-4 pt-4">
         {isLoading ? (
           <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
         ) : messages.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Nenhum recado registrado.</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <BookOpen className="w-10 h-10 text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground">Nenhum recado registrado.</p>
+            <p className="text-xs text-muted-foreground/70">Seja o primeiro a deixar um recado.</p>
+          </div>
         ) : (
-          <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto pr-1 py-2 scrollbar-thin">
+          <div className="flex flex-col gap-3 max-h-[350px] overflow-y-auto pr-1 py-1 scrollbar-thin">
             {[...messages].reverse().map((msg: any) => {
               const isMe = user && msg.author_id === user.id;
+              const profile = authorProfiles[msg.author_id];
+              const displayName = profile?.full_name || msg.author_name || "Porteiro";
+              const avatarUrl = profile?.avatar_url;
               return (
-                <div key={msg.id} className={`flex items-center gap-1 group ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  {isMe && (
-                    <button
-                      onClick={() => deleteMutation.mutate(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
+                <div
+                  key={msg.id}
+                  className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  <Avatar className="w-8 h-8 shrink-0 border-2 border-background shadow-sm">
+                    {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+                    <AvatarFallback className={`text-[10px] font-semibold ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                      {getInitials(displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-3.5 py-2 shadow-sm ${
+                      isMe
+                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                        : "bg-muted rounded-bl-sm"
+                    }`}
+                  >
+                    <p
+                      className={`text-xs font-semibold mb-0.5 ${
+                        isMe ? "text-primary-foreground/90" : "text-primary"
+                      }`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 shadow-sm ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-muted rounded-bl-sm'}`}>
-                    {!isMe && (
-                      <p className="text-xs font-semibold mb-0.5 text-primary">{msg.author_name}</p>
-                    )}
-                    <p className={`text-sm whitespace-pre-line ${isMe ? 'text-primary-foreground' : 'text-foreground'}`}>{msg.content}</p>
-                    <div className={`flex items-center mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <span className={`text-[10px] ${isMe ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                      {displayName}
+                    </p>
+                    <p
+                      className={`text-sm whitespace-pre-line ${
+                        isMe ? "text-primary-foreground" : "text-foreground"
+                      }`}
+                    >
+                      {msg.content}
+                    </p>
+                    <div className={`flex items-center mt-1 ${isMe ? "justify-end" : "justify-start"}`}>
+                      <span
+                        className={`text-[10px] ${
+                          isMe ? "text-primary-foreground/70" : "text-muted-foreground"
+                        }`}
+                      >
                         {format(new Date(msg.created_at), "dd/MM HH:mm", { locale: ptBR })}
                       </span>
                     </div>
                   </div>
-                  {!isMe && (
-                    <button
-                      onClick={() => deleteMutation.mutate(msg.id)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => deleteMutation.mutate(msg.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80 self-center"
+                    aria-label="Excluir recado"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               );
             })}
           </div>
         )}
         {/* Input */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-2 border-t">
+          <Avatar className="w-9 h-9 shrink-0 mt-1">
+            {profileInfo?.avatar_url && <AvatarImage src={profileInfo.avatar_url} alt={profileInfo.full_name || ""} />}
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+              {getInitials(profileInfo?.full_name || "Eu")}
+            </AvatarFallback>
+          </Avatar>
           <Textarea
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
