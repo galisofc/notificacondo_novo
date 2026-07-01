@@ -553,6 +553,19 @@ export default function PorteiroPackages() {
                     ))}
                   </div>
                 )}
+                {hasMore && filteredPackages.length > 0 && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      className="gap-2"
+                    >
+                      {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Carregar mais
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </>
