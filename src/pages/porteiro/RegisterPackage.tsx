@@ -647,7 +647,7 @@ export default function RegisterPackage() {
               {/* Package Type Select with Search */}
               <div className="space-y-2">
                 <Label htmlFor="package-type">Tipo de Encomenda *</Label>
-                <Popover>
+                <Popover open={packageTypeOpen} onOpenChange={setPackageTypeOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -693,8 +693,10 @@ export default function RegisterPackage() {
                                 value={type.name}
                                 onSelect={() => {
                                   setSelectedPackageType(type.id);
+                                  setPackageTypeOpen(false);
                                 }}
                               >
+
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
