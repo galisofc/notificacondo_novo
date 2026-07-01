@@ -826,90 +826,9 @@ function SidebarNavigation() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer with User Info */}
-      <SidebarFooter className="p-3 mt-auto">
-        <div
-          className={cn(
-            "flex items-center gap-3 p-3 rounded-xl bg-sidebar-accent/30",
-            collapsed && "justify-center p-2"
-          )}
-        >
-          <Avatar className="h-10 w-10 shrink-0 border-2 border-sidebar-accent">
-            {profileInfo?.avatar_url && (
-              <AvatarImage 
-                src={profileInfo.avatar_url} 
-                alt={getUserName()}
-                className="object-cover"
-              />
-            )}
-            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm font-bold">
-              <User className="w-5 h-5" />
-            </AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex-1 overflow-hidden min-w-0">
-              <p className="text-sm font-bold text-sidebar-foreground truncate">
-                {getUserName()}
-              </p>
-              <p className="text-xs text-sidebar-muted truncate">
-                {getRoleLabel()}
-              </p>
-            </div>
-          )}
-          {!collapsed && (
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleSignOut}
-                    className="p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>Sair da conta</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )}
-        </div>
-        {collapsed && (
-          <div className="flex flex-col items-center gap-2 mt-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => navigate("/notifications")}
-                  className="relative p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-                >
-                  <Bell className="w-4 h-4" />
-                  {pendingDefenses > 0 && (
-                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold animate-pulse">
-                      {pendingDefenses > 9 ? "9+" : pendingDefenses}
-                    </span>
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>{pendingDefenses > 0 ? `${pendingDefenses} defesa(s) pendente(s)` : "Notificações"}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={handleSignOut}
-                  className="p-2 rounded-lg text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Sair</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        )}
-      </SidebarFooter>
+      {/* Footer removido conforme solicitação */}
+      <SidebarFooter className="p-0" />
+
     </Sidebar>
   );
 }
