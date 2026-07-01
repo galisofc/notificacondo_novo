@@ -417,7 +417,7 @@ const Autenticidade = () => {
                     <div className="mt-8 pt-8 border-t border-emerald-500/10">
                       <div className="flex items-center gap-2 mb-6">
                         <ClipboardList className="w-5 h-5 text-primary" />
-                        <h3 className="text-xl font-bold text-foreground">Conteúdo do Documento</h3>
+                        <h3 className="text-xl font-bold text-slate-900">Conteúdo do Documento</h3>
                       </div>
                       
                       <Card className="bg-background border-border shadow-sm">
