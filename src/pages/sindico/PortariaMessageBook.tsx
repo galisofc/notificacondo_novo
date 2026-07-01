@@ -209,40 +209,45 @@ export default function SindicoPortariaMessageBook() {
                 {[...messages].reverse().map((msg: any) => {
                   const isMe = user && msg.author_id === user.id;
                   const profile = authorProfiles[msg.author_id];
-                  const displayName = profile?.full_name || msg.author_name || "Usuário";
+                  const roles = authorRoles[msg.author_id] || [];
+                  const isSindico = roles.includes("sindico");
+                  const baseName = profile?.full_name || msg.author_name || "Usuário";
+                  const displayName = isSindico ? `Síndico - ${baseName}` : baseName;
                   const avatarUrl = profile?.avatar_url;
                   return (
                     <div
                       key={msg.id}
                       className={`flex items-end gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}
                     >
-                      <Avatar className="w-8 h-8 shrink-0 border-2 border-background shadow-sm">
+                      <Avatar className={`w-8 h-8 shrink-0 border-2 shadow-sm ${isSindico ? "border-amber-500 ring-2 ring-amber-500/30" : "border-background"}`}>
                         {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
                         <AvatarFallback
                           className={`text-[10px] font-semibold ${
-                            isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                            isSindico ? "bg-amber-500 text-white" : isMe ? "bg-primary text-primary-foreground" : "bg-muted"
                           }`}
                         >
-                          {getInitials(displayName)}
+                          {getInitials(baseName)}
                         </AvatarFallback>
                       </Avatar>
                       <div
                         className={`max-w-[75%] rounded-2xl px-3.5 py-2 shadow-sm ${
-                          isMe
+                          isSindico
+                            ? "bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500/60 text-foreground"
+                            : isMe
                             ? "bg-primary text-primary-foreground rounded-br-sm"
                             : "bg-muted rounded-bl-sm"
                         }`}
                       >
                         <p
                           className={`text-xs font-semibold mb-0.5 ${
-                            isMe ? "text-primary-foreground/90" : "text-primary"
+                            isSindico ? "text-amber-700 dark:text-amber-400" : isMe ? "text-primary-foreground/90" : "text-primary"
                           }`}
                         >
                           {displayName}
                         </p>
                         <p
                           className={`text-sm whitespace-pre-line ${
-                            isMe ? "text-primary-foreground" : "text-foreground"
+                            isSindico ? "text-foreground" : isMe ? "text-primary-foreground" : "text-foreground"
                           }`}
                         >
                           {msg.content}
@@ -250,7 +255,7 @@ export default function SindicoPortariaMessageBook() {
                         <div className={`flex items-center mt-1 ${isMe ? "justify-end" : "justify-start"}`}>
                           <span
                             className={`text-[10px] ${
-                              isMe ? "text-primary-foreground/70" : "text-muted-foreground"
+                              isSindico ? "text-amber-700/70 dark:text-amber-400/70" : isMe ? "text-primary-foreground/70" : "text-muted-foreground"
                             }`}
                           >
                             {format(new Date(msg.created_at), "dd/MM HH:mm", { locale: ptBR })}
