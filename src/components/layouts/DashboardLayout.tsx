@@ -1063,7 +1063,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       </span>
                     </div>
                     <Avatar className="h-8 w-8 border border-border shadow-sm">
-                      <AvatarImage src="" />
+                      <AvatarImage src={profileInfo?.avatar_url || ""} alt={profileInfo?.full_name || "Usuário"} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                         {profileInfo?.full_name?.charAt(0) || "U"}
                       </AvatarFallback>
