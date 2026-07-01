@@ -66,6 +66,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import logoImage from "@/assets/logo.webp";
 import logoIcon from "@/assets/logo-icon.png";
+import logoDarkAsset from "@/assets/logo-branco-v2.png.asset.json";
+const logoDark = logoDarkAsset.url;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -633,14 +635,26 @@ function SidebarNavigation() {
       {/* Header with Logo */}
       <SidebarHeader className="p-4 pb-6">
         <div className="flex items-center justify-center w-full">
-          <img 
-            src={collapsed ? logoIcon : logoImage} 
-            alt="NotificaCondo" 
-            className={cn(
-              "object-contain transition-all duration-200",
-              collapsed ? "w-full h-14" : "w-full h-auto max-h-28"
-            )} 
-          />
+          {collapsed ? (
+            <img
+              src={logoIcon}
+              alt="NotificaCondo"
+              className="object-contain transition-all duration-200 w-full h-14"
+            />
+          ) : (
+            <>
+              <img
+                src={logoImage}
+                alt="NotificaCondo"
+                className="object-contain transition-all duration-200 w-full h-auto max-h-28 block dark:hidden"
+              />
+              <img
+                src={logoDark}
+                alt="NotificaCondo"
+                className="object-contain transition-all duration-200 w-full h-auto max-h-28 hidden dark:block"
+              />
+            </>
+          )}
         </div>
       </SidebarHeader>
 
