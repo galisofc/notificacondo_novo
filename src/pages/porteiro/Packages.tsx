@@ -46,10 +46,15 @@ export default function PorteiroPackages() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState<ApartmentInfo | null>(null);
   
+  const PAGE_SIZE = 20;
   const [packages, setPackages] = useState<PackageWithSignedUrl[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [activeTab, setActiveTab] = useState<"pendente" | "retirada" | "all">("pendente");
-  
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
   const [selectedPackage, setSelectedPackage] = useState<PackageWithSignedUrl | null>(null);
   const [isPickupDialogOpen, setIsPickupDialogOpen] = useState(false);
   const [detailsPackage, setDetailsPackage] = useState<PackageWithSignedUrl | null>(null);
@@ -82,47 +87,80 @@ export default function PorteiroPackages() {
     fetchCondominiums();
   }, [user]);
 
-  // Fetch packages when apartment is selected
-  const fetchPackages = useCallback(async (apartmentId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("packages")
-        .select(`
-          *,
-          apartment:apartments(id, number),
-          block:blocks(id, name),
-          condominium:condominiums(id, name),
-          package_type:package_types(id, name, icon)
-        `)
-        .eq("apartment_id", apartmentId)
-        .order("received_at", { ascending: false });
+  // Fetch packages for the selected apartment, filtered/paginated on the server
+  const fetchPackages = useCallback(
+    async (
+      apartmentId: string,
+      tab: "pendente" | "retirada" | "all",
+      pageIndex: number,
+      append = false,
+    ) => {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+      try {
+        const from = pageIndex * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
 
-      if (error) throw error;
-      
-      // Generate signed URLs for all packages in parallel
-      const packagesWithSignedUrls = await Promise.all(
-        (data || []).map(async (pkg) => {
-          const signedPhotoUrl = await getSignedPackagePhotoUrl(pkg.photo_url);
-          return {
-            ...pkg,
-            signedPhotoUrl: signedPhotoUrl || pkg.photo_url, // Fallback to original URL
-          };
-        })
-      );
-      
-      setPackages(packagesWithSignedUrls);
-    } catch (error) {
-      console.error("Error fetching packages:", error);
-      toast({
-        title: "Erro ao buscar encomendas",
-        description: "Não foi possível carregar as encomendas",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+        let query = supabase
+          .from("packages")
+          .select(
+            `
+              *,
+              apartment:apartments(id, number),
+              block:blocks(id, name),
+              condominium:condominiums(id, name),
+              package_type:package_types(id, name, icon)
+            `
+          )
+          .eq("apartment_id", apartmentId)
+          .order("received_at", { ascending: false })
+          .range(from, to);
+
+        if (tab !== "all") {
+          query = query.eq("status", tab);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const packagesWithSignedUrls = await Promise.all(
+          (data || []).map(async (pkg) => {
+            const signedPhotoUrl = await getSignedPackagePhotoUrl(pkg.photo_url);
+            return {
+              ...pkg,
+              signedPhotoUrl: signedPhotoUrl || pkg.photo_url,
+            };
+          })
+        );
+
+        setHasMore((data?.length || 0) === PAGE_SIZE);
+        setPackages((prev) =>
+          append ? [...prev, ...packagesWithSignedUrls] : packagesWithSignedUrls
+        );
+      } catch (error) {
+        console.error("Error fetching packages:", error);
+        toast({
+          title: "Erro ao buscar encomendas",
+          description: "Não foi possível carregar as encomendas",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [toast]
+  );
+
+  // Lightweight count of pending packages for the tab badge
+  const fetchPendingCount = useCallback(async (apartmentId: string) => {
+    const { count } = await supabase
+      .from("packages")
+      .select("id", { count: "exact", head: true })
+      .eq("apartment_id", apartmentId)
+      .eq("status", "pendente");
+    setPendingCount(count || 0);
+  }, []);
 
   // Search apartment by code (BBAA format)
   const handleSearch = async () => {
@@ -205,8 +243,13 @@ export default function PorteiroPackages() {
         condominiumName: condoData?.name || "",
       });
 
-      // Fetch packages for this apartment
-      await fetchPackages(matchedApartment.id);
+      // Fetch packages for this apartment (reset to first page)
+      setPage(0);
+      await Promise.all([
+        fetchPackages(matchedApartment.id, activeTab, 0, false),
+        fetchPendingCount(matchedApartment.id),
+      ]);
+
       
     } catch (error) {
       console.error("Search error:", error);
@@ -272,8 +315,13 @@ export default function PorteiroPackages() {
 
       // Refresh packages
       if (selectedApartment) {
-        await fetchPackages(selectedApartment.id);
+        setPage(0);
+        await Promise.all([
+          fetchPackages(selectedApartment.id, activeTab, 0, false),
+          fetchPendingCount(selectedApartment.id),
+        ]);
       }
+
 
       setSelectedPackage(null);
       return { success: true };
@@ -303,7 +351,7 @@ export default function PorteiroPackages() {
       setNotificationModalState("success");
 
       if (selectedApartment) {
-        await fetchPackages(selectedApartment.id);
+        await fetchPackages(selectedApartment.id, activeTab, page, false);
       }
     } catch (error) {
       console.error("Error resending notification:", error);
@@ -312,13 +360,22 @@ export default function PorteiroPackages() {
     }
   };
 
-  // Filter packages by tab
-  const filteredPackages = packages.filter((pkg) => {
-    if (activeTab === "all") return true;
-    return pkg.status === activeTab;
-  });
+  // Refetch when tab changes
+  useEffect(() => {
+    if (!selectedApartment) return;
+    setPage(0);
+    fetchPackages(selectedApartment.id, activeTab, 0, false);
+  }, [activeTab, selectedApartment, fetchPackages]);
 
-  const pendingCount = packages.filter((p) => p.status === "pendente").length;
+  const filteredPackages = packages;
+
+  const handleLoadMore = () => {
+    if (!selectedApartment || loadingMore) return;
+    const next = page + 1;
+    setPage(next);
+    fetchPackages(selectedApartment.id, activeTab, next, true);
+  };
+
 
   return (
     <DashboardLayout>
@@ -494,6 +551,19 @@ export default function PorteiroPackages() {
                         notificationTimestamps={notificationDataMap[pkg.id]?.timestamps}
                       />
                     ))}
+                  </div>
+                )}
+                {hasMore && filteredPackages.length > 0 && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      className="gap-2"
+                    >
+                      {loadingMore && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Carregar mais
+                    </Button>
                   </div>
                 )}
               </TabsContent>
