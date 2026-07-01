@@ -927,10 +927,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     localStorage.setItem("sidebar-open", String(newOpen));
   };
 
+  const [signOutOpen, setSignOutOpen] = useState(false);
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
+
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
