@@ -1,4 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, CSSProperties } from "react";
+
+const midnightTokens = {
+  "--background": "230 60% 4%",
+  "--foreground": "210 40% 98%",
+  "--card": "230 40% 8%",
+  "--card-foreground": "210 40% 98%",
+  "--popover": "230 40% 8%",
+  "--popover-foreground": "210 40% 98%",
+  "--primary": "243 75% 59%",
+  "--primary-foreground": "210 40% 98%",
+  "--secondary": "230 30% 14%",
+  "--secondary-foreground": "210 40% 98%",
+  "--muted": "230 30% 14%",
+  "--muted-foreground": "215 20% 65%",
+  "--accent": "243 75% 59%",
+  "--accent-foreground": "210 40% 98%",
+  "--border": "230 30% 15%",
+  "--input": "230 30% 15%",
+  "--ring": "243 75% 59%",
+} as CSSProperties;
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -514,7 +534,7 @@ const Auth = () => {
       <Helmet>
         <title>NotificaCondo - Login</title>
       </Helmet>
-      <div className="min-h-screen bg-background flex relative overflow-hidden">
+      <div className="dark min-h-screen bg-background text-foreground flex relative overflow-hidden" style={midnightTokens}>
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
         <div className="absolute top-1/4 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
         <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
