@@ -287,20 +287,7 @@ export function CondominiumBlockApartmentSelect({
 
   return (
     <div className="space-y-4">
-      {/* Condominium Display (read-only) */}
-      <div className="space-y-2">
-        <Label htmlFor="condominium">Condomínio</Label>
-        {loadingCondos ? (
-          <div className="flex items-center gap-2 h-10 px-3 border rounded-md bg-muted">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-muted-foreground text-sm">Carregando...</span>
-          </div>
-        ) : (
-          <div className="h-10 px-3 border rounded-md bg-muted flex items-center">
-            <span className="text-sm font-medium">{selectedCondominiumName || "Nenhum condomínio vinculado"}</span>
-          </div>
-        )}
-      </div>
+      {/* Condomínio ocultado — porteiro já está vinculado */}
 
       {/* Quick Search */}
       <div className="space-y-2">
