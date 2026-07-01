@@ -1058,7 +1058,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Button variant="ghost" className="flex items-center gap-2 p-1 pl-2 hover:bg-muted rounded-full transition-colors">
                     <div className="hidden sm:flex flex-col items-end mr-1">
                       <span className="text-sm font-semibold text-foreground leading-none">{profileInfo?.full_name?.split(" ")[0] || "Usuário"}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">Premium</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 capitalize">
+                        {role === "super_admin" ? "Super Admin" : role === "sindico" ? "Síndico" : role === "porteiro" ? "Porteiro" : role === "zelador" ? "Zelador" : role === "morador" ? "Morador" : "Usuário"}
+                      </span>
                     </div>
                     <Avatar className="h-8 w-8 border border-border shadow-sm">
                       <AvatarImage src="" />
