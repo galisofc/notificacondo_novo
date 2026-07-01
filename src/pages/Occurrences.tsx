@@ -127,6 +127,8 @@ const AdvertenciasEMultas = () => {
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [blockFilter, setBlockFilter] = useState<string>("all");
+  const OCC_PAGE_SIZE = 5;
+  const [visibleCount, setVisibleCount] = useState<number>(OCC_PAGE_SIZE);
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
