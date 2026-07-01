@@ -1,10 +1,11 @@
+import { useState } from "react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { AlertTriangle, Package, PartyPopper, HelpCircle, DoorOpen, Wrench } from "lucide-react";
+import { AlertTriangle, Package, PartyPopper, HelpCircle, DoorOpen, Wrench, Sparkles } from "lucide-react";
 import { useTrialDays } from "@/hooks/useTrialDays";
 
 const faqCategories = [
@@ -12,8 +13,8 @@ const faqCategories = [
     id: "multas",
     title: "Gestão de Multas",
     icon: AlertTriangle,
-    color: "text-primary",
-    bgColor: "bg-primary/10",
+    accent: "from-rose-500/20 to-red-500/10",
+    iconColor: "text-rose-300",
     questions: [
       {
         question: "Como funciona o registro de ocorrências?",
@@ -37,8 +38,8 @@ const faqCategories = [
     id: "encomendas",
     title: "Controle de Encomendas",
     icon: Package,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
+    accent: "from-sky-500/20 to-blue-500/10",
+    iconColor: "text-sky-300",
     questions: [
       {
         question: "Como funciona o registro de encomendas?",
@@ -62,8 +63,8 @@ const faqCategories = [
     id: "salao",
     title: "Espaços",
     icon: PartyPopper,
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
+    accent: "from-violet-500/20 to-purple-500/10",
+    iconColor: "text-violet-300",
     questions: [
       {
         question: "Como faço para reservar os espaços?",
@@ -87,8 +88,8 @@ const faqCategories = [
     id: "portaria",
     title: "Portaria",
     icon: DoorOpen,
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-500/10",
+    accent: "from-emerald-500/20 to-teal-500/10",
+    iconColor: "text-emerald-300",
     questions: [
       {
         question: "Como funciona a passagem de plantão?",
@@ -112,8 +113,8 @@ const faqCategories = [
     id: "manutencao",
     title: "Manutenção",
     icon: Wrench,
-    color: "text-orange-500",
-    bgColor: "bg-orange-500/10",
+    accent: "from-amber-500/20 to-orange-500/10",
+    iconColor: "text-amber-300",
     questions: [
       {
         question: "Como cadastrar uma manutenção?",
@@ -137,6 +138,7 @@ const faqCategories = [
 
 const FAQ = () => {
   const { trialDays } = useTrialDays();
+  const [activeCategory, setActiveCategory] = useState<string>("multas");
 
   const generalFAQ = [
     {
@@ -157,72 +159,154 @@ const FAQ = () => {
     }
   ];
 
+  const active = faqCategories.find((c) => c.id === activeCategory) ?? faqCategories[0];
+
   return (
-    <section id="faq" className="py-24 bg-secondary/30">
-      <div className="container mx-auto px-4">
+    <section
+      id="faq"
+      className="relative py-24 overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(ellipse at top, hsl(240 60% 14%) 0%, hsl(240 55% 8%) 50%, hsl(240 60% 5%) 100%)",
+        fontFamily: "'Manrope', sans-serif",
+      }}
+    >
+      {/* Glow accents */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-indigo-500/20 blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-0 -right-32 w-96 h-96 rounded-full bg-violet-500/20 blur-[120px]" />
+      </div>
+
+      <div className="container relative mx-auto px-4">
+        {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-indigo-200 text-sm font-medium mb-6 backdrop-blur-sm">
             <HelpCircle className="w-4 h-4" />
             Perguntas Frequentes
           </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold mb-6">
-            Tire suas <span className="text-gradient">dúvidas</span>
+          <h2
+            className="text-4xl md:text-5xl font-bold mb-6 text-white"
+            style={{ fontFamily: "'Sora', sans-serif", letterSpacing: "-0.02em" }}
+          >
+            Tire suas{" "}
+            <span
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage: "linear-gradient(135deg, #a5b4fc 0%, #c4b5fd 50%, #f0abfc 100%)",
+              }}
+            >
+              dúvidas
+            </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-indigo-100/70 max-w-2xl mx-auto">
             Encontre respostas para as perguntas mais comuns sobre cada módulo do sistema.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-12">
-          {/* FAQ by Module */}
-          {faqCategories.map((category) => (
-            <div key={category.id} className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`w-10 h-10 rounded-xl ${category.bgColor} flex items-center justify-center`}>
-                  <category.icon className={`w-5 h-5 ${category.color}`} />
-                </div>
-                <h3 className="font-display text-xl font-bold">{category.title}</h3>
-              </div>
-              
-              <Accordion type="single" collapsible className="space-y-2">
-                {category.questions.map((item, index) => (
-                  <AccordionItem 
-                    key={index} 
-                    value={`${category.id}-${index}`}
-                    className="bg-background border border-border/50 rounded-xl px-6 data-[state=open]:border-primary/30 transition-colors"
+        {/* Bento: category selector + accordion */}
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-[280px_1fr] gap-6">
+          {/* Category rail */}
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-3 h-fit lg:sticky lg:top-24">
+            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible">
+              {faqCategories.map((cat) => {
+                const Icon = cat.icon;
+                const isActive = cat.id === activeCategory;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-left flex-shrink-0 lg:flex-shrink lg:w-full ${
+                      isActive
+                        ? "bg-gradient-to-br from-indigo-500/25 to-violet-500/15 border border-indigo-400/30 shadow-[0_0_25px_-8px_rgba(129,140,248,0.5)]"
+                        : "border border-transparent hover:bg-white/5"
+                    }`}
                   >
-                    <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
-                      {item.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground pb-4">
-                      {item.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+                    <div
+                      className={`w-9 h-9 rounded-xl bg-gradient-to-br ${cat.accent} flex items-center justify-center flex-shrink-0 border border-white/10`}
+                    >
+                      <Icon className={`w-4 h-4 ${cat.iconColor}`} />
+                    </div>
+                    <span
+                      className={`text-sm font-medium whitespace-nowrap lg:whitespace-normal ${
+                        isActive ? "text-white" : "text-indigo-100/70 group-hover:text-white"
+                      }`}
+                      style={{ fontFamily: "'Sora', sans-serif" }}
+                    >
+                      {cat.title}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          ))}
+          </div>
 
-          {/* General FAQ */}
-          <div className="space-y-4 pt-8 border-t border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          {/* Accordion panel */}
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div
+                className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${active.accent} flex items-center justify-center border border-white/10`}
+              >
+                <active.icon className={`w-5 h-5 ${active.iconColor}`} />
               </div>
-              <h3 className="font-display text-xl font-bold">Perguntas Gerais</h3>
+              <h3
+                className="text-2xl font-bold text-white"
+                style={{ fontFamily: "'Sora', sans-serif", letterSpacing: "-0.01em" }}
+              >
+                {active.title}
+              </h3>
             </div>
-            
-            <Accordion type="single" collapsible className="space-y-2">
-              {generalFAQ.map((item, index) => (
-                <AccordionItem 
-                  key={index} 
-                  value={`general-${index}`}
-                  className="bg-background border border-border/50 rounded-xl px-6 data-[state=open]:border-primary/30 transition-colors"
+
+            <Accordion type="single" collapsible className="space-y-3">
+              {active.questions.map((item, index) => (
+                <AccordionItem
+                  key={index}
+                  value={`${active.id}-${index}`}
+                  className="border border-white/10 rounded-2xl px-5 bg-white/[0.02] data-[state=open]:border-indigo-400/40 data-[state=open]:bg-white/[0.04] transition-all"
                 >
-                  <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
+                  <AccordionTrigger
+                    className="text-left font-medium hover:no-underline py-4 text-white [&>svg]:text-indigo-300"
+                    style={{ fontFamily: "'Sora', sans-serif" }}
+                  >
                     {item.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4">
+                  <AccordionContent className="text-indigo-100/70 pb-4 leading-relaxed">
+                    {item.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </div>
+
+        {/* General FAQ */}
+        <div className="max-w-6xl mx-auto mt-8">
+          <div className="relative rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500/25 to-violet-500/15 flex items-center justify-center border border-white/10">
+                <Sparkles className="w-5 h-5 text-indigo-300" />
+              </div>
+              <h3
+                className="text-2xl font-bold text-white"
+                style={{ fontFamily: "'Sora', sans-serif", letterSpacing: "-0.01em" }}
+              >
+                Perguntas Gerais
+              </h3>
+            </div>
+
+            <Accordion type="single" collapsible className="grid md:grid-cols-2 gap-3">
+              {generalFAQ.map((item, index) => (
+                <AccordionItem
+                  key={index}
+                  value={`general-${index}`}
+                  className="border border-white/10 rounded-2xl px-5 bg-white/[0.02] data-[state=open]:border-indigo-400/40 data-[state=open]:bg-white/[0.04] transition-all"
+                >
+                  <AccordionTrigger
+                    className="text-left font-medium hover:no-underline py-4 text-white [&>svg]:text-indigo-300"
+                    style={{ fontFamily: "'Sora', sans-serif" }}
+                  >
+                    {item.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-indigo-100/70 pb-4 leading-relaxed">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>
