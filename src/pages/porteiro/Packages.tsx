@@ -113,11 +113,15 @@ export default function PorteiroPackages() {
             `
           )
           .eq("apartment_id", apartmentId)
-          .order("received_at", { ascending: false })
-          .range(from, to);
+          .order("received_at", { ascending: false });
 
         if (tab !== "all") {
           query = query.eq("status", tab);
+        }
+
+        // Paginação apenas para abas não-pendentes
+        if (tab !== "pendente") {
+          query = query.range(from, to);
         }
 
         const { data, error } = await query;
@@ -133,7 +137,7 @@ export default function PorteiroPackages() {
           })
         );
 
-        setHasMore((data?.length || 0) === PAGE_SIZE);
+        setHasMore(tab !== "pendente" && (data?.length || 0) === PAGE_SIZE);
         setPackages((prev) =>
           append ? [...prev, ...packagesWithSignedUrls] : packagesWithSignedUrls
         );
