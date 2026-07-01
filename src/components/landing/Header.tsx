@@ -3,7 +3,7 @@ import { Menu, X, LayoutDashboard, LogIn, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import logoImage from "@/assets/logo-branco.png.asset.json";
+import logoImage from "@/assets/logo-branco-v2.png.asset.json";
 
 const navLinkClass =
   "text-sm text-indigo-100/70 hover:text-white transition-colors";
