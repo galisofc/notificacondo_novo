@@ -250,62 +250,6 @@ export default function PorteiroDashboard() {
         {/* Banners do Condomínio */}
         <CondominiumBanners condominiumIds={condominiumIds} />
 
-        {/* Period Filter */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Período:</span>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={periodFilter === "today" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPeriodFilter("today")}>
-
-              Hoje
-            </Button>
-            <Button
-              variant={periodFilter === "7days" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPeriodFilter("7days")}>
-
-              7 dias
-            </Button>
-            <Button
-              variant={periodFilter === "15days" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPeriodFilter("15days")}>
-
-              15 dias
-            </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={periodFilter === "custom" ? "default" : "outline"}
-                  size="sm"
-                  className="gap-1"
-                  onClick={() => setPeriodFilter("custom")}>
-
-                  <Calendar className="h-4 w-4" />
-                  {periodFilter === "custom" && dateRange.from && dateRange.to ?
-                  `${format(dateRange.from, "dd/MM")} - ${format(dateRange.to, "dd/MM")}` :
-                  "Período"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="range"
-                  selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range) => {
-                    setDateRange({ from: range?.from, to: range?.to });
-                    if (range?.from && range?.to) {
-                      setPeriodFilter("custom");
-                    }
-                  }}
-                  locale={ptBR}
-                  numberOfMonths={2} />
-
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
 
         {/* Stats Cards removidos conforme solicitação */}
 
