@@ -109,6 +109,13 @@ export default function SindicoPortariaOccurrences() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [filterBlockId, setFilterBlockId] = useState<string>("all");
   const [filterApartmentId, setFilterApartmentId] = useState<string>("all");
+  const PAGE_SIZE = 3;
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCondominium, filterStatus, filterCategory, searchTerm, dateRange, filterBlockId, filterApartmentId]);
 
   // New occurrence form
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -1256,7 +1263,7 @@ export default function SindicoPortariaOccurrences() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredOccurrences.map((occ) => (
+            {filteredOccurrences.slice(0, visibleCount).map((occ) => (
               <Card key={occ.id} className="group bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
                 <div className={cn(
                   "h-1.5 w-full transition-colors duration-500",
@@ -1432,6 +1439,20 @@ export default function SindicoPortariaOccurrences() {
                 </CardContent>
               </Card>
             ))}
+            {visibleCount < filteredOccurrences.length && (
+              <div className="flex flex-col items-center gap-2 pt-2">
+                <p className="text-xs text-muted-foreground">
+                  Exibindo {Math.min(visibleCount, filteredOccurrences.length)} de {filteredOccurrences.length}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                  className="rounded-xl"
+                >
+                  Carregar mais
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
