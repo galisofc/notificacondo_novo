@@ -521,6 +521,26 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
     staleTime: 1000 * 60 * 2,
   });
 
+  // Realtime: refresh on INSERT/UPDATE/DELETE for porter_messages of these condominiums
+  useEffect(() => {
+    if (condominiumIds.length === 0) return;
+    const channel = supabase
+      .channel(`porter-messages-${condominiumIds.join("-")}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "porter_messages" },
+        (payload: any) => {
+          const row = (payload.new ?? payload.old) as { condominium_id?: string } | null;
+          if (row?.condominium_id && !condominiumIds.includes(row.condominium_id)) return;
+          queryClient.invalidateQueries({ queryKey: ["porter-messages", condominiumIds] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [condominiumIds, queryClient]);
+
   const authorIds = useMemo(
     () => Array.from(new Set(messages.map((m: any) => m.author_id).filter(Boolean))),
     [messages]
