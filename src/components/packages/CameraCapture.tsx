@@ -137,7 +137,7 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
 
   if (capturedImage) {
     return (
-      <div className={cn("relative rounded-xl overflow-hidden bg-muted", className)}>
+      <div className={cn("relative w-full rounded-xl overflow-hidden bg-muted aspect-[4/3] sm:aspect-video", className)}>
         <img
           src={capturedImage}
           alt="Foto capturada"
@@ -156,7 +156,7 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
   }
 
   return (
-    <div className={cn("relative rounded-xl overflow-hidden bg-muted", className)}>
+    <div className={cn("relative w-full rounded-xl overflow-hidden bg-muted", className)}>
       <canvas ref={canvasRef} className="hidden" />
       <input
         type="file"
@@ -168,14 +168,14 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
       />
 
       {/* Keep video mounted so we can attach the stream even before "isStreaming" becomes true */}
-      <div className="relative w-full aspect-[3/4] sm:aspect-video sm:min-h-[360px] max-h-[70vh] bg-black">
+      <div className="relative w-full aspect-[4/3] sm:aspect-video bg-black">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className={cn(
-            "absolute inset-0 w-full h-full object-contain sm:object-cover transition-opacity",
+            "absolute inset-0 w-full h-full object-cover transition-opacity",
             isStreaming ? "opacity-100" : "opacity-0",
           )}
         />
@@ -185,7 +185,7 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
             {/* Animated focus guide overlay */}
             <div className="absolute inset-0 pointer-events-none z-[5]">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[75%] h-[55%] max-w-[360px]">
+                <div className="relative w-[72%] h-[48%] max-w-[360px]">
                   <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg animate-pulse" />
                   <div
                     className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg animate-pulse"
@@ -207,17 +207,17 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
                 </div>
               </div>
 
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm whitespace-nowrap">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-background/80 text-foreground text-xs px-3 py-1 rounded-full backdrop-blur-sm whitespace-nowrap">
                 Centralize a encomenda
               </div>
             </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10">
               <Button
                 variant="secondary"
                 size="icon"
                 onClick={switchCamera}
-                className="rounded-full w-12 h-12"
+                className="rounded-full h-10 w-10 sm:h-12 sm:w-12"
               >
                 <RotateCcw className="w-5 h-5" />
               </Button>
@@ -225,15 +225,15 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
                 variant="default"
                 size="icon"
                 onClick={capturePhoto}
-                className="rounded-full w-16 h-16 bg-white hover:bg-white/90 text-foreground shadow-lg"
+                className="rounded-full h-14 w-14 bg-background hover:bg-background/90 text-foreground shadow-lg sm:h-16 sm:w-16"
               >
-                <div className="w-12 h-12 rounded-full border-4 border-foreground" />
+                <div className="h-10 w-10 rounded-full border-4 border-foreground sm:h-12 sm:w-12" />
               </Button>
               <Button
                 variant="destructive"
                 size="icon"
                 onClick={stopCamera}
-                className="rounded-full w-12 h-12"
+                className="rounded-full h-10 w-10 sm:h-12 sm:w-12"
               >
                 <X className="w-5 h-5" />
               </Button>

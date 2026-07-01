@@ -502,7 +502,7 @@ export default function RegisterPackage() {
         </div>
 
         {/* Form */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
           {/* Camera Section */}
           <Card>
             <CardHeader>
@@ -513,7 +513,6 @@ export default function RegisterPackage() {
                 onCapture={setCapturedImage}
                 capturedImage={capturedImage}
                 onClear={() => setCapturedImage(null)}
-                className="aspect-[4/3]"
               />
             </CardContent>
           </Card>
