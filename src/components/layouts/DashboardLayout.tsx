@@ -67,7 +67,6 @@ import { cn } from "@/lib/utils";
 import logoImage from "@/assets/logo.webp";
 import logoIcon from "@/assets/logo-icon.png";
 import logoDarkAsset from "@/assets/logo-branco-v2.png.asset.json";
-import { useTheme } from "next-themes";
 const logoDark = logoDarkAsset.url;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
