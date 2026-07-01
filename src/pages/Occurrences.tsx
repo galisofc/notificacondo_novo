@@ -1203,6 +1203,20 @@ const AdvertenciasEMultas = () => {
               </div>
             ))}
           </div>
+          {visibleCount < filteredOccurrences.length && (
+            <div className="flex flex-col items-center gap-2 mt-4">
+              <p className="text-xs text-muted-foreground">
+                Exibindo {Math.min(visibleCount, filteredOccurrences.length)} de {filteredOccurrences.length}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount((c) => c + OCC_PAGE_SIZE)}
+                className="rounded-xl"
+              >
+                Carregar mais
+              </Button>
+            </div>
+          )}
         </>
       )}
     </TabsContent>
