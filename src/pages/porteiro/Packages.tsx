@@ -46,10 +46,15 @@ export default function PorteiroPackages() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState<ApartmentInfo | null>(null);
   
+  const PAGE_SIZE = 20;
   const [packages, setPackages] = useState<PackageWithSignedUrl[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [activeTab, setActiveTab] = useState<"pendente" | "retirada" | "all">("pendente");
-  
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
   const [selectedPackage, setSelectedPackage] = useState<PackageWithSignedUrl | null>(null);
   const [isPickupDialogOpen, setIsPickupDialogOpen] = useState(false);
   const [detailsPackage, setDetailsPackage] = useState<PackageWithSignedUrl | null>(null);
