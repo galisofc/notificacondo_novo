@@ -212,6 +212,11 @@ const AdvertenciasEMultas = () => {
     return matchesStatus && matchesType && matchesCondominium && matchesBlock && matchesSearch;
   });
 
+  // Reset pagination whenever the filters or dataset change
+  useEffect(() => {
+    setVisibleCount(OCC_PAGE_SIZE);
+  }, [statusFilter, typeFilter, condominiumFilter, blockFilter, searchTerm, occurrences.length]);
+
   const fetchData = async () => {
     if (!user) return;
 
