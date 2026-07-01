@@ -243,8 +243,13 @@ export default function PorteiroPackages() {
         condominiumName: condoData?.name || "",
       });
 
-      // Fetch packages for this apartment
-      await fetchPackages(matchedApartment.id);
+      // Fetch packages for this apartment (reset to first page)
+      setPage(0);
+      await Promise.all([
+        fetchPackages(matchedApartment.id, activeTab, 0, false),
+        fetchPendingCount(matchedApartment.id),
+      ]);
+
       
     } catch (error) {
       console.error("Search error:", error);
