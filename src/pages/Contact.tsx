@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send, CheckCircle2, Mail, Phone, MessageSquare, ArrowLeft, Sparkles } from "lucide-react";
-import logoAsset from "@/assets/logo-branco-v2.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -15,6 +14,8 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { midnightTokens } from "@/lib/midnightTheme";
 import { cn } from "@/lib/utils";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
