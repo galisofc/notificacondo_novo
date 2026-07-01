@@ -566,21 +566,21 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
   });
 
   const { data: authorRoles = {} } = useQuery({
-    queryKey: ["porter-message-author-roles", authorIds],
+    queryKey: ["porter-message-author-roles", condominiumIds],
     queryFn: async () => {
-      if (authorIds.length === 0) return {};
+      if (condominiumIds.length === 0) return {};
       const { data, error } = await supabase
-        .from("user_roles")
-        .select("user_id, role")
-        .in("user_id", authorIds as string[]);
+        .from("condominiums")
+        .select("owner_id")
+        .in("id", condominiumIds);
       if (error) throw error;
       const map: Record<string, string[]> = {};
-      (data || []).forEach((r: any) => {
-        (map[r.user_id] ||= []).push(r.role);
+      (data || []).forEach((c: any) => {
+        if (c.owner_id) (map[c.owner_id] ||= []).push("sindico");
       });
       return map;
     },
-    enabled: authorIds.length > 0,
+    enabled: condominiumIds.length > 0,
     staleTime: 1000 * 60 * 5,
   });
 
