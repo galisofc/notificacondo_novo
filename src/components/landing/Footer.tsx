@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, MessageCircle, ShieldCheck } from "lucide-react";
-import logoImage from "@/assets/logo.webp";
+import logoImage from "@/assets/logo-branco.png.asset.json";
 
 const linkClass =
   "text-sm text-indigo-100/70 hover:text-white transition-colors";
