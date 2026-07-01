@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { midnightTokens } from "@/lib/midnightTheme";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 const sections = [
   {
