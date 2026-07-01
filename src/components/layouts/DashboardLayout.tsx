@@ -916,12 +916,46 @@ function SidebarNavigation() {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, signOut } = useAuth();
-  const { profileInfo, role } = useUserRole();
+  const { profileInfo, role, porteiroCondominiums } = useUserRole();
   const navigate = useNavigate();
   const savedState = localStorage.getItem("sidebar-open");
   const initialOpen = savedState !== null ? savedState === "true" : false;
 
   const [open, setOpen] = useState(initialOpen);
+
+  const porteiroCondoIds = porteiroCondominiums.map((c) => c.id);
+
+  const { data: pendingPackages = 0 } = useQuery({
+    queryKey: ["header-pending-packages", porteiroCondoIds],
+    queryFn: async () => {
+      if (porteiroCondoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("packages")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", porteiroCondoIds)
+        .eq("status", "pendente");
+      return count || 0;
+    },
+    enabled: !!user && role === "porteiro" && porteiroCondoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+  });
+
+  const { data: openPorterOccurrencesPorteiro = 0 } = useQuery({
+    queryKey: ["header-porter-occurrences-porteiro", porteiroCondoIds],
+    queryFn: async () => {
+      if (porteiroCondoIds.length === 0) return 0;
+      const { count } = await supabase
+        .from("porter_occurrences")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", porteiroCondoIds)
+        .eq("status", "aberta");
+      return count || 0;
+    },
+    enabled: !!user && role === "porteiro" && porteiroCondoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+  });
 
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -956,10 +990,64 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             
             <div className="flex items-center gap-2 md:gap-4">
               <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="text-muted-foreground relative rounded-full">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
-                </Button>
+                {role === "porteiro" ? (
+                  (() => {
+                    const totalPorteiroNotif = (pendingPackages || 0) + (openPorterOccurrencesPorteiro || 0);
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground relative rounded-full"
+                            aria-label="Notificações"
+                          >
+                            <Bell className="w-5 h-5" />
+                            {totalPorteiroNotif > 0 && (
+                              <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-72 mt-2 rounded-xl border-border shadow-elevated">
+                          <DropdownMenuLabel className="font-display font-semibold flex items-center justify-between">
+                            Notificações
+                            <span className="text-xs text-muted-foreground font-normal">{totalPorteiroNotif} pendente(s)</span>
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => navigate("/porteiro/encomendas")}
+                            className="gap-3 cursor-pointer py-2 rounded-lg m-1"
+                          >
+                            <PackageCheck className="w-4 h-4 text-primary" />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">Encomendas pendentes</div>
+                              <div className="text-xs text-muted-foreground">
+                                {pendingPackages > 0 ? `${pendingPackages} aguardando retirada` : "Nenhuma pendente"}
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => navigate("/porteiro/portaria/ocorrencias")}
+                            className="gap-3 cursor-pointer py-2 rounded-lg m-1"
+                          >
+                            <AlertTriangle className="w-4 h-4 text-destructive" />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">Ocorrências abertas</div>
+                              <div className="text-xs text-muted-foreground">
+                                {openPorterOccurrencesPorteiro > 0 ? `${openPorterOccurrencesPorteiro} em aberto` : "Nenhuma aberta"}
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()
+                ) : (
+                  <Button variant="ghost" size="icon" className="text-muted-foreground relative rounded-full" aria-label="Notificações">
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-card" />
+                  </Button>
+                )}
                 <ThemeToggle />
               </div>
               
