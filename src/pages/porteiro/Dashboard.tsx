@@ -335,17 +335,6 @@ export default function PorteiroDashboard() {
               </CardContent>
             </Card>
 
-            <Card
-              className="cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => navigate("/porteiro/encomendas")}>
-
-              <CardContent className="flex flex-col items-center justify-center py-6">
-                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-3">
-                  <Search className="w-6 h-6 text-blue-500" />
-                </div>
-                <p className="font-medium text-sm text-center">Buscar Unidade</p>
-              </CardContent>
-            </Card>
 
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
