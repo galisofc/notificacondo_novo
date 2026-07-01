@@ -635,14 +635,26 @@ function SidebarNavigation() {
       {/* Header with Logo */}
       <SidebarHeader className="p-4 pb-6">
         <div className="flex items-center justify-center w-full">
-          <img 
-            src={collapsed ? logoIcon : logoImage} 
-            alt="NotificaCondo" 
-            className={cn(
-              "object-contain transition-all duration-200",
-              collapsed ? "w-full h-14" : "w-full h-auto max-h-28"
-            )} 
-          />
+          {collapsed ? (
+            <img
+              src={logoIcon}
+              alt="NotificaCondo"
+              className="object-contain transition-all duration-200 w-full h-14"
+            />
+          ) : (
+            <>
+              <img
+                src={logoImage}
+                alt="NotificaCondo"
+                className="object-contain transition-all duration-200 w-full h-auto max-h-28 block dark:hidden"
+              />
+              <img
+                src={logoDark}
+                alt="NotificaCondo"
+                className="object-contain transition-all duration-200 w-full h-auto max-h-28 hidden dark:block"
+              />
+            </>
+          )}
         </div>
       </SidebarHeader>
 
