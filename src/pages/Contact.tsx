@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { midnightTokens } from "@/lib/midnightTheme";
 import { cn } from "@/lib/utils";
 
 const contactSchema = z.object({
@@ -84,7 +85,7 @@ const Contact = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="dark min-h-screen bg-background text-foreground bg-gradient-hero flex items-center justify-center p-4 relative overflow-hidden" style={midnightTokens}>
         {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
@@ -131,7 +132,7 @@ const Contact = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
+    <div className="dark min-h-screen bg-background text-foreground bg-gradient-hero relative overflow-hidden" style={midnightTokens}>
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />

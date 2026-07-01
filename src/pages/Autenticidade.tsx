@@ -8,6 +8,7 @@ import Footer from "@/components/landing/Footer";
 import { Helmet } from "react-helmet-async";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { midnightTokens } from "@/lib/midnightTheme";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -194,7 +195,7 @@ const Autenticidade = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="dark min-h-screen bg-background text-foreground" style={midnightTokens}>
       <Helmet>
         <title>Autenticidade | NotificaCondo</title>
         <meta name="description" content="Verifique a autenticidade e assinatura digital de documentos gerados pelo sistema NotificaCondo." />

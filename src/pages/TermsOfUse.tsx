@@ -3,6 +3,7 @@ import { ArrowLeft, FileText, Users, Shield, AlertTriangle, CreditCard, Scale, X
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { midnightTokens } from "@/lib/midnightTheme";
 
 const sections = [
   {
@@ -116,7 +117,7 @@ export default function TermsOfUse() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero relative overflow-hidden">
+    <div className="dark min-h-screen bg-background text-foreground bg-gradient-hero relative overflow-hidden" style={midnightTokens}>
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
