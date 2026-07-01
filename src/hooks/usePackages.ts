@@ -123,33 +123,51 @@ export function usePackages(options: UsePackagesOptions = {}) {
 
   const markAsPickedUp = useCallback(async (packageId: string, userId: string, pickedUpByName?: string) => {
     try {
-      // Usa RPC para garantir que o timestamp seja do servidor
-      const { error } = await supabase.rpc('confirm_package_pickup' as any, {
+      // Tenta via RPC (timestamp do servidor)
+      const { error: rpcError } = await supabase.rpc('confirm_package_pickup' as any, {
         p_package_id: packageId,
         p_picked_up_by: userId,
         p_picked_up_by_name: pickedUpByName || '',
       });
 
-      if (error) {
-        // Fallback para update direto
+      if (rpcError) {
+        console.warn('RPC confirm_package_pickup falhou, tentando update direto:', rpcError);
         const { error: updateError } = await supabase
           .from("packages")
           .update({
             status: "retirada" as PackageStatus,
             picked_up_at: new Date().toISOString(),
             picked_up_by: userId,
+            picked_up_by_name: pickedUpByName || null,
           })
           .eq("id", packageId);
-        
+
         if (updateError) throw updateError;
       }
 
-      // Refresh packages
+      // Verifica no banco se o status realmente foi persistido como "retirada"
+      const { data: verifyData, error: verifyError } = await supabase
+        .from("packages")
+        .select("id, status, picked_up_at")
+        .eq("id", packageId)
+        .maybeSingle();
+
+      if (verifyError) throw verifyError;
+      if (!verifyData) {
+        return { success: false, error: "Encomenda não encontrada após a atualização." };
+      }
+      if (verifyData.status !== "retirada") {
+        return {
+          success: false,
+          error: `Falha ao confirmar baixa no banco: status permanece "${verifyData.status}". Verifique permissões (RLS) e tente novamente.`,
+        };
+      }
+
       await fetchPackages();
       return { success: true };
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error marking package as picked up:", err);
-      return { success: false, error: "Erro ao marcar encomenda como retirada" };
+      return { success: false, error: err?.message || "Erro ao marcar encomenda como retirada" };
     }
   }, [fetchPackages]);
 
