@@ -357,6 +357,9 @@ export function PackagePickupDialog({
             <p className="mt-6 text-xl font-bold text-green-600 dark:text-green-400">
               Retirada Confirmada!
             </p>
+            <p className="mt-2 text-sm text-muted-foreground text-center max-w-[260px]">
+              Encomenda baixada do sistema corretamente
+            </p>
             <div className="mt-3 p-3 bg-muted rounded-lg text-center">
               {revealPickupCode && (
                 <p className="font-mono font-bold text-lg text-primary">
