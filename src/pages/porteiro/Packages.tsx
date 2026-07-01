@@ -351,7 +351,7 @@ export default function PorteiroPackages() {
       setNotificationModalState("success");
 
       if (selectedApartment) {
-        await fetchPackages(selectedApartment.id);
+        await fetchPackages(selectedApartment.id, activeTab, page, false);
       }
     } catch (error) {
       console.error("Error resending notification:", error);
@@ -360,13 +360,22 @@ export default function PorteiroPackages() {
     }
   };
 
-  // Filter packages by tab
-  const filteredPackages = packages.filter((pkg) => {
-    if (activeTab === "all") return true;
-    return pkg.status === activeTab;
-  });
+  // Refetch when tab changes
+  useEffect(() => {
+    if (!selectedApartment) return;
+    setPage(0);
+    fetchPackages(selectedApartment.id, activeTab, 0, false);
+  }, [activeTab, selectedApartment, fetchPackages]);
 
-  const pendingCount = packages.filter((p) => p.status === "pendente").length;
+  const filteredPackages = packages;
+
+  const handleLoadMore = () => {
+    if (!selectedApartment || loadingMore) return;
+    const next = page + 1;
+    setPage(next);
+    fetchPackages(selectedApartment.id, activeTab, next, true);
+  };
+
 
   return (
     <DashboardLayout>
