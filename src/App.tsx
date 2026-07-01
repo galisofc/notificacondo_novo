@@ -80,6 +80,7 @@ const ShiftHandover = lazy(() => import("./pages/porteiro/ShiftHandover"));
 const ShiftChecklistSettings = lazy(() => import("./pages/sindico/ShiftChecklistSettings"));
 const SindicoPortariaOccurrences = lazy(() => import("./pages/sindico/PortariaOccurrences"));
 const SindicoPortariaShiftHandovers = lazy(() => import("./pages/sindico/PortariaShiftHandovers"));
+const SindicoPortariaMessageBook = lazy(() => import("./pages/sindico/PortariaMessageBook"));
 const SindicoZeladores = lazy(() => import("./pages/sindico/Zeladores"));
 const SindicoManutencoes = lazy(() => import("./pages/sindico/Manutencoes"));
 const SindicoManutencoesTarefas = lazy(() => import("./pages/sindico/ManutencoesTarefas"));
@@ -148,6 +149,7 @@ const App = () => (
               <Route path="/sindico/portaria/checklist" element={<ProtectedRoute requiredRole="sindico"><ShiftChecklistSettings /></ProtectedRoute>} />
               <Route path="/sindico/portaria/ocorrencias" element={<ProtectedRoute requiredRole="sindico"><SindicoPortariaOccurrences /></ProtectedRoute>} />
               <Route path="/sindico/portaria/plantoes" element={<ProtectedRoute requiredRole="sindico"><SindicoPortariaShiftHandovers /></ProtectedRoute>} />
+              <Route path="/sindico/portaria/recados" element={<ProtectedRoute requiredRole="sindico"><SindicoPortariaMessageBook /></ProtectedRoute>} />
               <Route path="/sindico/encomendas" element={<ProtectedRoute requiredRole={["sindico", "super_admin"]}><SindicoPackages /></ProtectedRoute>} />
               <Route path="/sindico/packages/dashboard" element={<ProtectedRoute requiredRole={["sindico", "super_admin"]}><PackagesDashboard /></ProtectedRoute>} />
               <Route path="/sindico/packages" element={<ProtectedRoute requiredRole={["sindico", "super_admin"]}><SindicoPackages /></ProtectedRoute>} />

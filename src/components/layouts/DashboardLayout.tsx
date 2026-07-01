@@ -60,6 +60,7 @@ import {
   Menu,
   ListChecks,
   CalendarDays,
+  BookOpen,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
@@ -495,6 +496,7 @@ function SidebarNavigation() {
       icon: DoorOpen,
       items: [
         { title: "Passagens de Plantão", url: "/sindico/portaria/plantoes", icon: ClipboardCheck },
+        { title: "Livro de Recados", url: "/sindico/portaria/recados", icon: BookOpen },
         { title: "Checklist Portaria", url: "/sindico/portaria/checklist", icon: Cog },
         { title: "Banners Portaria", url: "/sindico/banners", icon: Megaphone },
       ],
