@@ -64,11 +64,10 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import logoImage from "@/assets/logo.webp";
 import logoIconAsset from "@/assets/logo-icon-v2.png.asset.json";
 const logoIcon = logoIconAsset.url;
 import logoDarkAsset from "@/assets/logo-branco-v2.png.asset.json";
-const logoDark = logoDarkAsset.url;
+const logoWhite = logoDarkAsset.url;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -645,14 +644,9 @@ function SidebarNavigation() {
           ) : (
             <>
               <img
-                src={logoImage}
+                src={logoWhite}
                 alt="NotificaCondo"
-                className="object-contain transition-all duration-200 w-full h-auto max-h-28 block dark:hidden"
-              />
-              <img
-                src={logoDark}
-                alt="NotificaCondo"
-                className="object-contain transition-all duration-200 w-full h-auto max-h-28 hidden dark:block"
+                className="object-contain transition-all duration-200 w-full h-auto max-h-28"
               />
             </>
           )}
