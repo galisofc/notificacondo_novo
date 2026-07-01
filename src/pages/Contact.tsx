@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Send, CheckCircle2, Mail, Phone, MessageSquare, ArrowLeft, Sparkles } from "lucide-react";
-import logoImage from "@/assets/logo.webp";
+import logoAsset from "@/assets/logo-branco-v2.png.asset.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -146,7 +146,7 @@ const Contact = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center group">
               <img 
-                src={logoImage} 
+                src={logoAsset.url} 
                 alt="NotificaCondo" 
                 className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
