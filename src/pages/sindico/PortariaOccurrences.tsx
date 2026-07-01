@@ -1439,6 +1439,20 @@ export default function SindicoPortariaOccurrences() {
                 </CardContent>
               </Card>
             ))}
+            {visibleCount < filteredOccurrences.length && (
+              <div className="flex flex-col items-center gap-2 pt-2">
+                <p className="text-xs text-muted-foreground">
+                  Exibindo {Math.min(visibleCount, filteredOccurrences.length)} de {filteredOccurrences.length}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                  className="rounded-xl"
+                >
+                  Carregar mais
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
