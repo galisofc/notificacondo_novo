@@ -128,22 +128,8 @@ export default function TermsOfUse() {
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-glow">
-              <span className="text-primary-foreground font-bold text-sm">CM</span>
-            </div>
-            <span className="font-semibold text-lg">CondoMaster</span>
-          </Link>
-          <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link to="/">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar
-            </Link>
-          </Button>
-        </div>
-      </header>
+      <Header />
+
 
       {/* Content */}
       <div className="pt-28 pb-20 px-4 relative z-10">
