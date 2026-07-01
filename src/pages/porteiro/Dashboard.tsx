@@ -335,6 +335,19 @@ export default function PorteiroDashboard() {
               </CardContent>
             </Card>
 
+            <Card
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => navigate("/porteiro/portaria/ocorrencias")}>
+
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                  <Megaphone className="w-6 h-6 text-red-500" />
+                </div>
+                <p className="font-medium text-sm text-center">Nova Ocorrência</p>
+              </CardContent>
+            </Card>
+
+
 
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
