@@ -514,80 +514,13 @@ const Auth = () => {
       <Helmet>
         <title>NotificaCondo - Login</title>
       </Helmet>
-      <div className="min-h-screen bg-background flex">
+      <div className="min-h-screen bg-background flex relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
+        <div className="absolute top-1/4 -left-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow pointer-events-none" />
 
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-card relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-        
-        <div className="relative z-10 flex flex-col justify-center p-12">
-          <div className="flex items-center mb-8">
-            <img 
-              src={logoImage} 
-              alt="NotificaCondo" 
-              className="h-16 w-auto object-contain"
-            />
-          </div>
-
-          <h1 className="font-display text-4xl font-bold mb-6 text-foreground">
-            Gestão completa do{" "}
-            <span className="text-gradient">seu condomínio</span>
-          </h1>
-          
-          <p className="text-lg text-muted-foreground mb-8 max-w-md">
-            Sistema integrado para gestão de multas, controle de encomendas 
-            e reservas do salão de festas com notificações automáticas.
-          </p>
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">Gestão de Multas</h3>
-              <div className="space-y-2">
-                {["Registro de ocorrências com prova jurídica", "Notificação automática via WhatsApp", "Contraditório e ampla defesa"].map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-blue-500 uppercase tracking-wide">Controle de Encomendas</h3>
-              <div className="space-y-2">
-                {["Registro com foto e código de retirada", "Notificação instantânea ao morador", "Histórico completo de entregas"].map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-purple-500 uppercase tracking-wide">Espaços</h3>
-              <div className="space-y-2">
-                {["Reservas online com calendário", "Lembretes automáticos", "Checklist de entrada e saída"].map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col justify-center p-8 lg:p-12 overflow-y-auto">
+      {/* Centered Form */}
+      <div className="flex-1 flex flex-col justify-center p-4 sm:p-8 lg:p-12 overflow-y-auto relative z-10">
         <div className="max-w-lg mx-auto w-full">
           <button
             onClick={() => navigate("/")}
@@ -597,12 +530,12 @@ const Auth = () => {
             Voltar ao início
           </button>
 
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center mb-8">
-            <img 
-              src={logoImage} 
-              alt="NotificaCondo" 
-              className="h-12 w-auto object-contain"
+          {/* Logo */}
+          <div className="flex items-center justify-center mb-8">
+            <img
+              src={logoImage}
+              alt="NotificaCondo"
+              className="h-14 sm:h-16 w-auto object-contain"
             />
           </div>
 
