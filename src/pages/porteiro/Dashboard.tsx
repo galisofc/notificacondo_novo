@@ -565,6 +565,25 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
     staleTime: 1000 * 60 * 5,
   });
 
+  const { data: authorRoles = {} } = useQuery({
+    queryKey: ["porter-message-author-roles", authorIds],
+    queryFn: async () => {
+      if (authorIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", authorIds as string[]);
+      if (error) throw error;
+      const map: Record<string, string[]> = {};
+      (data || []).forEach((r: any) => {
+        (map[r.user_id] ||= []).push(r.role);
+      });
+      return map;
+    },
+    enabled: authorIds.length > 0,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const sendMutation = useMutation({
     mutationFn: async () => {
       if (!user || !newMessage.trim() || condominiumIds.length === 0) return;
