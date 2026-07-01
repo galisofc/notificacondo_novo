@@ -99,6 +99,23 @@ export default function SindicoPortariaMessageBook() {
     enabled: authorIds.length > 0,
   });
 
+  const { data: authorRoles = {} } = useQuery({
+    queryKey: ["sindico-msgbook-author-roles", authorIds],
+    queryFn: async () => {
+      if (authorIds.length === 0) return {};
+      const { data } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", authorIds as string[]);
+      const map: Record<string, string[]> = {};
+      (data || []).forEach((r: any) => {
+        (map[r.user_id] ||= []).push(r.role);
+      });
+      return map;
+    },
+    enabled: authorIds.length > 0,
+  });
+
   const sendMutation = useMutation({
     mutationFn: async () => {
       if (!user || !newMessage.trim() || !selectedCondominium) return;
