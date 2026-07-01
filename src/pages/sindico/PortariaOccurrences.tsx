@@ -109,6 +109,13 @@ export default function SindicoPortariaOccurrences() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [filterBlockId, setFilterBlockId] = useState<string>("all");
   const [filterApartmentId, setFilterApartmentId] = useState<string>("all");
+  const PAGE_SIZE = 3;
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCondominium, filterStatus, filterCategory, searchTerm, dateRange, filterBlockId, filterApartmentId]);
 
   // New occurrence form
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
