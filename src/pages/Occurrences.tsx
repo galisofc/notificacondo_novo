@@ -1054,7 +1054,7 @@ const AdvertenciasEMultas = () => {
 
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {filteredOccurrences.map((occurrence) => (
+            {filteredOccurrences.slice(0, visibleCount).map((occurrence) => (
               <div
                 key={occurrence.id}
                 className="group relative flex flex-col p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 overflow-hidden"
