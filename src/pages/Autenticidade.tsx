@@ -210,10 +210,10 @@ const Autenticidade = () => {
               <ShieldCheck className="w-4 h-4" />
               Verificador ICP-Brasil
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-slate-900 leading-tight">
+            <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-white leading-tight">
               Verificação de <span className="text-primary italic">Autenticidade</span>
             </h1>
-            <p className="text-slate-600 text-lg max-w-xl mx-auto font-medium">
+            <p className="text-slate-300 text-lg max-w-xl mx-auto font-medium">
               Valide a integridade e a assinatura digital de advertências, multas e relatórios gerados por nossa plataforma.
             </p>
           </div>
@@ -238,14 +238,14 @@ const Autenticidade = () => {
           </Card>
 
           {!fileHash ? (
-            <Card className="bg-white/80 backdrop-blur-md border-slate-200/60 shadow-2xl shadow-slate-200/40 animate-fade-up delay-100 border-dashed border-2">
+            <Card className="bg-white border-slate-200 shadow-2xl shadow-black/40 animate-fade-up delay-100 border-dashed border-2">
               <CardContent className="pt-20 pb-20 text-center space-y-6">
-                <div className="mx-auto bg-slate-100 w-28 h-28 rounded-3xl rotate-3 flex items-center justify-center mb-4 shadow-inner">
-                  <FileText className="w-14 h-14 text-slate-400/50 -rotate-3" />
+                <div className="mx-auto bg-primary/10 w-28 h-28 rounded-3xl rotate-3 flex items-center justify-center mb-4 shadow-inner">
+                  <FileText className="w-14 h-14 text-primary -rotate-3" />
                 </div>
                 <div className="space-y-3">
-                  <p className="text-2xl font-bold text-slate-800">Aguardando Documento</p>
-                  <p className="text-slate-500 max-w-sm mx-auto font-medium">
+                  <p className="text-2xl font-bold text-slate-900">Aguardando Documento</p>
+                  <p className="text-slate-600 max-w-sm mx-auto font-medium">
                     Para verificar um documento, utilize o <span className="text-primary font-bold">QR Code</span> impresso no rodapé do arquivo ou digite o código de validação acima.
                   </p>
                 </div>
@@ -518,8 +518,8 @@ const Autenticidade = () => {
           )}
 
           <div className="text-center py-6">
-            <p className="text-xs text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Base Legal: Medida Provisória nº 2.200-2/2001, que instituiu a Infraestrutura de Chaves Públicas Brasileira (ICP-Brasil), 
+            <p className="text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+              <span className="font-semibold text-white">Base Legal:</span> Medida Provisória nº 2.200-2/2001, que instituiu a Infraestrutura de Chaves Públicas Brasileira (ICP-Brasil),
               garantindo validade jurídica a documentos em forma eletrônica.
             </p>
           </div>
