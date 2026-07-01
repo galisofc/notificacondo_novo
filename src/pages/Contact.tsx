@@ -142,25 +142,8 @@ const Contact = () => {
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center group">
-              <img 
-                src={logoAsset.url} 
-                alt="NotificaCondo" 
-                className="h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-            </Link>
-            <Button asChild variant="ghost" className="gap-2 hover:bg-secondary/80">
-              <Link to="/">
-                <ArrowLeft className="w-4 h-4" />
-                Voltar
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Header />
+
 
       {/* Content */}
       <div className="pt-28 pb-20 px-4 relative z-10">
