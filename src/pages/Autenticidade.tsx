@@ -235,7 +235,7 @@ const Autenticidade = () => {
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                   <Input 
                     placeholder="Digite o código hash ou protocolo..." 
-                    className="pl-11 h-12 bg-slate-50 border-slate-200 focus:bg-white focus:ring-primary/20 transition-all text-base"
+                    className="pl-11 h-12 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-primary/20 transition-all text-base"
                     value={inputHash}
                     onChange={(e) => setInputHash(e.target.value)}
                   />
