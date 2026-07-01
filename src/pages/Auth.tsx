@@ -530,12 +530,12 @@ const Auth = () => {
             Voltar ao início
           </button>
 
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center mb-8">
-            <img 
-              src={logoImage} 
-              alt="NotificaCondo" 
-              className="h-12 w-auto object-contain"
+          {/* Logo */}
+          <div className="flex items-center justify-center mb-8">
+            <img
+              src={logoImage}
+              alt="NotificaCondo"
+              className="h-14 sm:h-16 w-auto object-contain"
             />
           </div>
 
