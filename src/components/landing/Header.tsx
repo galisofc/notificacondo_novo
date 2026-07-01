@@ -3,7 +3,7 @@ import { Menu, X, LayoutDashboard, LogIn, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import logoImage from "@/assets/logo.webp";
+import logoImage from "@/assets/logo-branco.png.asset.json";
 
 const navLinkClass =
   "text-sm text-indigo-100/70 hover:text-white transition-colors";
@@ -50,7 +50,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img
-              src={logoImage}
+              src={logoImage.url}
               alt="NotificaCondo"
               className="h-14 w-auto object-contain"
               width={126}

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, MessageCircle, ShieldCheck } from "lucide-react";
-import logoImage from "@/assets/logo.webp";
+import logoImage from "@/assets/logo-branco.png.asset.json";
 
 const linkClass =
   "text-sm text-indigo-100/70 hover:text-white transition-colors";
@@ -29,7 +29,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img
-                src={logoImage}
+                src={logoImage.url}
                 alt="NotificaCondo"
                 className="h-14 w-auto object-contain"
                 width={126}
