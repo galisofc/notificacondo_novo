@@ -75,6 +75,7 @@ export default function RegisterPackage() {
   const [targetResidents, setTargetResidents] = useState<Array<{ full_name: string; phone?: string }>>([]);
   const [destinationPreview, setDestinationPreview] = useState<DestinationPreview | null>(null);
   const [packageTypes, setPackageTypes] = useState<PackageType[]>([]);
+  const [packageTypeOpen, setPackageTypeOpen] = useState(false);
   const [selectedPackageType, setSelectedPackageType] = useState("");
   const [trackingCode, setTrackingCode] = useState("");
   const [showResidentForm, setShowResidentForm] = useState(false);
