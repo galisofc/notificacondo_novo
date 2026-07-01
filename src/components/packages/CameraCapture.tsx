@@ -168,7 +168,7 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
       />
 
       {/* Keep video mounted so we can attach the stream even before "isStreaming" becomes true */}
-      <div className="relative w-full h-full min-h-[300px]">
+      <div className="relative w-full aspect-[3/4] sm:aspect-video min-h-[60vh] sm:min-h-[360px] max-h-[80vh]">
         <video
           ref={videoRef}
           autoPlay
@@ -185,7 +185,7 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
             {/* Animated focus guide overlay */}
             <div className="absolute inset-0 pointer-events-none z-[5]">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[80%] h-[70%] max-w-[320px] max-h-[240px]">
+                <div className="relative w-[75%] h-[55%] max-w-[360px]">
                   <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg animate-pulse" />
                   <div
                     className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg animate-pulse"
@@ -207,7 +207,7 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
                 </div>
               </div>
 
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-sm whitespace-nowrap">
                 Centralize a encomenda
               </div>
             </div>
