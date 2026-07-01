@@ -837,8 +837,21 @@ function SidebarNavigation() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer removido conforme solicitação */}
-      <SidebarFooter className="p-0" />
+      <SidebarFooter className="p-2 border-t border-sidebar-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSignOut}
+              tooltip="Sair"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
 
     </Sidebar>
   );
