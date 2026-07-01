@@ -337,37 +337,6 @@ export default function PorteiroDashboard() {
 
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => navigate("/porteiro/portaria/ocorrencias")}>
-
-              <CardContent className="flex flex-col items-center justify-center py-6">
-                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
-                  <Megaphone className="w-6 h-6 text-red-500" />
-                </div>
-                <p className="font-medium text-sm text-center">Nova Ocorrência</p>
-              </CardContent>
-            </Card>
-
-
-
-            <Card
-              className="cursor-pointer hover:bg-muted/50 transition-colors"
-              onClick={() => navigate("/porteiro/encomendas")}>
-
-              <CardContent className="flex flex-col items-center justify-center py-6">
-                <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-3">
-                  <Clock className="w-6 h-6 text-yellow-500" />
-                </div>
-                <p className="font-medium text-sm text-center">Pendentes</p>
-                {stats.totalPending > 0 &&
-                <span className="mt-1 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
-                    {stats.totalPending}
-                  </span>
-                }
-              </CardContent>
-            </Card>
-
-            <Card
-              className="cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => navigate("/porteiro/encomendas")}>
 
               <CardContent className="flex flex-col items-center justify-center py-6">
@@ -380,15 +349,45 @@ export default function PorteiroDashboard() {
 
             <Card
               className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => navigate("/porteiro/encomendas")}>
+
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-3">
+                  <Clock className="w-6 h-6 text-yellow-500" />
+                </div>
+                <p className="font-medium text-sm text-center">Encomendas Pendentes</p>
+                {stats.totalPending > 0 &&
+                <span className="mt-1 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium">
+                    {stats.totalPending}
+                  </span>
+                }
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
               onClick={() => navigate("/porteiro/historico")}>
 
               <CardContent className="flex flex-col items-center justify-center py-6">
                 <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mb-3">
                   <FileText className="w-6 h-6 text-purple-500" />
                 </div>
-                <p className="font-medium text-sm text-center">Histórico</p>
+                <p className="font-medium text-sm text-center">Histórico de Encomendas</p>
               </CardContent>
             </Card>
+
+            <Card
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => navigate("/porteiro/portaria/ocorrencias")}>
+
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-3">
+                  <Megaphone className="w-6 h-6 text-red-500" />
+                </div>
+                <p className="font-medium text-sm text-center">Nova Ocorrência</p>
+              </CardContent>
+            </Card>
+
           </div>
         </div>
 
