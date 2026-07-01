@@ -239,6 +239,7 @@ export default function TermsOfUse() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
