@@ -168,14 +168,14 @@ export function CameraCapture({ onCapture, capturedImage, onClear, className }: 
       />
 
       {/* Keep video mounted so we can attach the stream even before "isStreaming" becomes true */}
-      <div className="relative w-full aspect-[3/4] sm:aspect-video min-h-[60vh] sm:min-h-[360px] max-h-[80vh]">
+      <div className="relative w-full aspect-[3/4] sm:aspect-video sm:min-h-[360px] max-h-[70vh] bg-black">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-opacity",
+            "absolute inset-0 w-full h-full object-contain sm:object-cover transition-opacity",
             isStreaming ? "opacity-100" : "opacity-0",
           )}
         />
