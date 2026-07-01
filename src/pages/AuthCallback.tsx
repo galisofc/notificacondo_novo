@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { midnightTokens } from "@/lib/midnightTheme";
 
 const base64UrlDecode = (input: string) => {
   // base64url -> base64
@@ -124,7 +125,7 @@ const AuthCallback = () => {
   }, [navigate, params.next]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="dark min-h-screen bg-background text-foreground flex items-center justify-center p-4" style={midnightTokens}>
       <Card className="w-full max-w-md bg-gradient-card border-border/50">
         <CardContent className="pt-8 pb-8">
           <div className="flex flex-col items-center text-center">
