@@ -46,7 +46,7 @@ export default function PorteiroPackages() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState<ApartmentInfo | null>(null);
   
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 3;
   const [packages, setPackages] = useState<PackageWithSignedUrl[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
