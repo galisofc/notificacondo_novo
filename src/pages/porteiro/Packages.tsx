@@ -315,8 +315,13 @@ export default function PorteiroPackages() {
 
       // Refresh packages
       if (selectedApartment) {
-        await fetchPackages(selectedApartment.id);
+        setPage(0);
+        await Promise.all([
+          fetchPackages(selectedApartment.id, activeTab, 0, false),
+          fetchPendingCount(selectedApartment.id),
+        ]);
       }
+
 
       setSelectedPackage(null);
       return { success: true };
