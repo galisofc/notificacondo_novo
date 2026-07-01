@@ -1263,7 +1263,7 @@ export default function SindicoPortariaOccurrences() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredOccurrences.map((occ) => (
+            {filteredOccurrences.slice(0, visibleCount).map((occ) => (
               <Card key={occ.id} className="group bg-white dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden">
                 <div className={cn(
                   "h-1.5 w-full transition-colors duration-500",
