@@ -535,7 +535,7 @@ const Auth = () => {
             <img
               src={logoImage}
               alt="NotificaCondo"
-              className="h-14 sm:h-16 w-auto object-contain"
+              className="h-20 sm:h-24 md:h-28 w-auto object-contain drop-shadow-sm"
             />
           </div>
 
