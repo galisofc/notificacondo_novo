@@ -127,6 +127,8 @@ const AdvertenciasEMultas = () => {
   const [condominiumFilter, setCondominiumFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [blockFilter, setBlockFilter] = useState<string>("all");
+  const OCC_PAGE_SIZE = 5;
+  const [visibleCount, setVisibleCount] = useState<number>(OCC_PAGE_SIZE);
 
   // Form states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -209,6 +211,11 @@ const AdvertenciasEMultas = () => {
       occ.apartments?.number?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesType && matchesCondominium && matchesBlock && matchesSearch;
   });
+
+  // Reset pagination whenever the filters or dataset change
+  useEffect(() => {
+    setVisibleCount(OCC_PAGE_SIZE);
+  }, [statusFilter, typeFilter, condominiumFilter, blockFilter, searchTerm, occurrences.length]);
 
   const fetchData = async () => {
     if (!user) return;
@@ -1047,7 +1054,7 @@ const AdvertenciasEMultas = () => {
 
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {filteredOccurrences.map((occurrence) => (
+            {filteredOccurrences.slice(0, visibleCount).map((occurrence) => (
               <div
                 key={occurrence.id}
                 className="group relative flex flex-col p-5 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 overflow-hidden"
@@ -1196,6 +1203,20 @@ const AdvertenciasEMultas = () => {
               </div>
             ))}
           </div>
+          {visibleCount < filteredOccurrences.length && (
+            <div className="flex flex-col items-center gap-2 mt-4">
+              <p className="text-xs text-muted-foreground">
+                Exibindo {Math.min(visibleCount, filteredOccurrences.length)} de {filteredOccurrences.length}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount((c) => c + OCC_PAGE_SIZE)}
+                className="rounded-xl"
+              >
+                Carregar mais
+              </Button>
+            </div>
+          )}
         </>
       )}
     </TabsContent>
