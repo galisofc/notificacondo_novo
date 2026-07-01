@@ -87,47 +87,80 @@ export default function PorteiroPackages() {
     fetchCondominiums();
   }, [user]);
 
-  // Fetch packages when apartment is selected
-  const fetchPackages = useCallback(async (apartmentId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("packages")
-        .select(`
-          *,
-          apartment:apartments(id, number),
-          block:blocks(id, name),
-          condominium:condominiums(id, name),
-          package_type:package_types(id, name, icon)
-        `)
-        .eq("apartment_id", apartmentId)
-        .order("received_at", { ascending: false });
+  // Fetch packages for the selected apartment, filtered/paginated on the server
+  const fetchPackages = useCallback(
+    async (
+      apartmentId: string,
+      tab: "pendente" | "retirada" | "all",
+      pageIndex: number,
+      append = false,
+    ) => {
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+      try {
+        const from = pageIndex * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
 
-      if (error) throw error;
-      
-      // Generate signed URLs for all packages in parallel
-      const packagesWithSignedUrls = await Promise.all(
-        (data || []).map(async (pkg) => {
-          const signedPhotoUrl = await getSignedPackagePhotoUrl(pkg.photo_url);
-          return {
-            ...pkg,
-            signedPhotoUrl: signedPhotoUrl || pkg.photo_url, // Fallback to original URL
-          };
-        })
-      );
-      
-      setPackages(packagesWithSignedUrls);
-    } catch (error) {
-      console.error("Error fetching packages:", error);
-      toast({
-        title: "Erro ao buscar encomendas",
-        description: "Não foi possível carregar as encomendas",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
+        let query = supabase
+          .from("packages")
+          .select(
+            `
+              *,
+              apartment:apartments(id, number),
+              block:blocks(id, name),
+              condominium:condominiums(id, name),
+              package_type:package_types(id, name, icon)
+            `
+          )
+          .eq("apartment_id", apartmentId)
+          .order("received_at", { ascending: false })
+          .range(from, to);
+
+        if (tab !== "all") {
+          query = query.eq("status", tab);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const packagesWithSignedUrls = await Promise.all(
+          (data || []).map(async (pkg) => {
+            const signedPhotoUrl = await getSignedPackagePhotoUrl(pkg.photo_url);
+            return {
+              ...pkg,
+              signedPhotoUrl: signedPhotoUrl || pkg.photo_url,
+            };
+          })
+        );
+
+        setHasMore((data?.length || 0) === PAGE_SIZE);
+        setPackages((prev) =>
+          append ? [...prev, ...packagesWithSignedUrls] : packagesWithSignedUrls
+        );
+      } catch (error) {
+        console.error("Error fetching packages:", error);
+        toast({
+          title: "Erro ao buscar encomendas",
+          description: "Não foi possível carregar as encomendas",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [toast]
+  );
+
+  // Lightweight count of pending packages for the tab badge
+  const fetchPendingCount = useCallback(async (apartmentId: string) => {
+    const { count } = await supabase
+      .from("packages")
+      .select("id", { count: "exact", head: true })
+      .eq("apartment_id", apartmentId)
+      .eq("status", "pendente");
+    setPendingCount(count || 0);
+  }, []);
 
   // Search apartment by code (BBAA format)
   const handleSearch = async () => {
