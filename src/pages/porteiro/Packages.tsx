@@ -267,7 +267,7 @@ export default function PorteiroPackages() {
 
       toast({
         title: "Encomenda retirada!",
-        description: `Retirada por ${pickedUpByName} confirmada com sucesso.`,
+        description: `Encomenda baixada do sistema corretamente. Retirada por ${pickedUpByName}.`,
       });
 
       // Refresh packages
