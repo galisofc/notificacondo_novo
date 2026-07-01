@@ -377,6 +377,7 @@ const CivilCode = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
