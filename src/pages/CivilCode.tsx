@@ -2,6 +2,8 @@ import { Shield, Scale, BookOpen, ArrowLeft, Building2, Users, Gavel, FileText, 
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { midnightTokens } from "@/lib/midnightTheme";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 const CivilCode = () => {
   const sections = [
@@ -235,27 +237,8 @@ const CivilCode = () => {
       </div>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-primary flex items-center justify-center transition-transform group-hover:scale-105">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-display text-lg font-bold text-foreground">
-                Notifica<span className="text-gradient">Condo</span>
-              </span>
-            </Link>
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar ao início
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
+
 
       {/* Content */}
       <main className="pt-28 pb-20 px-4 relative z-10">
@@ -394,6 +377,7 @@ const CivilCode = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
