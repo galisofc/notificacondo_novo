@@ -895,13 +895,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-muted p-2 rounded-lg transition-colors" />
               <MobileSidebarTrigger className="md:hidden" />
-              <div className="hidden md:flex relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Pesquisar..." 
-                  className="pl-9 h-9 bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/20 rounded-full text-sm"
-                />
-              </div>
               <div className="flex items-center gap-2 md:hidden">
                 <img src={logoIcon} alt="Logo" className="w-8 h-8 object-contain" />
               </div>
