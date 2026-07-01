@@ -927,10 +927,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     localStorage.setItem("sidebar-open", String(newOpen));
   };
 
+  const [signOutOpen, setSignOutOpen] = useState(false);
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
+
 
   return (
     <SidebarProvider open={open} onOpenChange={handleOpenChange}>
@@ -1036,12 +1039,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     Perfil
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="gap-2 cursor-pointer text-destructive focus:text-destructive py-2 rounded-lg m-1">
+                  <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setSignOutOpen(true); }} className="gap-2 cursor-pointer text-destructive focus:text-destructive py-2 rounded-lg m-1">
                     <LogOut className="w-4 h-4" />
                     Sair
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <AlertDialog open={signOutOpen} onOpenChange={setSignOutOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Deseja realmente sair?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Você será desconectado da sua conta e precisará fazer login novamente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleSignOut} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Sair
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </header>
           <div className="flex-1 overflow-auto p-4 md:p-8 w-full">
