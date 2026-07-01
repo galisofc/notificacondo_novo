@@ -99,6 +99,16 @@ const Autenticidade = () => {
 
             if (pkgErr) console.error("Erro ao buscar encomenda:", pkgErr);
             pkg = pkgData;
+
+            // Fallback público via RPC (para usuários não autenticados / RLS)
+            if (!pkg) {
+              const { data: publicPkg, error: publicErr } = await (supabase as any)
+                .rpc("get_signed_package", { _hash: hash });
+              if (publicErr && publicErr.code !== "PGRST202") {
+                console.error("Erro ao buscar encomenda pública:", publicErr);
+              }
+              pkg = publicPkg;
+            }
           }
 
           setVerificationResult({
