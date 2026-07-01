@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { midnightTokens } from "@/lib/midnightTheme";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 const sections = [
   {
