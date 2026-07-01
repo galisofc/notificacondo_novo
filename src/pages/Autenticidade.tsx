@@ -466,10 +466,16 @@ const Autenticidade = () => {
                           </div>
 
                           {verificationResult.occurrence.status === "resolvida" && (
-                            <div className="space-y-2">
-                              <p className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold">Resolução / Finalização</p>
-                              <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-xl text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                {verificationResult.occurrence.resolution_notes}
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                                <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Resolução / Finalização</p>
+                              </div>
+                              <div className="relative p-5 pl-6 rounded-xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-400/20 backdrop-blur-sm overflow-hidden">
+                                <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
+                                <p className="text-sm md:text-base text-emerald-50/90 leading-relaxed whitespace-pre-wrap font-light">
+                                  {verificationResult.occurrence.resolution_notes}
+                                </p>
                               </div>
                             </div>
                           )}
