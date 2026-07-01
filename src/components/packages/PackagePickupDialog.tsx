@@ -379,14 +379,26 @@ export function PackagePickupDialog({
               <X className="w-10 h-10 text-destructive" />
             </div>
             <p className="mt-6 text-lg font-medium text-destructive">Erro na Retirada</p>
-            <p className="text-sm text-muted-foreground mt-1 text-center">{errorMessage}</p>
-            <Button
-              variant="outline"
-              onClick={() => setStep("validate")}
-              className="mt-6"
-            >
-              Tentar Novamente
-            </Button>
+            <p className="text-sm text-muted-foreground mt-1 text-center max-w-[280px]">
+              {errorMessage}
+            </p>
+            <div className="flex flex-col gap-3 mt-6 w-full max-w-[280px]">
+              <Button
+                onClick={handleConfirm}
+                className="w-full gap-2"
+              >
+                <Loader2 className="w-4 h-4" />
+                Re-tentar baixa no banco
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setStep("validate")}
+                className="w-full gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Voltar e revisar dados
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
