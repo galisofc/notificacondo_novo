@@ -75,6 +75,7 @@ export default function RegisterPackage() {
   const [targetResidents, setTargetResidents] = useState<Array<{ full_name: string; phone?: string }>>([]);
   const [destinationPreview, setDestinationPreview] = useState<DestinationPreview | null>(null);
   const [packageTypes, setPackageTypes] = useState<PackageType[]>([]);
+  const [packageTypeOpen, setPackageTypeOpen] = useState(false);
   const [selectedPackageType, setSelectedPackageType] = useState("");
   const [trackingCode, setTrackingCode] = useState("");
   const [showResidentForm, setShowResidentForm] = useState(false);
@@ -647,7 +648,7 @@ export default function RegisterPackage() {
               {/* Package Type Select with Search */}
               <div className="space-y-2">
                 <Label htmlFor="package-type">Tipo de Encomenda *</Label>
-                <Popover>
+                <Popover open={packageTypeOpen} onOpenChange={setPackageTypeOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -693,8 +694,10 @@ export default function RegisterPackage() {
                                 value={type.name}
                                 onSelect={() => {
                                   setSelectedPackageType(type.id);
+                                  setPackageTypeOpen(false);
                                 }}
                               >
+
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
