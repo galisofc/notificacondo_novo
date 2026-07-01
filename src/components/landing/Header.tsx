@@ -50,7 +50,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img
-              src={logoImage}
+              src={logoImage.url}
               alt="NotificaCondo"
               className="h-14 w-auto object-contain"
               width={126}

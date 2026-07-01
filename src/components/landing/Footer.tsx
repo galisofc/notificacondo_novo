@@ -29,7 +29,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img
-                src={logoImage}
+                src={logoImage.url}
                 alt="NotificaCondo"
                 className="h-14 w-auto object-contain"
                 width={126}
