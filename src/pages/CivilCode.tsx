@@ -2,6 +2,8 @@ import { Shield, Scale, BookOpen, ArrowLeft, Building2, Users, Gavel, FileText, 
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { midnightTokens } from "@/lib/midnightTheme";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 const CivilCode = () => {
   const sections = [
