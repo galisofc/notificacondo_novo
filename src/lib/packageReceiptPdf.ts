@@ -22,6 +22,14 @@ function renderPackageArrivalMessage(pkg: PackageData): string {
   return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
 }
 
+/** Remove emojis/pictographs not supported by jsPDF's built-in fonts. */
+function stripEmojis(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\u{FE0F}\u{200D}]/gu, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/^[ \t]+/gm, "");
+}
+
 /** Draws a WhatsApp-like message bubble with *bold* markdown support. Returns final Y. */
 function drawWhatsAppBubble(
   doc: jsPDF,
@@ -249,7 +257,7 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
   }
 
   // Rendered WhatsApp message sent to resident
-  const messageText = renderPackageArrivalMessage(pkg);
+  const messageText = stripEmojis(renderPackageArrivalMessage(pkg));
   const bubbleWidth = pageWidth - margin * 2;
   // Estimate bubble height for pagination
   doc.setFontSize(9);
