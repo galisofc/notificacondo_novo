@@ -248,6 +248,35 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
     afterTableY = margin;
   }
 
+  // Rendered WhatsApp message sent to resident
+  const messageText = renderPackageArrivalMessage(pkg);
+  const bubbleWidth = pageWidth - margin * 2;
+  // Estimate bubble height for pagination
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  const approxLines = messageText.split("\n").reduce((acc, line) => {
+    if (!line.trim()) return acc + 1;
+    return acc + (doc.splitTextToSize(line, bubbleWidth - 8) as string[]).length;
+  }, 0);
+  const estBubbleH = 8 + approxLines * 4.2 + 20;
+  if (afterTableY + estBubbleH > pageHeight - margin) {
+    doc.addPage();
+    afterTableY = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Mensagem enviada ao morador", margin, afterTableY + 10);
+  doc.setDrawColor(200);
+  doc.line(margin, afterTableY + 12, pageWidth - margin, afterTableY + 12);
+  const bubbleEndY = drawWhatsAppBubble(doc, messageText, margin, afterTableY + 16, bubbleWidth);
+  afterTableY = bubbleEndY + 4;
+
+  if (afterTableY + 20 > pageHeight - margin) {
+    doc.addPage();
+    afterTableY = margin;
+  }
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.text("Linha do tempo — Notificações WhatsApp", margin, afterTableY + 10);
