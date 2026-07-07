@@ -257,7 +257,7 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
   }
 
   // Rendered WhatsApp message sent to resident
-  const messageText = renderPackageArrivalMessage(pkg);
+  const messageText = stripEmojis(renderPackageArrivalMessage(pkg));
   const bubbleWidth = pageWidth - margin * 2;
   // Estimate bubble height for pagination
   doc.setFontSize(9);
