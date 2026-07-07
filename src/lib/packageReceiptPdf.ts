@@ -236,19 +236,30 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
     .eq("package_id", pkg.id)
     .order("created_at", { ascending: true });
 
-  const timeline: Array<{ when: string; label: string; detail: string }> = [];
+  const timeline: Array<{ when: string; label: string; detail: string; ts: number }> = [];
   (waLogs || []).forEach((log: any, idx: number) => {
     const prefix = `Envio #${idx + 1}`;
+    const createdTs = new Date(log.created_at).getTime();
     timeline.push({
       when: fmt(log.created_at),
       label: `${prefix} — ${log.success ? "Enviada" : "Falhou"}`,
       detail: log.template_name || log.error_message || "",
+      ts: createdTs,
     });
-    if (log.accepted_at) timeline.push({ when: fmt(log.accepted_at), label: `${prefix} — Aceita pela Meta`, detail: "" });
-    if (log.sent_at) timeline.push({ when: fmt(log.sent_at), label: `${prefix} — Enviada ao WhatsApp`, detail: "" });
-    if (log.delivered_at) timeline.push({ when: fmt(log.delivered_at), label: `${prefix} — Entregue`, detail: "" });
-    if (log.read_at) timeline.push({ when: fmt(log.read_at), label: `${prefix} — Lida`, detail: "" });
+    const events: Array<{ at: string | null; label: string }> = [
+      { at: log.accepted_at, label: `${prefix} — Aceita pela Meta` },
+      { at: log.sent_at, label: `${prefix} — Enviada ao WhatsApp` },
+      { at: log.delivered_at, label: `${prefix} — Entregue` },
+      { at: log.read_at, label: `${prefix} — Lida` },
+    ];
+    events
+      .filter((e) => !!e.at)
+      .map((e) => ({ ...e, ts: new Date(e.at as string).getTime() }))
+      .sort((a, b) => a.ts - b.ts)
+      .forEach((e) => timeline.push({ when: fmt(e.at as string), label: e.label, detail: "", ts: e.ts }));
   });
+  timeline.sort((a, b) => a.ts - b.ts);
+
 
   const pageHeight = doc.internal.pageSize.getHeight();
   if (afterTableY + 20 > pageHeight - margin) {
