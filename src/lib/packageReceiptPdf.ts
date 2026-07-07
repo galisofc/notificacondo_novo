@@ -22,6 +22,14 @@ function renderPackageArrivalMessage(pkg: PackageData): string {
   return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
 }
 
+/** Remove emojis/pictographs not supported by jsPDF's built-in fonts. */
+function stripEmojis(text: string): string {
+  return text
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\u{FE0F}\u{200D}]/gu, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/^[ \t]+/gm, "");
+}
+
 /** Draws a WhatsApp-like message bubble with *bold* markdown support. Returns final Y. */
 function drawWhatsAppBubble(
   doc: jsPDF,
