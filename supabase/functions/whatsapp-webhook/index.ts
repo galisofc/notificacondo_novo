@@ -248,29 +248,45 @@ Deno.serve(async (req) => {
 
           console.log(`[WEBHOOK] Status: ${status.status} -> ${normalizedStatus} | msgId: ${messageId} | phone: ${recipientPhone} | bsuid: ${bsuid || "none"}${hasErrors ? ' | ERRORS: ' + errorText : ''}`);
 
-          // Build update for notifications_sent
-          const now = new Date().toISOString();
-          const updateData: Record<string, unknown> = {
+          // Use Meta's own event timestamp (unix seconds) — not "now" — so each
+          // status keeps its real time from the WhatsApp servers.
+          const eventIso = status.timestamp
+            ? new Date(Number(status.timestamp) * 1000).toISOString()
+            : new Date().toISOString();
+
+          // Field mapping per status. We only set the timestamp for the
+          // CURRENT status and never overwrite existing ones — otherwise a
+          // later event (e.g. "read") would reset accepted/sent/delivered
+          // to the same time.
+          const statusField: Record<string, string | null> = {
+            accepted: "accepted_at",
+            sent: "sent_at",
+            delivered: "delivered_at",
+            read: "read_at",
+            failed: null,
+          };
+          const currentField = statusField[normalizedStatus] ?? null;
+
+          // --- notifications_sent ---
+          const notifUpdate: Record<string, unknown> = {
             zpro_status: normalizedStatus,
           };
-
-          // Backfill: always set current + all earlier timestamps
-          if (normalizedStatus === "accepted") {
-            updateData.accepted_at = now;
-          } else if (normalizedStatus === "sent") {
-            updateData.accepted_at = now;
-          } else if (normalizedStatus === "delivered") {
-            updateData.accepted_at = now;
-            updateData.delivered_at = now;
-          } else if (normalizedStatus === "read") {
-            updateData.accepted_at = now;
-            updateData.delivered_at = now;
-            updateData.read_at = now;
+          // notifications_sent doesn't track sent_at separately in the earlier
+          // schema; keep accepted/delivered/read fields only if present.
+          if (currentField && currentField !== "sent_at") {
+            const { data: existingNotif } = await supabase
+              .from("notifications_sent")
+              .select(`id, ${currentField}`)
+              .eq("zpro_message_id", messageId)
+              .maybeSingle();
+            if (existingNotif && !(existingNotif as any)[currentField]) {
+              notifUpdate[currentField] = eventIso;
+            }
           }
 
           const { data, error } = await supabase
             .from("notifications_sent")
-            .update(updateData)
+            .update(notifUpdate)
             .eq("zpro_message_id", messageId)
             .select("id");
 
@@ -280,23 +296,17 @@ Deno.serve(async (req) => {
             totalUpdated += data?.length || 0;
           }
 
-          // Build update for whatsapp_notification_logs
+          // --- whatsapp_notification_logs ---
           const logUpdate: Record<string, unknown> = { status: normalizedStatus };
-          // Backfill: set current + all earlier timestamps to ensure consistency
-          if (normalizedStatus === "accepted") {
-            logUpdate.accepted_at = now;
-          } else if (normalizedStatus === "sent") {
-            logUpdate.accepted_at = now;
-            logUpdate.sent_at = now;
-          } else if (normalizedStatus === "delivered") {
-            logUpdate.accepted_at = now;
-            logUpdate.sent_at = now;
-            logUpdate.delivered_at = now;
-          } else if (normalizedStatus === "read") {
-            logUpdate.accepted_at = now;
-            logUpdate.sent_at = now;
-            logUpdate.delivered_at = now;
-            logUpdate.read_at = now;
+          if (currentField) {
+            const { data: existingLog } = await supabase
+              .from("whatsapp_notification_logs")
+              .select(`id, ${currentField}`)
+              .eq("message_id", messageId)
+              .maybeSingle();
+            if (existingLog && !(existingLog as any)[currentField]) {
+              logUpdate[currentField] = eventIso;
+            }
           }
 
           if (errorText) {
@@ -308,6 +318,7 @@ Deno.serve(async (req) => {
             .from("whatsapp_notification_logs")
             .update(logUpdate)
             .eq("message_id", messageId);
+
 
           // Capture BSUID if present
           if (bsuid && recipientPhone) {
