@@ -5,6 +5,81 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPackagePhotoUrl } from "@/lib/packageStorage";
+import { DEFAULT_TEMPLATES } from "@/components/superadmin/whatsapp/DefaultTemplates";
+
+function renderPackageArrivalMessage(pkg: PackageData): string {
+  const template = DEFAULT_TEMPLATES.package_arrival;
+  const vars: Record<string, string> = {
+    nome: pkg.resident?.full_name || "",
+    bloco: pkg.block?.name || "",
+    apartamento: pkg.apartment?.number || "",
+    tipo_encomenda: pkg.package_type?.name || "Encomenda",
+    codigo_rastreio: pkg.tracking_code || "—",
+    porteiro: pkg.received_by_name || pkg.received_by_profile?.full_name || "—",
+    numeropedido: pkg.pickup_code || "",
+    condominio: pkg.condominium?.name || "",
+  };
+  return template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
+}
+
+/** Draws a WhatsApp-like message bubble with *bold* markdown support. Returns final Y. */
+function drawWhatsAppBubble(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+): number {
+  const paddingX = 4;
+  const paddingY = 4;
+  const lineHeight = 4.2;
+  const fontSize = 9;
+  doc.setFontSize(fontSize);
+
+  const rawLines = text.split("\n");
+  // Wrap each line, preserving blank lines
+  const wrapped: string[] = [];
+  for (const line of rawLines) {
+    if (line.trim() === "") {
+      wrapped.push("");
+      continue;
+    }
+    // splitTextToSize handles wrapping using currently set font
+    doc.setFont("helvetica", "normal");
+    const parts = doc.splitTextToSize(line, width - paddingX * 2) as string[];
+    wrapped.push(...parts);
+  }
+
+  const bubbleHeight = paddingY * 2 + wrapped.length * lineHeight;
+  // Bubble background (WhatsApp light green)
+  doc.setFillColor(220, 248, 198);
+  doc.setDrawColor(200, 230, 180);
+  doc.roundedRect(x, y, width, bubbleHeight, 2, 2, "FD");
+
+  doc.setTextColor(20, 20, 20);
+  let cursorY = y + paddingY + lineHeight - 1;
+
+  for (const line of wrapped) {
+    // Render with *bold* segments
+    const segments = line.split(/(\*[^*]+\*)/g).filter(Boolean);
+    let cursorX = x + paddingX;
+    for (const seg of segments) {
+      if (seg.startsWith("*") && seg.endsWith("*") && seg.length > 2) {
+        doc.setFont("helvetica", "bold");
+        const clean = seg.slice(1, -1);
+        doc.text(clean, cursorX, cursorY);
+        cursorX += doc.getTextWidth(clean);
+      } else {
+        doc.setFont("helvetica", "normal");
+        doc.text(seg, cursorX, cursorY);
+        cursorX += doc.getTextWidth(seg);
+      }
+    }
+    cursorY += lineHeight;
+  }
+  doc.setTextColor(0, 0, 0);
+  return y + bubbleHeight;
+}
 
 const generateSignatureHash = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -168,6 +243,35 @@ export async function generatePackageReceiptPdf(pkg: PackageData): Promise<void>
   });
 
   const pageHeight = doc.internal.pageSize.getHeight();
+  if (afterTableY + 20 > pageHeight - margin) {
+    doc.addPage();
+    afterTableY = margin;
+  }
+
+  // Rendered WhatsApp message sent to resident
+  const messageText = renderPackageArrivalMessage(pkg);
+  const bubbleWidth = pageWidth - margin * 2;
+  // Estimate bubble height for pagination
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  const approxLines = messageText.split("\n").reduce((acc, line) => {
+    if (!line.trim()) return acc + 1;
+    return acc + (doc.splitTextToSize(line, bubbleWidth - 8) as string[]).length;
+  }, 0);
+  const estBubbleH = 8 + approxLines * 4.2 + 20;
+  if (afterTableY + estBubbleH > pageHeight - margin) {
+    doc.addPage();
+    afterTableY = margin;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("Mensagem enviada ao morador", margin, afterTableY + 10);
+  doc.setDrawColor(200);
+  doc.line(margin, afterTableY + 12, pageWidth - margin, afterTableY + 12);
+  const bubbleEndY = drawWhatsAppBubble(doc, messageText, margin, afterTableY + 16, bubbleWidth);
+  afterTableY = bubbleEndY + 4;
+
   if (afterTableY + 20 > pageHeight - margin) {
     doc.addPage();
     afterTableY = margin;
