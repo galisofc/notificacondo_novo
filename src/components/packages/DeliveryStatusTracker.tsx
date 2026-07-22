@@ -5,8 +5,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const DELIVERY_STEPS = [
-  { key: "accepted", label: "Aceita", icon: Check, tsKey: "accepted_at" },
   { key: "sent", label: "Enviada", icon: Send, tsKey: "sent_at" },
+  { key: "accepted", label: "Aceita", icon: Check, tsKey: "accepted_at" },
   { key: "delivered", label: "Entregue", icon: CheckCircle2, tsKey: "delivered_at" },
   { key: "read", label: "Lida", icon: Eye, tsKey: "read_at" },
 ] as const;
@@ -35,14 +35,8 @@ function formatStepTimestamp(ts: string): { date: string; time: string } {
 export function DeliveryStatusTracker({ status, className, timestamps }: DeliveryStatusTrackerProps) {
   const isFailed = status === "failed";
 
-  // Sort steps by the actual webhook timestamp so the order reflects the real
-  // sequence reported by Meta. Steps without a timestamp are appended at the
-  // end preserving their default order.
-  const orderedSteps = [...DELIVERY_STEPS].sort((a, b) => {
-    const ta = timestamps?.[a.tsKey] ? new Date(timestamps[a.tsKey] as string).getTime() : Infinity;
-    const tb = timestamps?.[b.tsKey] ? new Date(timestamps[b.tsKey] as string).getTime() : Infinity;
-    return ta - tb;
-  });
+  // Fixed order: Enviada, Aceita, Entregue, Lida
+  const orderedSteps = DELIVERY_STEPS;
   const activeCount = orderedSteps.filter((s) => !!timestamps?.[s.tsKey]).length;
 
 
@@ -59,7 +53,7 @@ export function DeliveryStatusTracker({ status, className, timestamps }: Deliver
     <TooltipProvider delayDuration={200}>
       <div className={cn("flex items-center gap-0", className)}>
         {orderedSteps.map((step, i) => {
-          const isActive = i < activeCount;
+          const isActive = !!timestamps?.[step.tsKey];
 
           const isGreen = isActive && (step.key === "delivered" || step.key === "read");
           const isBlue = isActive && !isGreen;
