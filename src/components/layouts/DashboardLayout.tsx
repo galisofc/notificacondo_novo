@@ -254,6 +254,24 @@ function SidebarNavigation() {
     refetchIntervalInBackground: false,
   });
 
+  // Badge: pending package deletion requests for sindico
+  const { data: pendingDeletions = 0 } = useQuery({
+    queryKey: ["badge-package-deletions-sindico", condoIds],
+    queryFn: async () => {
+      if (condoIds.length === 0) return 0;
+      const { count } = await (supabase as any)
+        .from("package_deletion_requests")
+        .select("*", { count: "exact", head: true })
+        .in("condominium_id", condoIds)
+        .eq("status", "pendente");
+      return count || 0;
+    },
+    enabled: !!user && role === "sindico" && condoIds.length > 0,
+    staleTime: 1000 * 60,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
+  });
+
   // Badge: pending packages for porteiro
   const { data: pendingPackages = 0 } = useQuery({
     queryKey: ["badge-pending-packages", porteiroCondoIds],
@@ -489,6 +507,7 @@ function SidebarNavigation() {
       icon: Package,
       items: [
         { title: "Encomendas", url: "/sindico/encomendas", icon: Package },
+        { title: "Exclusões", url: "/sindico/exclusoes", icon: Trash2, badge: pendingDeletions },
         { title: "Advertências e Multas", url: "/occurrences", icon: FileText },
         { title: "Análise de Defesas", url: "/defenses", icon: Scale, badge: pendingDefenses },
         { title: "Livro de Ocorrências", url: "/sindico/portaria/ocorrencias", icon: AlertTriangle, badge: openPorterOccurrences },
