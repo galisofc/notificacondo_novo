@@ -212,3 +212,23 @@ $$;
 REVOKE ALL ON FUNCTION public.approve_package_deletion_request(uuid, text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.approve_package_deletion_request(uuid, text) FROM anon;
 GRANT EXECUTE ON FUNCTION public.approve_package_deletion_request(uuid, text) TO authenticated;
+
+-- 6) Reconcile requests approved by the previous soft-delete implementation.
+-- Re-running this script will also hard-delete packages from requests already marked as approved.
+UPDATE public.package_deletion_requests r
+SET
+  package_pickup_code = COALESCE(r.package_pickup_code, p.pickup_code),
+  package_condominium_name = COALESCE(r.package_condominium_name, c.name),
+  package_block_name = COALESCE(r.package_block_name, b.name),
+  package_apartment_number = COALESCE(r.package_apartment_number, a.number::text)
+FROM public.packages p
+LEFT JOIN public.condominiums c ON c.id = p.condominium_id
+LEFT JOIN public.blocks b ON b.id = p.block_id
+LEFT JOIN public.apartments a ON a.id = p.apartment_id
+WHERE r.package_id = p.id
+  AND r.status = 'aprovada';
+
+DELETE FROM public.packages p
+USING public.package_deletion_requests r
+WHERE r.package_id = p.id
+  AND r.status = 'aprovada';
