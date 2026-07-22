@@ -352,6 +352,8 @@ Este link é pessoal e intransferível.`;
       success: result.success,
       message_id: result.messageId,
       error_message: result.error,
+      // Meta returned 200 with a messageId => WABA "accepted" the message.
+      accepted_at: result.success && result.messageId ? new Date().toISOString() : null,
       request_payload: result.debug?.payload || { variables, params_order: paramsOrder },
       response_body: result.debug?.response,
       response_status: result.debug?.status,
