@@ -43,7 +43,7 @@ TO authenticated
 USING (
   public.has_role(auth.uid(), 'super_admin')
   OR condominium_id IN (SELECT id FROM public.condominiums WHERE owner_id = auth.uid())
-  OR condominium_id IN (SELECT public.get_user_condominium_ids(auth.uid()))
+  OR public.user_belongs_to_condominium(auth.uid(), condominium_id)
 );
 
 DROP POLICY IF EXISTS "pkg_del_req_insert" ON public.package_deletion_requests;
@@ -56,7 +56,7 @@ WITH CHECK (
   AND (
     public.has_role(auth.uid(), 'super_admin')
     OR condominium_id IN (SELECT id FROM public.condominiums WHERE owner_id = auth.uid())
-    OR condominium_id IN (SELECT public.get_user_condominium_ids(auth.uid()))
+    OR public.user_belongs_to_condominium(auth.uid(), condominium_id)
   )
 );
 
