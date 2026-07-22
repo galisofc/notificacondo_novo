@@ -268,6 +268,7 @@ export function PackageCard({
           </CardContent>
         </Card>
         {canResend && <ResendButton />}
+        {canDelete && <DeleteButton />}
       </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
