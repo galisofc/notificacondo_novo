@@ -5,8 +5,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const DELIVERY_STEPS = [
-  { key: "accepted", label: "Aceita", icon: Check, tsKey: "accepted_at" },
   { key: "sent", label: "Enviada", icon: Send, tsKey: "sent_at" },
+  { key: "accepted", label: "Aceita", icon: Check, tsKey: "accepted_at" },
   { key: "delivered", label: "Entregue", icon: CheckCircle2, tsKey: "delivered_at" },
   { key: "read", label: "Lida", icon: Eye, tsKey: "read_at" },
 ] as const;
