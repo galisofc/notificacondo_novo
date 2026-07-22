@@ -53,7 +53,7 @@ export function DeliveryStatusTracker({ status, className, timestamps }: Deliver
     <TooltipProvider delayDuration={200}>
       <div className={cn("flex items-center gap-0", className)}>
         {orderedSteps.map((step, i) => {
-          const isActive = i < activeCount;
+          const isActive = !!timestamps?.[step.tsKey];
 
           const isGreen = isActive && (step.key === "delivered" || step.key === "read");
           const isBlue = isActive && !isGreen;
