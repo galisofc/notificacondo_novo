@@ -90,6 +90,7 @@ export default function PackageDeletions() {
   const [tab, setTab] = useState<Status>("pendente");
   const [approveTarget, setApproveTarget] = useState<DeletionRequest | null>(null);
   const [rejectTarget, setRejectTarget] = useState<DeletionRequest | null>(null);
+  const [rejectNotes, setRejectNotes] = useState("");
   const [processing, setProcessing] = useState(false);
 
   const fetchAll = async () => {
