@@ -54,6 +54,7 @@ export function usePackages(options: UsePackagesOptions = {}) {
           block:blocks(name),
           apartment:apartments(number)
         `)
+        .is("deleted_at", null)
         .order("received_at", { ascending: false });
 
       // Filter by condominium IDs

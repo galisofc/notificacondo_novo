@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Package, Clock, Building2, MoreVertical, Info, RefreshCw } from "lucide-react";
+import { Package, Clock, Building2, MoreVertical, Info, RefreshCw, Trash2 } from "lucide-react";
+import { PackageDeleteRequestDialog } from "./PackageDeleteRequestDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,7 @@ interface PackageCardProps {
   apartmentNumber: string;
   blockName: string;
   condominiumName?: string;
+  condominiumId?: string;
   receivedAt: string;
   description?: string;
   notificationStatus?: string | null;
@@ -41,9 +43,11 @@ interface PackageCardProps {
   onClick?: () => void;
   onResendNotification?: () => void;
   onViewDetails?: () => void;
+  onRequestDeletion?: () => void;
   showCondominium?: boolean;
   compact?: boolean;
   showPickupCode?: boolean;
+  canRequestDeletion?: boolean;
 }
 
 export function PackageCard({
@@ -54,6 +58,7 @@ export function PackageCard({
   apartmentNumber,
   blockName,
   condominiumName,
+  condominiumId,
   notificationStatus,
   notificationTimestamps,
   receivedAt,
@@ -61,12 +66,16 @@ export function PackageCard({
   onClick,
   onResendNotification,
   onViewDetails,
+  onRequestDeletion,
   showCondominium = false,
   compact = false,
   showPickupCode = true,
+  canRequestDeletion = false,
 }: PackageCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const canResend = Boolean(onResendNotification);
+  const canDelete = canRequestDeletion && Boolean(condominiumId) && status !== "retirada";
 
   const formattedDate = format(new Date(receivedAt), "dd/MM/yyyy 'às' HH:mm", {
     locale: ptBR,
@@ -171,7 +180,7 @@ export function PackageCard({
             <PackageCardImage src={photoUrl} />
             <div className="absolute top-3 right-3 flex items-center gap-2">
               <PackageStatusBadge status={status} />
-              {onViewDetails && (
+              {(onViewDetails || canDelete) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                     <Button
@@ -183,10 +192,21 @@ export function PackageCard({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenuItem onClick={onViewDetails}>
-                      <Info className="w-4 h-4 mr-2" />
-                      Ver Detalhes
-                    </DropdownMenuItem>
+                    {onViewDetails && (
+                      <DropdownMenuItem onClick={onViewDetails}>
+                        <Info className="w-4 h-4 mr-2" />
+                        Ver Detalhes
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete && (
+                      <DropdownMenuItem
+                        onClick={() => setDeleteOpen(true)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Solicitar exclusão
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -251,6 +271,17 @@ export function PackageCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {canDelete && condominiumId && (
+        <PackageDeleteRequestDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          packageId={id}
+          condominiumId={condominiumId}
+          packageLabel={`${pickupCode} — ${blockName} Apto ${apartmentNumber}`}
+          onSubmitted={onRequestDeletion}
+        />
+      )}
     </>
   );
 }

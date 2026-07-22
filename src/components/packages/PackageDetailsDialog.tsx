@@ -14,6 +14,7 @@ import {
   User,
   CheckCircle2,
   XCircle,
+  Trash2,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,6 +35,7 @@ import { PackageCardImage } from "./PackageCardImage";
 import { getSignedPackagePhotoUrl } from "@/lib/packageStorage";
 import { cn } from "@/lib/utils";
 import { DeliveryStatusTracker } from "./DeliveryStatusTracker";
+import { PackageDeleteRequestDialog } from "./PackageDeleteRequestDialog";
 
 interface PackageDetailsDialogProps {
   open: boolean;
@@ -80,6 +82,7 @@ export function PackageDetailsDialog({
   const [isLoadingPhoto, setIsLoadingPhoto] = useState(false);
   const [notificationLogs, setNotificationLogs] = useState<NotificationLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Generate signed URL when package changes
   useEffect(() => {
@@ -493,8 +496,32 @@ export function PackageDetailsDialog({
                 </div>
               ) : null}
             </div>
+
+            {package_.status !== "retirada" && package_.condominium_id && (
+              <>
+                <Separator />
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 text-destructive hover:text-destructive"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Solicitar exclusão da encomenda
+                </Button>
+              </>
+            )}
           </div>
         </ScrollArea>
+
+        {package_.condominium_id && (
+          <PackageDeleteRequestDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            packageId={package_.id}
+            condominiumId={package_.condominium_id}
+            packageLabel={`${package_.pickup_code} — ${package_.block?.name ?? ""} Apto ${package_.apartment?.number ?? ""}`}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
