@@ -36,10 +36,14 @@ type Status = "pendente" | "aprovada" | "rejeitada";
 
 interface DeletionRequest {
   id: string;
-  package_id: string;
+  package_id: string | null;
   condominium_id: string;
   requested_by: string;
   requested_by_name: string | null;
+  package_pickup_code: string | null;
+  package_block_name: string | null;
+  package_apartment_number: string | null;
+  package_condominium_name: string | null;
   reason: string;
   status: Status;
   reviewed_by: string | null;
@@ -55,6 +59,26 @@ interface DeletionRequest {
     condominium?: { name: string };
     block?: { name: string };
     apartment?: { number: string };
+  };
+}
+
+interface PackageDisplayInfo {
+  pickupCode: string;
+  location: string | null;
+  condominiumName: string | null;
+}
+
+function getPackageDisplayInfo(req: DeletionRequest): PackageDisplayInfo {
+  const blockName = req.package?.block?.name ?? req.package_block_name;
+  const apartmentNumber = req.package?.apartment?.number ?? req.package_apartment_number;
+  const location = blockName || apartmentNumber
+    ? `${blockName ?? "Bloco —"} - Apto ${apartmentNumber ?? "—"}`
+    : null;
+
+  return {
+    pickupCode: req.package?.pickup_code ?? req.package_pickup_code ?? "—",
+    location,
+    condominiumName: req.package?.condominium?.name ?? req.package_condominium_name,
   };
 }
 
@@ -123,28 +147,29 @@ export default function PackageDeletions() {
     if (!approveTarget || !user) return;
     setProcessing(true);
     try {
-      // Soft-delete package
-      const { error: pkgErr } = await (supabase as any)
-        .from("packages")
-        .update({
-          deleted_at: new Date().toISOString(),
-          deletion_reason: approveTarget.reason,
-        })
-        .eq("id", approveTarget.package_id);
-      if (pkgErr) throw pkgErr;
+      const { error: approveError } = await (supabase as any).rpc(
+        "approve_package_deletion_request",
+        {
+          _request_id: approveTarget.id,
+          _reviewer_name: reviewerName,
+        }
+      );
+      if (approveError) throw approveError;
 
-      const { error: reqErr } = await (supabase as any)
-        .from("package_deletion_requests")
-        .update({
-          status: "aprovada",
-          reviewed_by: user.id,
-          reviewed_by_name: reviewerName,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", approveTarget.id);
-      if (reqErr) throw reqErr;
+      if (approveTarget.package_id) {
+        const { data: packageStillExists, error: verifyError } = await (supabase as any)
+          .from("packages")
+          .select("id")
+          .eq("id", approveTarget.package_id)
+          .maybeSingle();
 
-      toast.success("Solicitação aprovada — encomenda excluída");
+        if (verifyError) throw verifyError;
+        if (packageStillExists) {
+          throw new Error("A solicitação foi aprovada, mas a encomenda ainda existe no banco de dados.");
+        }
+      }
+
+      toast.success("Solicitação aprovada — encomenda excluída do banco de dados");
       setApproveTarget(null);
       fetchAll();
     } catch (err: any) {
@@ -226,16 +251,19 @@ export default function PackageDeletions() {
                 </CardContent>
               </Card>
             ) : (
-              filtered.map((req) => (
+              filtered.map((req) => {
+                const packageInfo = getPackageDisplayInfo(req);
+
+                return (
                 <Card key={req.id} className="overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <CardTitle className="text-base flex items-center gap-2">
                         <PackageIcon className="w-4 h-4 text-primary" />
-                        <span className="font-mono">{req.package?.pickup_code ?? "—"}</span>
-                        {req.package && (
+                        <span className="font-mono">{packageInfo.pickupCode}</span>
+                        {packageInfo.location && (
                           <span className="text-sm font-normal text-muted-foreground">
-                            {req.package.block?.name} - Apto {req.package.apartment?.number}
+                            {packageInfo.location}
                           </span>
                         )}
                       </CardTitle>
@@ -253,10 +281,10 @@ export default function PackageDeletions() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {req.package?.condominium?.name && (
+                    {packageInfo.condominiumName && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Building2 className="w-4 h-4" />
-                        {req.package.condominium.name}
+                        {packageInfo.condominiumName}
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -311,7 +339,8 @@ export default function PackageDeletions() {
                     )}
                   </CardContent>
                 </Card>
-              ))
+                );
+              })
             )}
           </TabsContent>
         </Tabs>
@@ -326,9 +355,9 @@ export default function PackageDeletions() {
           <AlertDialogHeader>
             <AlertDialogTitle>Aprovar exclusão?</AlertDialogTitle>
             <AlertDialogDescription>
-              A encomenda <strong>{approveTarget?.package?.pickup_code}</strong> será
-              marcada como excluída e não aparecerá mais nas listagens. Esta ação pode
-              ser auditada posteriormente.
+              A encomenda <strong>{approveTarget ? getPackageDisplayInfo(approveTarget).pickupCode : "—"}</strong> será
+              removida definitivamente da tabela de encomendas. A solicitação ficará
+              preservada para auditoria.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
