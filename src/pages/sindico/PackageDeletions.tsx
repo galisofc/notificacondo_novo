@@ -85,6 +85,7 @@ function getPackageDisplayInfo(req: DeletionRequest): PackageDisplayInfo {
 export default function PackageDeletions() {
   const { user } = useAuth();
   const [items, setItems] = useState<DeletionRequest[]>([]);
+  const [nameByUserId, setNameByUserId] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Status>("pendente");
   const [approveTarget, setApproveTarget] = useState<DeletionRequest | null>(null);
@@ -107,7 +108,23 @@ export default function PackageDeletions() {
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
-      setItems((data as DeletionRequest[]) || []);
+      const list = (data as DeletionRequest[]) || [];
+      setItems(list);
+
+      const userIds = Array.from(new Set(list.map((r) => r.requested_by).filter(Boolean)));
+      if (userIds.length > 0) {
+        const { data: profiles } = await (supabase as any)
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", userIds);
+        const map: Record<string, string> = {};
+        (profiles || []).forEach((p: any) => {
+          if (p?.full_name) map[p.id] = p.full_name;
+        });
+        setNameByUserId(map);
+      } else {
+        setNameByUserId({});
+      }
     } catch (err: any) {
       console.error(err);
       toast.error("Erro ao carregar solicitações");
@@ -289,7 +306,7 @@ export default function PackageDeletions() {
                     )}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="w-4 h-4" />
-                      Solicitado por: <strong>{req.requested_by_name || "—"}</strong>
+                      Solicitado por: <strong>{nameByUserId[req.requested_by] || (req.requested_by_name && !req.requested_by_name.includes("@") ? req.requested_by_name : null) || "Porteiro"}</strong>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-4 h-4" />
