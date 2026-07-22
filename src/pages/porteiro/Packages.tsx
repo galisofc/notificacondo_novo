@@ -544,13 +544,16 @@ export default function PorteiroPackages() {
                         apartmentNumber={pkg.apartment?.number || ""}
                         blockName={pkg.block?.name || ""}
                         condominiumName={pkg.condominium?.name}
+                        condominiumId={pkg.condominium_id}
                         receivedAt={pkg.received_at}
                         description={pkg.description || undefined}
                         onClick={() => handlePackageClick(pkg)}
                         onViewDetails={() => handleViewDetails(pkg)}
                         onResendNotification={() => handleResendNotification(pkg)}
+                        onRequestDeletion={() => selectedApartment && fetchPackages(selectedApartment.id, activeTab, 0, false)}
                         showCondominium={false}
                         showPickupCode={false}
+                        canRequestDeletion
                         notificationStatus={notificationStatusMap[pkg.id] || null}
                         notificationTimestamps={notificationDataMap[pkg.id]?.timestamps}
                       />
