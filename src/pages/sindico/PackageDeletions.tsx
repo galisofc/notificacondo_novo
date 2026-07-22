@@ -306,7 +306,7 @@ export default function PackageDeletions() {
                     )}
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="w-4 h-4" />
-                      Solicitado por: <strong>{req.requested_by_name || "—"}</strong>
+                      Solicitado por: <strong>{nameByUserId[req.requested_by] || (req.requested_by_name && !req.requested_by_name.includes("@") ? req.requested_by_name : null) || "Porteiro"}</strong>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Clock className="w-4 h-4" />
