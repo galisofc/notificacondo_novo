@@ -85,11 +85,11 @@ function getPackageDisplayInfo(req: DeletionRequest): PackageDisplayInfo {
 export default function PackageDeletions() {
   const { user } = useAuth();
   const [items, setItems] = useState<DeletionRequest[]>([]);
+  const [nameByUserId, setNameByUserId] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Status>("pendente");
   const [approveTarget, setApproveTarget] = useState<DeletionRequest | null>(null);
   const [rejectTarget, setRejectTarget] = useState<DeletionRequest | null>(null);
-  const [rejectNotes, setRejectNotes] = useState("");
   const [processing, setProcessing] = useState(false);
 
   const fetchAll = async () => {
