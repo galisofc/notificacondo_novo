@@ -101,6 +101,24 @@ export function PackageCard({
     </Button>
   );
 
+  const DeleteButton = ({ className }: { className?: string }) => (
+    <Button
+      variant="outline"
+      size="sm"
+      className={cn(
+        "w-full gap-2 text-xs border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive",
+        className,
+      )}
+      onClick={(e) => {
+        e.stopPropagation();
+        setDeleteOpen(true);
+      }}
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+      Solicitar exclusão
+    </Button>
+  );
+
   if (compact) {
     return (
       <>
