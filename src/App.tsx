@@ -89,6 +89,7 @@ const ManutencoesCondominios = lazy(() => import("./pages/sindico/ManutencoesCon
 const ManutencoesCondominioDetalhes = lazy(() => import("./pages/sindico/ManutencoesCondominioDetalhes"));
 const ManutencoesCategorias = lazy(() => import("./pages/sindico/ManutencoesCategorias"));
 const ManutencoesHistorico = lazy(() => import("./pages/sindico/ManutencoesHistorico"));
+const PackageDeletions = lazy(() => import("./pages/sindico/PackageDeletions"));
 const ZeladorDashboard = lazy(() => import("./pages/zelador/Dashboard"));
 const ZeladorManutencoes = lazy(() => import("./pages/zelador/Manutencoes"));
 const ZeladorSettings = lazy(() => import("./pages/zelador/Settings"));
@@ -164,6 +165,7 @@ const App = () => (
               <Route path="/sindico/manutencoes/condominios/:id" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCondominioDetalhes /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/categorias" element={<ProtectedRoute requiredRole="sindico"><ManutencoesCategorias /></ProtectedRoute>} />
               <Route path="/sindico/manutencoes/historico" element={<ProtectedRoute requiredRole="sindico"><ManutencoesHistorico /></ProtectedRoute>} />
+              <Route path="/sindico/exclusoes" element={<ProtectedRoute requiredRole={["sindico", "super_admin"]}><PackageDeletions /></ProtectedRoute>} />
 
               {/* Resident Routes */}
               <Route path="/resident" element={<ProtectedRoute requiredRole="morador"><ResidentDashboard /></ProtectedRoute>} />
