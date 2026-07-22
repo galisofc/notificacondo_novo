@@ -36,7 +36,7 @@ type Status = "pendente" | "aprovada" | "rejeitada";
 
 interface DeletionRequest {
   id: string;
-  package_id: string;
+  package_id: string | null;
   condominium_id: string;
   requested_by: string;
   requested_by_name: string | null;
@@ -156,15 +156,17 @@ export default function PackageDeletions() {
       );
       if (approveError) throw approveError;
 
-      const { data: packageStillExists, error: verifyError } = await (supabase as any)
-        .from("packages")
-        .select("id")
-        .eq("id", approveTarget.package_id)
-        .maybeSingle();
+      if (approveTarget.package_id) {
+        const { data: packageStillExists, error: verifyError } = await (supabase as any)
+          .from("packages")
+          .select("id")
+          .eq("id", approveTarget.package_id)
+          .maybeSingle();
 
-      if (verifyError) throw verifyError;
-      if (packageStillExists) {
-        throw new Error("A solicitação foi aprovada, mas a encomenda ainda existe no banco de dados.");
+        if (verifyError) throw verifyError;
+        if (packageStillExists) {
+          throw new Error("A solicitação foi aprovada, mas a encomenda ainda existe no banco de dados.");
+        }
       }
 
       toast.success("Solicitação aprovada — encomenda excluída do banco de dados");
