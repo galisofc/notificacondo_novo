@@ -108,7 +108,23 @@ export default function PackageDeletions() {
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
-      setItems((data as DeletionRequest[]) || []);
+      const list = (data as DeletionRequest[]) || [];
+      setItems(list);
+
+      const userIds = Array.from(new Set(list.map((r) => r.requested_by).filter(Boolean)));
+      if (userIds.length > 0) {
+        const { data: profiles } = await (supabase as any)
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", userIds);
+        const map: Record<string, string> = {};
+        (profiles || []).forEach((p: any) => {
+          if (p?.full_name) map[p.id] = p.full_name;
+        });
+        setNameByUserId(map);
+      } else {
+        setNameByUserId({});
+      }
     } catch (err: any) {
       console.error(err);
       toast.error("Erro ao carregar solicitações");
