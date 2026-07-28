@@ -426,6 +426,16 @@ export default function RegisterPackage() {
     }
   };
 
+  const isFormComplete = Boolean(
+    capturedImage &&
+    selectedCondominium &&
+    selectedBlock &&
+    selectedApartment &&
+    selectedPackageType &&
+    trackingCode.trim() &&
+    destinationPreview?.hasResidents
+  );
+
   if (step === "success") {
     return (
       <DashboardLayout>
@@ -771,10 +781,15 @@ export default function RegisterPackage() {
               )}
 
               <Button
-                className="w-full gap-2"
+                className={cn(
+                  "w-full gap-2 transition-colors duration-200",
+                  isFormComplete && !isSubmitting
+                    ? "bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:hover:bg-green-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400"
+                )}
                 size="lg"
                 onClick={handleSubmit}
-                disabled={isSubmitting || !capturedImage || !selectedApartment || !selectedPackageType || !trackingCode.trim() || (destinationPreview && !destinationPreview.hasResidents)}
+                disabled={isSubmitting || !isFormComplete}
               >
                 {isSubmitting ? (
                   <>
