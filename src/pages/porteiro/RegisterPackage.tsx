@@ -426,6 +426,16 @@ export default function RegisterPackage() {
     }
   };
 
+  const isFormComplete = Boolean(
+    capturedImage &&
+    selectedCondominium &&
+    selectedBlock &&
+    selectedApartment &&
+    selectedPackageType &&
+    trackingCode.trim() &&
+    destinationPreview?.hasResidents
+  );
+
   if (step === "success") {
     return (
       <DashboardLayout>
