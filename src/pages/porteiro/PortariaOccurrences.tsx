@@ -736,16 +736,7 @@ export default function PortariaOccurrences() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                <Button
-                  onClick={() => createMutation.mutate()}
-                  disabled={!newTitle || !newDescription || !newCategory || !newPriority || !occurredDate || !occurredTime || createMutation.isPending}
-                  className={cn(
-                    "transition-colors",
-                    (!newTitle || !newDescription || !newCategory || !newPriority || !occurredDate || !occurredTime || createMutation.isPending)
-                      ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
-                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  )}
-                >
+                <Button onClick={() => createMutation.mutate()} disabled={!newTitle || !newDescription || !newCategory || !newPriority || !occurredDate || !occurredTime || createMutation.isPending}>
                   {createMutation.isPending ? "Registrando..." : "Registrar"}
                 </Button>
               </DialogFooter>
