@@ -323,15 +323,22 @@ export default function PackageDeletions() {
                 <Card key={req.id} className="overflow-hidden">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <PackageIcon className="w-4 h-4 text-primary" />
-                        <span className="font-mono">{packageInfo.pickupCode}</span>
-                        {packageInfo.location && (
-                          <span className="text-sm font-normal text-muted-foreground">
-                            {packageInfo.location}
-                          </span>
-                        )}
-                      </CardTitle>
+                      <div className="space-y-0.5">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <PackageIcon className="w-4 h-4 text-primary" />
+                          <span className="font-mono">{packageInfo.pickupCode}</span>
+                          {packageInfo.location && (
+                            <span className="text-sm font-normal text-muted-foreground">
+                              {packageInfo.location}
+                            </span>
+                          )}
+                        </CardTitle>
+                        <p className="text-sm flex items-center gap-1.5">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-muted-foreground">Destinatário:</span>
+                          <strong>{req.package?.resident?.full_name || "—"}</strong>
+                        </p>
+                      </div>
                       <Badge
                         variant={
                           req.status === "pendente"
