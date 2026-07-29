@@ -197,6 +197,10 @@ export default function PackageDeletions() {
     if (!approveTarget || !user) return;
     setProcessing(true);
     try {
+      // Guardamos a foto ANTES da exclusão do registro — ela só será apagada
+      // do Storage depois que a aprovação for confirmada com sucesso.
+      const photoUrlToDelete = approveTarget.package?.photo_url ?? null;
+
       const { error: approveError } = await (supabase as any).rpc(
         "approve_package_deletion_request",
         {
@@ -219,9 +223,19 @@ export default function PackageDeletions() {
         }
       }
 
-      toast.success("Solicitação aprovada — encomenda excluída do banco de dados");
+      // Somente após a aprovação confirmada removemos a imagem do Storage.
+      if (photoUrlToDelete) {
+        const result = await deletePackagePhoto(photoUrlToDelete);
+        if (!result.success) {
+          console.warn("Falha ao excluir a foto da encomenda:", result.error);
+          toast.warning("Encomenda excluída, mas a foto não pôde ser removida do armazenamento.");
+        }
+      }
+
+      toast.success("Solicitação aprovada — encomenda e foto excluídas");
       setApproveTarget(null);
       fetchAll();
+
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || "Erro ao aprovar");
