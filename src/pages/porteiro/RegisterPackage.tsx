@@ -233,15 +233,9 @@ export default function RegisterPackage() {
     }
 
     setIsSubmitting(true);
+    setProgress({ photo: "loading", protocol: "pending", notify: "pending" });
 
     try {
-      // 0. Fetch porter's profile name
-      const { data: porterProfile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .single();
-
       // 1. Upload image to storage
       const pickupCode = generatePickupCode();
       const fileName = `${Date.now()}_${pickupCode}.jpg`;
@@ -256,18 +250,23 @@ export default function RegisterPackage() {
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: "image/jpeg" });
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("package-photos")
         .upload(fileName, blob, {
           contentType: "image/jpeg",
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        setProgress((p) => ({ ...p, photo: "error" }));
+        throw uploadError;
+      }
 
       // 2. Get public URL
       const { data: urlData } = supabase.storage
         .from("package-photos")
         .getPublicUrl(fileName);
+
+      setProgress((p) => ({ ...p, photo: "done", protocol: "loading" }));
 
       // 3. Fetch porter name for denormalization
       const { data: profileData } = await supabase
@@ -295,9 +294,14 @@ export default function RegisterPackage() {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        setProgress((p) => ({ ...p, protocol: "error" }));
+        throw insertError;
+      }
 
-      // 4. Send WhatsApp notification (non-blocking)
+      setProgress((p) => ({ ...p, protocol: "done", notify: "loading" }));
+
+      // 5. Send WhatsApp notification (non-blocking)
       let notifResult: NotificationResult = { sent: false, count: 0 };
       try {
         const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
@@ -327,6 +331,17 @@ export default function RegisterPackage() {
         notifResult = { sent: false, count: 0, message: "Erro de conexão" };
       }
 
+      setProgress((p) => ({
+        ...p,
+        notify: notifResult.sent ? "done" : "error",
+        notifyDetail: notifResult.sent
+          ? `${notifResult.count} morador(es) notificado(s)`
+          : notifResult.message || "Notificação não enviada",
+      }));
+
+      // Give the user a moment to see the completed steps
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
       setNotificationResult(notifResult);
       setRegisteredCode(pickupCode);
       setStep("success");
@@ -339,6 +354,7 @@ export default function RegisterPackage() {
       });
     } catch (error) {
       console.error("Error registering package:", error);
+      await new Promise((resolve) => setTimeout(resolve, 700));
       toast({
         title: "Erro ao registrar",
         description: "Não foi possível registrar a encomenda. Tente novamente.",
