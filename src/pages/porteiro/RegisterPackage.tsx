@@ -46,6 +46,8 @@ interface PackageType {
 
 type RegistrationStep = "form" | "success";
 
+type SubmitStepStatus = "pending" | "loading" | "done" | "error";
+
 interface NotificationResult {
   sent: boolean;
   count: number;
