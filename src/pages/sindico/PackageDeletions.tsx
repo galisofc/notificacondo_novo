@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Trash2, CheckCircle2, XCircle, Loader2, Clock, User, Building2, ImageOff, Package as PackageIcon } from "lucide-react";
+import { Trash2, CheckCircle2, XCircle, Loader2, Clock, User, Building2, ImageOff, Package as PackageIcon, Filter } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,6 +111,9 @@ export default function PackageDeletions() {
   const [processing, setProcessing] = useState(false);
   const [photoByRequestId, setPhotoByRequestId] = useState<Record<string, string>>({});
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [selectedApartment, setSelectedApartment] = useState<string>("");
+
 
   const fetchAll = async () => {
     setLoading(true);
@@ -182,7 +192,20 @@ export default function PackageDeletions() {
     };
   }, []);
 
-  const filtered = useMemo(() => items.filter((i) => i.status === tab), [items, tab]);
+  const filtered = useMemo(
+    () =>
+      items
+        .filter((i) => i.status === tab)
+        .filter((i) => {
+          const blockName = i.package?.block?.name ?? i.package_block_name ?? "";
+          const apartmentNumber = i.package?.apartment?.number ?? i.package_apartment_number ?? "";
+          const blockMatch = !selectedBlock || blockName === selectedBlock;
+          const aptMatch = !selectedApartment || apartmentNumber === selectedApartment;
+          return blockMatch && aptMatch;
+        }),
+    [items, tab, selectedBlock, selectedApartment]
+  );
+
   const counts = useMemo(
     () => ({
       pendente: items.filter((i) => i.status === "pendente").length,
@@ -191,6 +214,24 @@ export default function PackageDeletions() {
     }),
     [items]
   );
+
+  const blockOptions = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((i) => {
+      const blockName = i.package?.block?.name ?? i.package_block_name;
+      if (blockName) set.add(blockName);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+  }, [items]);
+
+  const apartmentOptions = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((i) => {
+      const apartmentNumber = i.package?.apartment?.number ?? i.package_apartment_number;
+      if (apartmentNumber) set.add(String(apartmentNumber));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+  }, [items]);
 
   const reviewerName = user?.user_metadata?.full_name || user?.email || null;
 
@@ -302,6 +343,60 @@ export default function PackageDeletions() {
             <TabsTrigger value="aprovada">Aprovadas ({counts.aprovada})</TabsTrigger>
             <TabsTrigger value="rejeitada">Rejeitadas ({counts.rejeitada})</TabsTrigger>
           </TabsList>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+            <div className="flex-1 min-w-[140px] space-y-1.5">
+              <Label htmlFor="block-filter" className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                Bloco
+              </Label>
+              <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+                <SelectTrigger id="block-filter" className="w-full">
+                  <SelectValue placeholder="Todos os blocos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os blocos</SelectItem>
+                  {blockOptions.map((block) => (
+                    <SelectItem key={block} value={block}>
+                      {block}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[140px] space-y-1.5">
+              <Label htmlFor="apartment-filter" className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5" />
+                Apartamento
+              </Label>
+              <Select value={selectedApartment} onValueChange={setSelectedApartment}>
+                <SelectTrigger id="apartment-filter" className="w-full">
+                  <SelectValue placeholder="Todos os apartamentos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os apartamentos</SelectItem>
+                  {apartmentOptions.map((apt) => (
+                    <SelectItem key={apt} value={apt}>
+                      {apt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {(selectedBlock || selectedApartment) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedBlock("");
+                  setSelectedApartment("");
+                }}
+                className="shrink-0"
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
 
           <TabsContent value={tab} className="mt-4 space-y-3">
             {loading ? (
