@@ -56,9 +56,17 @@ interface DeletionRequest {
     pickup_code: string;
     status: string;
     received_at: string;
+    photo_url: string | null;
+    tracking_code: string | null;
+    description: string | null;
+    received_by_name: string | null;
+    picked_up_at: string | null;
+    picked_up_by_name: string | null;
     condominium?: { name: string };
     block?: { name: string };
     apartment?: { number: string };
+    resident?: { full_name: string; phone: string | null };
+    package_type?: { name: string; icon: string | null };
   };
 }
 
@@ -81,6 +89,7 @@ function getPackageDisplayInfo(req: DeletionRequest): PackageDisplayInfo {
     condominiumName: req.package?.condominium?.name ?? req.package_condominium_name,
   };
 }
+
 
 export default function PackageDeletions() {
   const { user } = useAuth();
