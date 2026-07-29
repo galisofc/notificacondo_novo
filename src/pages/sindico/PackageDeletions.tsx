@@ -385,10 +385,6 @@ export default function PackageDeletions() {
                         </div>
                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
                           <div>
-                            <span className="text-muted-foreground">Destinatário: </span>
-                            <strong>{req.package.resident?.full_name || "—"}</strong>
-                          </div>
-                          <div>
                             <span className="text-muted-foreground">Tipo: </span>
                             <strong>{req.package.package_type?.name || "—"}</strong>
                           </div>
