@@ -111,6 +111,9 @@ export default function PackageDeletions() {
   const [processing, setProcessing] = useState(false);
   const [photoByRequestId, setPhotoByRequestId] = useState<Record<string, string>>({});
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [selectedApartment, setSelectedApartment] = useState<string>("");
+
 
   const fetchAll = async () => {
     setLoading(true);
