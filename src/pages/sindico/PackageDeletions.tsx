@@ -103,6 +103,7 @@ export default function PackageDeletions() {
   const [rejectNotes, setRejectNotes] = useState("");
   const [processing, setProcessing] = useState(false);
   const [photoByRequestId, setPhotoByRequestId] = useState<Record<string, string>>({});
+  const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
