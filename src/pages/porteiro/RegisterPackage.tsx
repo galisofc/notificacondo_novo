@@ -858,20 +858,46 @@ export default function RegisterPackage() {
             <DialogDescription className="text-muted-foreground max-w-xs">
               Aguarde enquanto salvamos a foto, geramos o código de retirada e notificamos o morador.
             </DialogDescription>
-            <div className="mt-8 flex flex-col gap-2 w-full max-w-xs">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Enviando foto para o armazenamento seguro...</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Gerando protocolo de entrega...</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Notificando morador via WhatsApp...</span>
-              </div>
+            <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
+              {([
+                { key: "photo", label: "Enviando foto para o armazenamento seguro", done: "Foto enviada com sucesso", error: "Falha ao enviar a foto" },
+                { key: "protocol", label: "Gerando protocolo de entrega", done: "Protocolo gerado", error: "Falha ao gerar o protocolo" },
+                { key: "notify", label: "Notificando morador via WhatsApp", done: progress.notifyDetail || "Morador notificado", error: progress.notifyDetail || "Notificação não enviada" },
+              ] as const).map((stepItem) => {
+                const status = progress[stepItem.key];
+                return (
+                  <div
+                    key={stepItem.key}
+                    className={cn(
+                      "flex items-center gap-3 text-sm text-left transition-colors",
+                      status === "pending" && "text-muted-foreground/50",
+                      status === "loading" && "text-foreground font-medium",
+                      status === "done" && "text-emerald-600 dark:text-emerald-400",
+                      status === "error" && "text-destructive"
+                    )}
+                  >
+                    {status === "loading" && <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />}
+                    {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+                    {status === "error" && <AlertCircle className="w-4 h-4 shrink-0" />}
+                    {status === "pending" && (
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center">
+                        <span className="w-2 h-2 rounded-full bg-current" />
+                      </span>
+                    )}
+                    <span>
+                      {status === "done"
+                        ? stepItem.done
+                        : status === "error"
+                          ? stepItem.error
+                          : status === "loading"
+                            ? `${stepItem.label}...`
+                            : stepItem.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+
           </div>
         </DialogContent>
       </Dialog>
