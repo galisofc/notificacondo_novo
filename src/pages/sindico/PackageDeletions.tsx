@@ -357,12 +357,19 @@ export default function PackageDeletions() {
                       <div className="rounded-lg border bg-card p-3 flex flex-col sm:flex-row gap-3">
                         <div className="sm:w-32 shrink-0">
                           {photoByRequestId[req.id] ? (
-                            <img
-                              src={photoByRequestId[req.id]}
-                              alt={`Foto da encomenda ${packageInfo.pickupCode}`}
-                              loading="lazy"
-                              className="w-full h-28 sm:h-24 object-cover rounded-md border"
-                            />
+                            <button
+                              type="button"
+                              onClick={() => setZoomedPhoto(photoByRequestId[req.id])}
+                              className="w-full h-28 sm:h-24 rounded-md border overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              aria-label={`Ampliar foto da encomenda ${packageInfo.pickupCode}`}
+                            >
+                              <img
+                                src={photoByRequestId[req.id]}
+                                alt={`Foto da encomenda ${packageInfo.pickupCode}`}
+                                loading="lazy"
+                                className="w-full h-full object-cover transition-transform hover:scale-105"
+                              />
+                            </button>
                           ) : (
                             <div className="w-full h-28 sm:h-24 rounded-md border bg-muted/40 flex items-center justify-center">
                               <ImageOff className="w-5 h-5 text-muted-foreground" />
@@ -544,6 +551,25 @@ export default function PackageDeletions() {
               {processing ? "Processando..." : "Rejeitar"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Zoom photo modal */}
+      <Dialog
+        open={!!zoomedPhoto}
+        onOpenChange={(o) => !o && setZoomedPhoto(null)}
+      >
+        <DialogContent className="max-w-3xl p-1 md:p-2">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Visualização da foto</DialogTitle>
+          </DialogHeader>
+          {zoomedPhoto && (
+            <img
+              src={zoomedPhoto}
+              alt="Foto ampliada da encomenda"
+              className="w-full h-auto max-h-[80vh] object-contain rounded-md"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
