@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Trash2, CheckCircle2, XCircle, Loader2, Clock, User, Building2, Package as PackageIcon } from "lucide-react";
+import { Trash2, CheckCircle2, XCircle, Loader2, Clock, User, Building2, ImageOff, Package as PackageIcon } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
