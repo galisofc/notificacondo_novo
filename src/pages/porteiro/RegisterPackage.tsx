@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, CheckCircle2, Loader2, MessageCircle, AlertCircle, MapPin, User, Phone, UserPlus, Check, ChevronsUpDown, Search, icons, QrCode } from "lucide-react";
+import { ArrowLeft, Package, CheckCircle2, Loader2, MessageCircle, AlertCircle, MapPin, User, Phone, UserPlus, Check, ChevronsUpDown, Search, icons, QrCode, Box } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MaskedInput } from "@/components/ui/masked-input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Command,
   CommandEmpty,
@@ -807,6 +813,45 @@ export default function RegisterPackage() {
           </Card>
         </div>
       </div>
+
+      {/* Registration Loading Modal */}
+      <Dialog open={isSubmitting}>
+        <DialogContent
+          className="sm:max-w-md text-center border-none bg-background/95 backdrop-blur-sm shadow-2xl"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <div className="flex flex-col items-center justify-center py-10 px-4">
+            <div className="relative mb-8">
+              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+              <div className="relative w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-primary/20">
+                <Box className="w-12 h-12 text-primary animate-bounce" />
+              </div>
+            </div>
+            <DialogTitle className="text-xl font-bold mb-2">
+              Cadastrando Encomenda
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground max-w-xs">
+              Aguarde enquanto salvamos a foto, geramos o código de retirada e notificamos o morador.
+            </DialogDescription>
+            <div className="mt-8 flex flex-col gap-2 w-full max-w-xs">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>Enviando foto para o armazenamento seguro...</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>Gerando protocolo de entrega...</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>Notificando morador via WhatsApp...</span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       </SubscriptionGate>
     </DashboardLayout>
   );
