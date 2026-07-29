@@ -350,12 +350,15 @@ export default function PackageDeletions() {
                 <Building2 className="w-3.5 h-3.5" />
                 Bloco
               </Label>
-              <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+              <Select
+                value={selectedBlock || "__all__"}
+                onValueChange={(v) => setSelectedBlock(v === "__all__" ? "" : v)}
+              >
                 <SelectTrigger id="block-filter" className="w-full">
                   <SelectValue placeholder="Todos os blocos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os blocos</SelectItem>
+                  <SelectItem value="__all__">Todos os blocos</SelectItem>
                   {blockOptions.map((block) => (
                     <SelectItem key={block} value={block}>
                       {block}
@@ -369,12 +372,15 @@ export default function PackageDeletions() {
                 <Filter className="w-3.5 h-3.5" />
                 Apartamento
               </Label>
-              <Select value={selectedApartment} onValueChange={setSelectedApartment}>
+              <Select
+                value={selectedApartment || "__all__"}
+                onValueChange={(v) => setSelectedApartment(v === "__all__" ? "" : v)}
+              >
                 <SelectTrigger id="apartment-filter" className="w-full">
                   <SelectValue placeholder="Todos os apartamentos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os apartamentos</SelectItem>
+                  <SelectItem value="__all__">Todos os apartamentos</SelectItem>
                   {apartmentOptions.map((apt) => (
                     <SelectItem key={apt} value={apt}>
                       {apt}
