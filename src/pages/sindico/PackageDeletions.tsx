@@ -101,6 +101,7 @@ export default function PackageDeletions() {
   const [rejectTarget, setRejectTarget] = useState<DeletionRequest | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [photoByRequestId, setPhotoByRequestId] = useState<Record<string, string>>({});
 
   const fetchAll = async () => {
     setLoading(true);
@@ -109,16 +110,38 @@ export default function PackageDeletions() {
         .from("package_deletion_requests")
         .select(
           `*, package:packages(
-            id, pickup_code, status, received_at,
+            id, pickup_code, status, received_at, photo_url, tracking_code,
+            description, received_by_name, picked_up_at, picked_up_by_name,
             condominium:condominiums(name),
             block:blocks(name),
-            apartment:apartments(number)
+            apartment:apartments(number),
+            resident:residents(full_name, phone),
+            package_type:package_types(name, icon)
           )`
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
       const list = (data as DeletionRequest[]) || [];
       setItems(list);
+
+      // Assinaturas temporárias para as fotos ainda existentes no Storage
+      const withPhotos = list.filter((r) => r.package?.photo_url);
+      if (withPhotos.length > 0) {
+        const entries = await Promise.all(
+          withPhotos.map(async (r) => {
+            const signed = await getSignedPackagePhotoUrl(r.package!.photo_url as string);
+            return [r.id, signed] as const;
+          })
+        );
+        const photoMap: Record<string, string> = {};
+        entries.forEach(([id, url]) => {
+          if (url) photoMap[id] = url;
+        });
+        setPhotoByRequestId(photoMap);
+      } else {
+        setPhotoByRequestId({});
+      }
+
 
       const userIds = Array.from(new Set(list.map((r) => r.requested_by).filter(Boolean)));
       if (userIds.length > 0) {
