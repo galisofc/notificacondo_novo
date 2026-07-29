@@ -204,8 +204,15 @@ export default function PackageDeletions() {
           const blockMatch = !selectedBlock || blockName === selectedBlock;
           const aptMatch = !selectedApartment || apartmentNumber === selectedApartment;
           return blockMatch && aptMatch;
+        })
+        .filter((i) => {
+          if (!searchQuery.trim()) return true;
+          const query = searchQuery.trim().toLowerCase();
+          const pickupCode = (i.package?.pickup_code ?? i.package_pickup_code ?? "").toLowerCase();
+          const residentName = (i.package?.resident?.full_name ?? "").toLowerCase();
+          return pickupCode.includes(query) || residentName.includes(query);
         }),
-    [items, tab, selectedBlock, selectedApartment]
+    [items, tab, selectedBlock, selectedApartment, searchQuery]
   );
 
   const counts = useMemo(
