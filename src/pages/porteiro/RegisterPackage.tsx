@@ -17,6 +17,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { CameraCapture } from "@/components/packages/CameraCapture";
+import { BarcodeScanner } from "@/components/packages/BarcodeScanner";
+import { CondominiumBlockApartmentSelect } from "@/components/packages/CondominiumBlockApartmentSelect";
+import { generatePickupCode } from "@/lib/packageConstants";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PackageType {
   id: string;
