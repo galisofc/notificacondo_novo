@@ -76,6 +76,12 @@ export default function RegisterPackage() {
   const [selectedApartment, setSelectedApartment] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState<{
+    photo: SubmitStepStatus;
+    protocol: SubmitStepStatus;
+    notify: SubmitStepStatus;
+    notifyDetail?: string;
+  }>({ photo: "pending", protocol: "pending", notify: "pending" });
   const [registeredCode, setRegisteredCode] = useState("");
   const [notificationResult, setNotificationResult] = useState<NotificationResult | null>(null);
   const [targetResidents, setTargetResidents] = useState<Array<{ full_name: string; phone?: string }>>([]);
