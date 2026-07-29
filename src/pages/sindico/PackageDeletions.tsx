@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Trash2, CheckCircle2, XCircle, Loader2, Clock, User, Building2, Package as PackageIcon } from "lucide-react";
+import { Trash2, CheckCircle2, XCircle, Loader2, Clock, User, Building2, ImageOff, Package as PackageIcon } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getSignedPackagePhotoUrl, deletePackagePhoto } from "@/lib/packageStorage";
 
 type Status = "pendente" | "aprovada" | "rejeitada";
 
@@ -56,9 +57,17 @@ interface DeletionRequest {
     pickup_code: string;
     status: string;
     received_at: string;
+    photo_url: string | null;
+    tracking_code: string | null;
+    description: string | null;
+    received_by_name: string | null;
+    picked_up_at: string | null;
+    picked_up_by_name: string | null;
     condominium?: { name: string };
     block?: { name: string };
     apartment?: { number: string };
+    resident?: { full_name: string; phone: string | null };
+    package_type?: { name: string; icon: string | null };
   };
 }
 
@@ -82,6 +91,7 @@ function getPackageDisplayInfo(req: DeletionRequest): PackageDisplayInfo {
   };
 }
 
+
 export default function PackageDeletions() {
   const { user } = useAuth();
   const [items, setItems] = useState<DeletionRequest[]>([]);
@@ -92,6 +102,7 @@ export default function PackageDeletions() {
   const [rejectTarget, setRejectTarget] = useState<DeletionRequest | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [photoByRequestId, setPhotoByRequestId] = useState<Record<string, string>>({});
 
   const fetchAll = async () => {
     setLoading(true);
@@ -100,16 +111,38 @@ export default function PackageDeletions() {
         .from("package_deletion_requests")
         .select(
           `*, package:packages(
-            id, pickup_code, status, received_at,
+            id, pickup_code, status, received_at, photo_url, tracking_code,
+            description, received_by_name, picked_up_at, picked_up_by_name,
             condominium:condominiums(name),
             block:blocks(name),
-            apartment:apartments(number)
+            apartment:apartments(number),
+            resident:residents(full_name, phone),
+            package_type:package_types(name, icon)
           )`
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
       const list = (data as DeletionRequest[]) || [];
       setItems(list);
+
+      // Assinaturas temporárias para as fotos ainda existentes no Storage
+      const withPhotos = list.filter((r) => r.package?.photo_url);
+      if (withPhotos.length > 0) {
+        const entries = await Promise.all(
+          withPhotos.map(async (r) => {
+            const signed = await getSignedPackagePhotoUrl(r.package!.photo_url as string);
+            return [r.id, signed] as const;
+          })
+        );
+        const photoMap: Record<string, string> = {};
+        entries.forEach(([id, url]) => {
+          if (url) photoMap[id] = url;
+        });
+        setPhotoByRequestId(photoMap);
+      } else {
+        setPhotoByRequestId({});
+      }
+
 
       const userIds = Array.from(new Set(list.map((r) => r.requested_by).filter(Boolean)));
       if (userIds.length > 0) {
@@ -164,6 +197,10 @@ export default function PackageDeletions() {
     if (!approveTarget || !user) return;
     setProcessing(true);
     try {
+      // Guardamos a foto ANTES da exclusão do registro — ela só será apagada
+      // do Storage depois que a aprovação for confirmada com sucesso.
+      const photoUrlToDelete = approveTarget.package?.photo_url ?? null;
+
       const { error: approveError } = await (supabase as any).rpc(
         "approve_package_deletion_request",
         {
@@ -186,9 +223,19 @@ export default function PackageDeletions() {
         }
       }
 
-      toast.success("Solicitação aprovada — encomenda excluída do banco de dados");
+      // Somente após a aprovação confirmada removemos a imagem do Storage.
+      if (photoUrlToDelete) {
+        const result = await deletePackagePhoto(photoUrlToDelete);
+        if (!result.success) {
+          console.warn("Falha ao excluir a foto da encomenda:", result.error);
+          toast.warning("Encomenda excluída, mas a foto não pôde ser removida do armazenamento.");
+        }
+      }
+
+      toast.success("Solicitação aprovada — encomenda e foto excluídas");
       setApproveTarget(null);
       fetchAll();
+
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || "Erro ao aprovar");
@@ -304,6 +351,69 @@ export default function PackageDeletions() {
                         {packageInfo.condominiumName}
                       </div>
                     )}
+
+                    {req.package && (
+                      <div className="rounded-lg border bg-card p-3 flex flex-col sm:flex-row gap-3">
+                        <div className="sm:w-32 shrink-0">
+                          {photoByRequestId[req.id] ? (
+                            <img
+                              src={photoByRequestId[req.id]}
+                              alt={`Foto da encomenda ${packageInfo.pickupCode}`}
+                              loading="lazy"
+                              className="w-full h-28 sm:h-24 object-cover rounded-md border"
+                            />
+                          ) : (
+                            <div className="w-full h-28 sm:h-24 rounded-md border bg-muted/40 flex items-center justify-center">
+                              <ImageOff className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Destinatário: </span>
+                            <strong>{req.package.resident?.full_name || "—"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Tipo: </span>
+                            <strong>{req.package.package_type?.name || "—"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Rastreio: </span>
+                            <strong className="font-mono">{req.package.tracking_code || "—"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Situação: </span>
+                            <strong>{req.package.status}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Recebida em: </span>
+                            <strong>
+                              {format(new Date(req.package.received_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                            </strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Recebida por: </span>
+                            <strong>{req.package.received_by_name || "—"}</strong>
+                          </div>
+                          {req.package.picked_up_at && (
+                            <div className="sm:col-span-2">
+                              <span className="text-muted-foreground">Retirada: </span>
+                              <strong>
+                                {format(new Date(req.package.picked_up_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                                {req.package.picked_up_by_name ? ` por ${req.package.picked_up_by_name}` : ""}
+                              </strong>
+                            </div>
+                          )}
+                          {req.package.description && (
+                            <div className="sm:col-span-2">
+                              <span className="text-muted-foreground">Observações: </span>
+                              <span className="whitespace-pre-wrap">{req.package.description}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="w-4 h-4" />
                       Solicitado por: <strong>{nameByUserId[req.requested_by] || (req.requested_by_name && !req.requested_by_name.includes("@") ? req.requested_by_name : null) || "Porteiro"}</strong>
