@@ -351,6 +351,69 @@ export default function PackageDeletions() {
                         {packageInfo.condominiumName}
                       </div>
                     )}
+
+                    {req.package && (
+                      <div className="rounded-lg border bg-card p-3 flex flex-col sm:flex-row gap-3">
+                        <div className="sm:w-32 shrink-0">
+                          {photoByRequestId[req.id] ? (
+                            <img
+                              src={photoByRequestId[req.id]}
+                              alt={`Foto da encomenda ${packageInfo.pickupCode}`}
+                              loading="lazy"
+                              className="w-full h-28 sm:h-24 object-cover rounded-md border"
+                            />
+                          ) : (
+                            <div className="w-full h-28 sm:h-24 rounded-md border bg-muted/40 flex items-center justify-center">
+                              <ImageOff className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Destinatário: </span>
+                            <strong>{req.package.resident?.full_name || "—"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Tipo: </span>
+                            <strong>{req.package.package_type?.name || "—"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Rastreio: </span>
+                            <strong className="font-mono">{req.package.tracking_code || "—"}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Situação: </span>
+                            <strong>{req.package.status}</strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Recebida em: </span>
+                            <strong>
+                              {format(new Date(req.package.received_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                            </strong>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Recebida por: </span>
+                            <strong>{req.package.received_by_name || "—"}</strong>
+                          </div>
+                          {req.package.picked_up_at && (
+                            <div className="sm:col-span-2">
+                              <span className="text-muted-foreground">Retirada: </span>
+                              <strong>
+                                {format(new Date(req.package.picked_up_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                                {req.package.picked_up_by_name ? ` por ${req.package.picked_up_by_name}` : ""}
+                              </strong>
+                            </div>
+                          )}
+                          {req.package.description && (
+                            <div className="sm:col-span-2">
+                              <span className="text-muted-foreground">Observações: </span>
+                              <span className="whitespace-pre-wrap">{req.package.description}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="w-4 h-4" />
                       Solicitado por: <strong>{nameByUserId[req.requested_by] || (req.requested_by_name && !req.requested_by_name.includes("@") ? req.requested_by_name : null) || "Porteiro"}</strong>
