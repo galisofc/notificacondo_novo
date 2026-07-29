@@ -46,6 +46,8 @@ interface PackageType {
 
 type RegistrationStep = "form" | "success";
 
+type SubmitStepStatus = "pending" | "loading" | "done" | "error";
+
 interface NotificationResult {
   sent: boolean;
   count: number;
@@ -76,6 +78,12 @@ export default function RegisterPackage() {
   const [selectedApartment, setSelectedApartment] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState<{
+    photo: SubmitStepStatus;
+    protocol: SubmitStepStatus;
+    notify: SubmitStepStatus;
+    notifyDetail?: string;
+  }>({ photo: "pending", protocol: "pending", notify: "pending" });
   const [registeredCode, setRegisteredCode] = useState("");
   const [notificationResult, setNotificationResult] = useState<NotificationResult | null>(null);
   const [targetResidents, setTargetResidents] = useState<Array<{ full_name: string; phone?: string }>>([]);
@@ -225,15 +233,9 @@ export default function RegisterPackage() {
     }
 
     setIsSubmitting(true);
+    setProgress({ photo: "loading", protocol: "pending", notify: "pending" });
 
     try {
-      // 0. Fetch porter's profile name
-      const { data: porterProfile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", user.id)
-        .single();
-
       // 1. Upload image to storage
       const pickupCode = generatePickupCode();
       const fileName = `${Date.now()}_${pickupCode}.jpg`;
@@ -248,18 +250,23 @@ export default function RegisterPackage() {
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: "image/jpeg" });
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("package-photos")
         .upload(fileName, blob, {
           contentType: "image/jpeg",
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        setProgress((p) => ({ ...p, photo: "error" }));
+        throw uploadError;
+      }
 
       // 2. Get public URL
       const { data: urlData } = supabase.storage
         .from("package-photos")
         .getPublicUrl(fileName);
+
+      setProgress((p) => ({ ...p, photo: "done", protocol: "loading" }));
 
       // 3. Fetch porter name for denormalization
       const { data: profileData } = await supabase
@@ -287,9 +294,14 @@ export default function RegisterPackage() {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        setProgress((p) => ({ ...p, protocol: "error" }));
+        throw insertError;
+      }
 
-      // 4. Send WhatsApp notification (non-blocking)
+      setProgress((p) => ({ ...p, protocol: "done", notify: "loading" }));
+
+      // 5. Send WhatsApp notification (non-blocking)
       let notifResult: NotificationResult = { sent: false, count: 0 };
       try {
         const { data: notifyData, error: notifyError } = await supabase.functions.invoke(
@@ -319,6 +331,17 @@ export default function RegisterPackage() {
         notifResult = { sent: false, count: 0, message: "Erro de conexão" };
       }
 
+      setProgress((p) => ({
+        ...p,
+        notify: notifResult.sent ? "done" : "error",
+        notifyDetail: notifResult.sent
+          ? `${notifResult.count} morador(es) notificado(s)`
+          : notifResult.message || "Notificação não enviada",
+      }));
+
+      // Give the user a moment to see the completed steps
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
       setNotificationResult(notifResult);
       setRegisteredCode(pickupCode);
       setStep("success");
@@ -331,6 +354,7 @@ export default function RegisterPackage() {
       });
     } catch (error) {
       console.error("Error registering package:", error);
+      await new Promise((resolve) => setTimeout(resolve, 700));
       toast({
         title: "Erro ao registrar",
         description: "Não foi possível registrar a encomenda. Tente novamente.",
@@ -834,20 +858,46 @@ export default function RegisterPackage() {
             <DialogDescription className="text-muted-foreground max-w-xs">
               Aguarde enquanto salvamos a foto, geramos o código de retirada e notificamos o morador.
             </DialogDescription>
-            <div className="mt-8 flex flex-col gap-2 w-full max-w-xs">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Enviando foto para o armazenamento seguro...</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Gerando protocolo de entrega...</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span>Notificando morador via WhatsApp...</span>
-              </div>
+            <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
+              {([
+                { key: "photo", label: "Enviando foto para o armazenamento seguro", done: "Foto enviada com sucesso", error: "Falha ao enviar a foto" },
+                { key: "protocol", label: "Gerando protocolo de entrega", done: "Protocolo gerado", error: "Falha ao gerar o protocolo" },
+                { key: "notify", label: "Notificando morador via WhatsApp", done: progress.notifyDetail || "Morador notificado", error: progress.notifyDetail || "Notificação não enviada" },
+              ] as const).map((stepItem) => {
+                const status = progress[stepItem.key];
+                return (
+                  <div
+                    key={stepItem.key}
+                    className={cn(
+                      "flex items-center gap-3 text-sm text-left transition-colors",
+                      status === "pending" && "text-muted-foreground/50",
+                      status === "loading" && "text-foreground font-medium",
+                      status === "done" && "text-emerald-600 dark:text-emerald-400",
+                      status === "error" && "text-destructive"
+                    )}
+                  >
+                    {status === "loading" && <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />}
+                    {status === "done" && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+                    {status === "error" && <AlertCircle className="w-4 h-4 shrink-0" />}
+                    {status === "pending" && (
+                      <span className="w-4 h-4 shrink-0 flex items-center justify-center">
+                        <span className="w-2 h-2 rounded-full bg-current" />
+                      </span>
+                    )}
+                    <span>
+                      {status === "done"
+                        ? stepItem.done
+                        : status === "error"
+                          ? stepItem.error
+                          : status === "loading"
+                            ? `${stepItem.label}...`
+                            : stepItem.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
+
           </div>
         </DialogContent>
       </Dialog>
