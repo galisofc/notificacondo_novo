@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Package, CheckCircle2, Loader2, MessageCircle, AlertCircle, MapPin, User, Phone, UserPlus, Check, ChevronsUpDown, Search, icons, QrCode } from "lucide-react";
+import { ArrowLeft, Package, CheckCircle2, Loader2, MessageCircle, AlertCircle, MapPin, User, Phone, UserPlus, Check, ChevronsUpDown, Search, icons, QrCode, Box } from "lucide-react";
 import SubscriptionGate from "@/components/sindico/SubscriptionGate";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,26 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MaskedInput } from "@/components/ui/masked-input";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { CameraCapture } from "@/components/packages/CameraCapture";
-import { BarcodeScanner } from "@/components/packages/BarcodeScanner";
-import { CondominiumBlockApartmentSelect } from "@/components/packages/CondominiumBlockApartmentSelect";
-import { generatePickupCode } from "@/lib/packageConstants";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 interface PackageType {
   id: string;
