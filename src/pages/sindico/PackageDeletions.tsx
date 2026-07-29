@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { getSignedPackagePhotoUrl, deletePackagePhoto } from "@/lib/packageStorage";
 
 type Status = "pendente" | "aprovada" | "rejeitada";
 
