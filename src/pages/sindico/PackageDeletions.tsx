@@ -344,6 +344,60 @@ export default function PackageDeletions() {
             <TabsTrigger value="rejeitada">Rejeitadas ({counts.rejeitada})</TabsTrigger>
           </TabsList>
 
+          <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-end">
+            <div className="flex-1 min-w-[140px] space-y-1.5">
+              <Label htmlFor="block-filter" className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5" />
+                Bloco
+              </Label>
+              <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+                <SelectTrigger id="block-filter" className="w-full">
+                  <SelectValue placeholder="Todos os blocos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os blocos</SelectItem>
+                  {blockOptions.map((block) => (
+                    <SelectItem key={block} value={block}>
+                      {block}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[140px] space-y-1.5">
+              <Label htmlFor="apartment-filter" className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5" />
+                Apartamento
+              </Label>
+              <Select value={selectedApartment} onValueChange={setSelectedApartment}>
+                <SelectTrigger id="apartment-filter" className="w-full">
+                  <SelectValue placeholder="Todos os apartamentos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os apartamentos</SelectItem>
+                  {apartmentOptions.map((apt) => (
+                    <SelectItem key={apt} value={apt}>
+                      {apt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {(selectedBlock || selectedApartment) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedBlock("");
+                  setSelectedApartment("");
+                }}
+                className="shrink-0"
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+
           <TabsContent value={tab} className="mt-4 space-y-3">
             {loading ? (
               <div className="flex items-center justify-center py-12 text-muted-foreground">
