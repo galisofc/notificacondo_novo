@@ -640,8 +640,8 @@ export default function PortariaOccurrences() {
                   )}
                 </div>
 
-                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                  <Label className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <div className="space-y-3 bg-muted/50 p-4 rounded-xl border border-border">
+                  <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-primary" />
                     Identificar solicitante (Unidade)?
                   </Label>
@@ -656,13 +656,13 @@ export default function PortariaOccurrences() {
                     }}
                     className="flex gap-4"
                   >
-                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center space-x-2 bg-card px-4 py-2 rounded-lg border border-border cursor-pointer hover:bg-secondary transition-colors">
                       <RadioGroupItem value="sim" id="identify-sim" />
-                      <Label htmlFor="identify-sim" className="cursor-pointer font-medium">Sim</Label>
+                      <Label htmlFor="identify-sim" className="cursor-pointer font-medium text-card-foreground">Sim</Label>
                     </div>
-                    <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center space-x-2 bg-card px-4 py-2 rounded-lg border border-border cursor-pointer hover:bg-secondary transition-colors">
                       <RadioGroupItem value="nao" id="identify-nao" />
-                      <Label htmlFor="identify-nao" className="cursor-pointer font-medium">Não</Label>
+                      <Label htmlFor="identify-nao" className="cursor-pointer font-medium text-card-foreground">Não</Label>
                     </div>
                   </RadioGroup>
                 </div>
