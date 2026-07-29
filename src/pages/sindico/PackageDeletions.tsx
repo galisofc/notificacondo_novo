@@ -192,7 +192,20 @@ export default function PackageDeletions() {
     };
   }, []);
 
-  const filtered = useMemo(() => items.filter((i) => i.status === tab), [items, tab]);
+  const filtered = useMemo(
+    () =>
+      items
+        .filter((i) => i.status === tab)
+        .filter((i) => {
+          const blockName = i.package?.block?.name ?? i.package_block_name ?? "";
+          const apartmentNumber = i.package?.apartment?.number ?? i.package_apartment_number ?? "";
+          const blockMatch = !selectedBlock || blockName === selectedBlock;
+          const aptMatch = !selectedApartment || apartmentNumber === selectedApartment;
+          return blockMatch && aptMatch;
+        }),
+    [items, tab, selectedBlock, selectedApartment]
+  );
+
   const counts = useMemo(
     () => ({
       pendente: items.filter((i) => i.status === "pendente").length,
@@ -201,6 +214,24 @@ export default function PackageDeletions() {
     }),
     [items]
   );
+
+  const blockOptions = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((i) => {
+      const blockName = i.package?.block?.name ?? i.package_block_name;
+      if (blockName) set.add(blockName);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+  }, [items]);
+
+  const apartmentOptions = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((i) => {
+      const apartmentNumber = i.package?.apartment?.number ?? i.package_apartment_number;
+      if (apartmentNumber) set.add(String(apartmentNumber));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR", { numeric: true }));
+  }, [items]);
 
   const reviewerName = user?.user_metadata?.full_name || user?.email || null;
 
