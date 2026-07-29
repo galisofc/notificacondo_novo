@@ -114,6 +114,7 @@ export default function PackageDeletions() {
   const [zoomedPhoto, setZoomedPhoto] = useState<string | null>(null);
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [selectedApartment, setSelectedApartment] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
 
   const fetchAll = async () => {
