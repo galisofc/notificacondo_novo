@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight as ChevronRightIcon, Megaphone, Package, PackagePlus, PackageCheck, Clock, Search, QrCode, Calendar, TrendingUp, FileText, BookOpen, Send, Trash2 } from "lucide-react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
+import BannerAcknowledgeModal from "@/components/porteiro/BannerAcknowledgeModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -248,6 +249,9 @@ export default function PorteiroDashboard() {
           </Button>
         </div>
 
+        {/* Modal de aviso com ciência do porteiro */}
+        <BannerAcknowledgeModal condominiumIds={condominiumIds} />
+
         {/* Banners do Condomínio */}
         <CondominiumBanners condominiumIds={condominiumIds} />
 
@@ -451,7 +455,16 @@ function CondominiumBanners({ condominiumIds }: { condominiumIds: string[] }) {
         className="rounded-lg p-4 flex items-start gap-3 animate-fade-in transition-all"
         style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
       >
-        <Megaphone className="w-5 h-5 shrink-0 mt-0.5" />
+        {banner.image_url ? (
+          <img
+            src={banner.image_url}
+            alt={banner.title}
+            className="w-16 h-16 rounded-md object-cover shrink-0"
+            loading="lazy"
+          />
+        ) : (
+          <Megaphone className="w-5 h-5 shrink-0 mt-0.5" />
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{banner.title}</p>
           <p className="text-sm mt-0.5 whitespace-pre-line">{banner.content}</p>
