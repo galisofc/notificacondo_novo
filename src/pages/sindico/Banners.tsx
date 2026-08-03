@@ -13,11 +13,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Plus, Pencil, Trash2, Eye, GripVertical, Megaphone } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, GripVertical, Megaphone, Upload, X, Loader2 } from "lucide-react";
 import SindicoBreadcrumbs from "@/components/sindico/SindicoBreadcrumbs";
 
 interface Banner {
   id: string;
+  image_url?: string | null;
+  show_as_modal?: boolean;
   condominium_id: string;
   title: string;
   content: string;
@@ -34,6 +36,8 @@ interface BannerForm {
   bg_color: string;
   text_color: string;
   is_active: boolean;
+  image_url: string | null;
+  show_as_modal: boolean;
 }
 
 const COLOR_PRESETS = [
@@ -53,6 +57,8 @@ const defaultForm: BannerForm = {
   bg_color: "#3b82f6",
   text_color: "#ffffff",
   is_active: true,
+  image_url: null,
+  show_as_modal: true,
 };
 
 export default function SindicoBanners() {
@@ -64,6 +70,39 @@ export default function SindicoBanners() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [form, setForm] = useState<BannerForm>(defaultForm);
+  const [uploading, setUploading] = useState(false);
+
+  // Faz upload da imagem para o bucket público "banners" e guarda a URL no form
+  const handleImageUpload = async (file: File | undefined) => {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Arquivo inválido", description: "Selecione uma imagem.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Imagem muito grande", description: "O limite é de 5MB.", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${selectedCondominium || "geral"}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("banners")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("banners").getPublicUrl(path);
+      setForm((prev) => ({ ...prev, image_url: data.publicUrl }));
+      toast({ title: "Imagem enviada!" });
+    } catch (error: any) {
+      toast({ title: "Erro ao enviar imagem", description: error.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Fetch condominiums
   const { data: condominiums = [] } = useQuery({
@@ -105,20 +144,22 @@ export default function SindicoBanners() {
     mutationFn: async () => {
       if (editingBanner) {
         const { error } = await supabase
-          .from("condominium_banners")
+          .from("condominium_banners" as any)
           .update({
             title: form.title,
             content: form.content,
             bg_color: form.bg_color,
             text_color: form.text_color,
             is_active: form.is_active,
+            image_url: form.image_url,
+            show_as_modal: form.show_as_modal,
             updated_at: new Date().toISOString(),
           })
           .eq("id", editingBanner.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("condominium_banners")
+          .from("condominium_banners" as any)
           .insert({
             condominium_id: selectedCondominium,
             title: form.title,
@@ -126,6 +167,8 @@ export default function SindicoBanners() {
             bg_color: form.bg_color,
             text_color: form.text_color,
             is_active: form.is_active,
+            image_url: form.image_url,
+            show_as_modal: form.show_as_modal,
             display_order: banners.length,
           });
         if (error) throw error;
@@ -181,6 +224,8 @@ export default function SindicoBanners() {
       bg_color: banner.bg_color,
       text_color: banner.text_color,
       is_active: banner.is_active,
+      image_url: banner.image_url ?? null,
+      show_as_modal: banner.show_as_modal ?? true,
     });
     setShowDialog(true);
   };
@@ -245,11 +290,21 @@ export default function SindicoBanners() {
                   <div className="flex items-start gap-4">
                     {/* Preview */}
                     <div
-                      className="flex-1 rounded-lg p-4 min-h-[60px]"
+                      className="flex-1 rounded-lg p-4 min-h-[60px] flex items-start gap-3"
                       style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
                     >
-                      <p className="font-semibold text-sm">{banner.title}</p>
-                      <p className="text-sm mt-1 whitespace-pre-line">{banner.content}</p>
+                      {banner.image_url && (
+                        <img
+                          src={banner.image_url}
+                          alt={banner.title}
+                          className="w-20 h-20 rounded-md object-cover shrink-0"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm">{banner.title}</p>
+                        <p className="text-sm mt-1 whitespace-pre-line">{banner.content}</p>
+                      </div>
                     </div>
                     {/* Actions */}
                     <div className="flex flex-col items-center gap-2 shrink-0">
@@ -262,6 +317,9 @@ export default function SindicoBanners() {
                       <Badge variant={banner.is_active ? "default" : "secondary"} className="text-xs">
                         {banner.is_active ? "Ativo" : "Inativo"}
                       </Badge>
+                      {banner.show_as_modal !== false && (
+                        <Badge variant="outline" className="text-xs">Modal</Badge>
+                      )}
                       <div className="flex gap-1 mt-1">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(banner)}>
                           <Pencil className="w-4 h-4" />
@@ -312,6 +370,45 @@ export default function SindicoBanners() {
                   rows={3}
                   maxLength={500}
                 />
+              </div>
+
+              {/* Imagem do banner */}
+              <div>
+                <Label>Imagem (opcional)</Label>
+                {form.image_url ? (
+                  <div className="relative mt-2 w-fit">
+                    <img
+                      src={form.image_url}
+                      alt="Imagem do banner"
+                      className="max-h-40 rounded-lg object-contain bg-muted"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-7 w-7 rounded-full"
+                      onClick={() => setForm({ ...form, image_url: null })}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
+                    {uploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {uploading ? "Enviando imagem..." : "Selecionar imagem (até 5MB)"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                    />
+                  </label>
+                )}
               </div>
 
               {/* Color presets */}
@@ -378,6 +475,13 @@ export default function SindicoBanners() {
                   className="rounded-lg p-4 mt-1"
                   style={{ backgroundColor: form.bg_color, color: form.text_color }}
                 >
+                  {form.image_url && (
+                    <img
+                      src={form.image_url}
+                      alt="Pré-visualização"
+                      className="mb-2 max-h-32 rounded-md object-contain"
+                    />
+                  )}
                   <p className="font-semibold text-sm">{form.title || "Título do banner"}</p>
                   <p className="text-sm mt-1">{form.content || "Mensagem do banner..."}</p>
                 </div>
@@ -390,12 +494,25 @@ export default function SindicoBanners() {
                 />
                 <Label>Banner ativo</Label>
               </div>
+
+              <div className="flex items-start gap-2">
+                <Switch
+                  checked={form.show_as_modal}
+                  onCheckedChange={(checked) => setForm({ ...form, show_as_modal: checked })}
+                />
+                <div>
+                  <Label>Exibir em modal no login da portaria</Label>
+                  <p className="text-xs text-muted-foreground">
+                    O porteiro precisa clicar em "Estou ciente"; depois disso o modal não aparece mais para ele.
+                  </p>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={closeDialog}>Cancelar</Button>
               <Button
                 onClick={() => saveMutation.mutate()}
-                disabled={!form.title.trim() || !form.content.trim() || saveMutation.isPending}
+                disabled={!form.title.trim() || !form.content.trim() || saveMutation.isPending || uploading}
               >
                 {saveMutation.isPending ? "Salvando..." : editingBanner ? "Salvar" : "Criar"}
               </Button>
