@@ -410,11 +410,12 @@ function CondominiumBanners({ condominiumIds }: { condominiumIds: string[] }) {
     queryKey: ["porteiro-banners", condominiumIds],
     queryFn: async () => {
       if (condominiumIds.length === 0) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("condominium_banners")
         .select("*")
         .in("condominium_id", condominiumIds)
         .eq("is_active", true)
+        .eq("show_as_modal", false)
         .order("display_order", { ascending: true });
       if (error) throw error;
       return data || [];
