@@ -129,21 +129,23 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
             </div>
           )}
           
-          <div
-            className="rounded-xl p-6 lg:p-10 shadow-md border border-white/10 flex flex-col gap-4"
-            style={{ backgroundColor: current.bg_color, color: current.text_color }}
-          >
-            {current.title && (
-              <h2 className="font-extrabold text-2xl lg:text-4xl tracking-tight leading-tight">
-                {current.title}
-              </h2>
-            )}
-            {current.content && (
-              <div className="text-lg lg:text-3xl leading-relaxed whitespace-pre-line opacity-90 font-medium">
-                {current.content}
-              </div>
-            )}
-          </div>
+          {!current.image_url && (
+            <div
+              className="rounded-xl p-6 lg:p-10 shadow-md border border-white/10 flex flex-col gap-4"
+              style={{ backgroundColor: current.bg_color, color: current.text_color }}
+            >
+              {current.title && (
+                <h2 className="font-extrabold text-2xl lg:text-4xl tracking-tight leading-tight">
+                  {current.title}
+                </h2>
+              )}
+              {current.content && (
+                <div className="text-lg lg:text-3xl leading-relaxed whitespace-pre-line opacity-90 font-medium">
+                  {current.content}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="pt-4 border-t mt-4">
