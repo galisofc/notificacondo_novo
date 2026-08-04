@@ -681,15 +681,22 @@ export default function SindicoBanners() {
                   className="rounded-lg p-4 mt-1"
                   style={{ backgroundColor: form.bg_color, color: form.text_color }}
                 >
-                  {form.image_url && (
-                    <img
-                      src={form.image_url}
-                      alt="Pré-visualização"
-                      className="mb-2 max-h-32 rounded-md object-contain"
-                    />
+                  {mode === "imagem" ? (
+                    form.image_url ? (
+                      <img
+                        src={form.image_url}
+                        alt="Pré-visualização"
+                        className="max-h-40 w-full rounded-md object-contain"
+                      />
+                    ) : (
+                      <p className="text-sm opacity-80">Selecione uma imagem para o aviso...</p>
+                    )
+                  ) : (
+                    <>
+                      <p className="font-semibold text-sm">{form.title || "Título do banner"}</p>
+                      <p className="text-sm mt-1">{form.content || "Mensagem do banner..."}</p>
+                    </>
                   )}
-                  <p className="font-semibold text-sm">{form.title || "Título do banner"}</p>
-                  <p className="text-sm mt-1">{form.content || "Mensagem do banner..."}</p>
                 </div>
               </div>
 
