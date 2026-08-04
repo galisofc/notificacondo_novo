@@ -97,12 +97,49 @@ function AcknowledgeList({ bannerId }: { bannerId: string }) {
     },
   });
 
+  const resetAllAcknowledgeMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any)
+        .from("banner_acknowledgments")
+        .delete()
+        .eq("banner_id", bannerId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banner-acknowledged-users", bannerId] });
+      toast({ title: "Ciências resetadas para todos!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao resetar ciências", description: error.message, variant: "destructive" });
+    },
+  });
+
   if (isLoading) return <div className="text-xs text-muted-foreground">Carregando cientes...</div>;
   if (cientes.length === 0) return <div className="text-xs text-muted-foreground">Ninguém ciente ainda.</div>;
 
   return (
     <div className="space-y-1">
-      <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Porteiros Cientes:</p>
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-[10px] font-bold uppercase text-muted-foreground">Porteiros Cientes ({cientes.length}):</p>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-5 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10 px-1 gap-1"
+          onClick={() => {
+            if (confirm("Deseja resetar a ciência de TODOS os porteiros para este banner? Ele voltará a aparecer para todos.")) {
+              resetAllAcknowledgeMutation.mutate();
+            }
+          }}
+          disabled={resetAllAcknowledgeMutation.isPending}
+        >
+          {resetAllAcknowledgeMutation.isPending ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : (
+            <Trash2 className="w-3 h-3" />
+          )}
+          Resetar Todos
+        </Button>
+      </div>
       <div className="flex flex-wrap gap-1">
         {cientes.map((item) => (
           <Badge key={item.user_id} variant="secondary" className="text-[10px] pr-1 gap-1 h-5">
