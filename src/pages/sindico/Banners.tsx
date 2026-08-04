@@ -224,6 +224,8 @@ export default function SindicoBanners() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [form, setForm] = useState<BannerForm>(defaultForm);
   const [uploading, setUploading] = useState(false);
+  // Tipo de aviso escolhido pelo síndico: "texto" (título + mensagem) ou "imagem" (somente imagem)
+  const [mode, setMode] = useState<"texto" | "imagem">("texto");
 
   // Faz upload da imagem para o bucket público "banners" e guarda a URL no form
   const handleImageUpload = async (file: File | undefined) => {
