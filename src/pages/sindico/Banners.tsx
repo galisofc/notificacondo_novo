@@ -67,7 +67,7 @@ function AcknowledgeList({ bannerId }: { bannerId: string }) {
   const { data: cientes = [], isLoading } = useQuery({
     queryKey: ["banner-acknowledged-users", bannerId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("banner_acknowledgments")
         .select(`
           user_id,
@@ -81,7 +81,7 @@ function AcknowledgeList({ bannerId }: { bannerId: string }) {
 
   const deleteAcknowledgeMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("banner_acknowledgments")
         .delete()
         .eq("banner_id", bannerId)
