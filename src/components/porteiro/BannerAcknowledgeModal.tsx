@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface BannerRecord {
   id: string;
@@ -26,6 +27,7 @@ interface BannerAcknowledgeModalProps {
  */
 export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowledgeModalProps) {
   const { user } = useAuth();
+  const { profileInfo } = useUserRole();
   const queryClient = useQueryClient();
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
@@ -110,7 +112,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl lg:text-3xl font-bold py-2">
             <Megaphone className="w-8 h-8 text-primary animate-bounce" />
-            Aviso da Portaria
+            {profileInfo?.full_name ? `Aviso para ${profileInfo.full_name}` : "Aviso da Portaria"}
             {pending.length > 1 && (
               <span className="text-sm font-normal text-muted-foreground ml-2">
                 ({index + 1} de {pending.length})
