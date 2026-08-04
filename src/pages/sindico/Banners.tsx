@@ -368,6 +368,7 @@ export default function SindicoBanners() {
   const openCreate = () => {
     setEditingBanner(null);
     setForm(defaultForm);
+    setMode("texto");
     setShowDialog(true);
   };
 
@@ -382,6 +383,7 @@ export default function SindicoBanners() {
       image_url: banner.image_url ?? null,
       show_as_modal: banner.show_as_modal ?? true,
     });
+    setMode(banner.image_url ? "imagem" : "texto");
     setShowDialog(true);
   };
 
@@ -389,7 +391,15 @@ export default function SindicoBanners() {
     setShowDialog(false);
     setEditingBanner(null);
     setForm(defaultForm);
+    setMode("texto");
   };
+
+  // Validação depende do tipo escolhido
+  const canSave =
+    mode === "imagem"
+      ? !!form.image_url && !!form.title.trim()
+      : !!form.title.trim() && !!form.content.trim();
+
 
   return (
     <DashboardLayout>
