@@ -30,11 +30,11 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  const { data: banners = [] } = useQuery({
+  const { data: banners = [], refetch: refetchBanners } = useQuery({
     queryKey: ["banner-modal-banners", condominiumIds],
     queryFn: async () => {
       if (condominiumIds.length === 0) return [] as BannerRecord[];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("condominium_banners")
         .select("id, title, content, bg_color, text_color, image_url, display_order, show_as_modal")
         .in("condominium_id", condominiumIds)
@@ -45,14 +45,14 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
       return (data || []) as BannerRecord[];
     },
     enabled: condominiumIds.length > 0 && !!user?.id,
-    staleTime: 1000 * 60,
+    staleTime: 0, // Garantir que sempre busque a versão mais recente ao montar
   });
 
-  const { data: acknowledgedIds = [] } = useQuery({
+  const { data: acknowledgedIds = [], refetch: refetchAcknowledge } = useQuery({
     queryKey: ["banner-acknowledgments", user?.id],
     queryFn: async () => {
       if (!user?.id) return [] as string[];
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("banner_acknowledgments")
         .select("banner_id")
         .eq("user_id", user.id);
@@ -60,7 +60,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
       return ((data || []) as { banner_id: string }[]).map((row) => row.banner_id);
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60,
+    staleTime: 0,
   });
 
   const pending = useMemo(
@@ -75,14 +75,16 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
   const acknowledgeMutation = useMutation({
     mutationFn: async (bannerId: string) => {
       if (!user?.id) throw new Error("Usuário não autenticado");
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("banner_acknowledgments")
         .insert({ banner_id: bannerId, user_id: user.id });
-      // 23505 = já existe ciência registrada, tratamos como sucesso
       if (error && error.code !== "23505") throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banner-acknowledgments", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["banner-modal-banners"] });
+      refetchAcknowledge();
+      refetchBanners();
     },
   });
 
