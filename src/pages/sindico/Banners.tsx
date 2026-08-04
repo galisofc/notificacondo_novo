@@ -518,8 +518,37 @@ export default function SindicoBanners() {
               <DialogTitle>{editingBanner ? "Editar Banner" : "Novo Banner"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pr-2">
+              {/* Tipo de aviso: texto ou imagem */}
               <div>
-                <Label>Título</Label>
+                <Label>Tipo de aviso</Label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setMode("texto")}
+                    className={`rounded-lg border p-3 text-sm font-medium transition-colors ${
+                      mode === "texto"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    Aviso em texto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("imagem")}
+                    className={`rounded-lg border p-3 text-sm font-medium transition-colors ${
+                      mode === "imagem"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    Aviso em imagem
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label>Título {mode === "imagem" && <span className="text-xs text-muted-foreground">(uso interno)</span>}</Label>
                 <Input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -527,60 +556,66 @@ export default function SindicoBanners() {
                   maxLength={100}
                 />
               </div>
-              <div>
-                <Label>Mensagem</Label>
-                <Textarea
-                  value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  placeholder="Escreva a mensagem do banner..."
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
+
+              {mode === "texto" && (
+                <div>
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    value={form.content}
+                    onChange={(e) => setForm({ ...form, content: e.target.value })}
+                    placeholder="Escreva a mensagem do banner..."
+                    rows={3}
+                    maxLength={500}
+                  />
+                </div>
+              )}
 
               {/* Imagem do banner */}
-              <div>
-                <Label>Imagem (opcional)</Label>
-                {form.image_url ? (
-                  <div className="space-y-2 mt-2">
-                    <div className="relative w-fit">
-                      <img
-                        src={form.image_url}
-                        alt="Imagem do banner"
-                        className="max-h-40 rounded-lg object-contain bg-muted"
-                      />
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg"
-                        onClick={() => setForm({ ...form, image_url: null })}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                      <p className="text-xs text-blue-600 font-medium bg-blue-50 p-2 rounded border border-blue-100">
-                        Nota: Quando houver imagem, apenas a imagem será exibida no Modal da Portaria para maior clareza visual.
+              {mode === "imagem" && (
+                <div>
+                  <Label>Imagem do aviso</Label>
+                  {form.image_url ? (
+                    <div className="space-y-2 mt-2">
+                      <div className="relative w-fit">
+                        <img
+                          src={form.image_url}
+                          alt="Imagem do banner"
+                          className="max-h-40 rounded-lg object-contain bg-muted"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg"
+                          onClick={() => setForm({ ...form, image_url: null })}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border">
+                        Somente a imagem será exibida para o porteiro (sem texto).
                       </p>
-                  </div>
-                ) : (
-                  <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
-                    {uploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Upload className="w-4 h-4" />
-                    )}
-                    {uploading ? "Enviando imagem..." : "Selecionar imagem (até 5MB)"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={(e) => handleImageUpload(e.target.files?.[0])}
-                    />
-                  </label>
-                )}
-              </div>
+                    </div>
+                  ) : (
+                    <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {uploading ? "Enviando imagem..." : "Selecionar imagem (até 5MB)"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploading}
+                        onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
+
 
               {/* Color presets */}
               <div>
