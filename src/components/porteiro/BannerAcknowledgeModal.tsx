@@ -75,7 +75,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
   const acknowledgeMutation = useMutation({
     mutationFn: async (bannerId: string) => {
       if (!user?.id) throw new Error("Usuário não autenticado");
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("banner_acknowledgments")
         .insert({ banner_id: bannerId, user_id: user.id });
       if (error && error.code !== "23505") throw error;
