@@ -497,20 +497,25 @@ export default function SindicoBanners() {
                           <Megaphone className="w-6 h-6" />
                         </div>
                       )}
-                      <div className="flex flex-col min-w-0">
-                        <h3 className="font-bold text-lg leading-snug">{banner.title}</h3>
-                        {banner.content && (
-                          <p className="text-sm opacity-80 line-clamp-2 mt-0.5">{banner.content}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-[10px] bg-white/10 border-white/20 text-inherit uppercase tracking-wider h-5">
-                            {banner.image_url ? "Imagem" : "Texto"}
-                          </Badge>
-                          {banner.show_as_modal && (
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-bold text-lg leading-snug truncate">{banner.title}</h3>
+                          <div className="flex items-center gap-2 shrink-0">
                             <Badge variant="outline" className="text-[10px] bg-white/10 border-white/20 text-inherit uppercase tracking-wider h-5">
-                              Modal
+                              {banner.image_url ? "Imagem" : "Texto"}
                             </Badge>
-                          )}
+                            {banner.show_as_modal && (
+                              <Badge variant="outline" className="text-[10px] bg-white/10 border-white/20 text-inherit uppercase tracking-wider h-5">
+                                Modal
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {banner.content && (
+                          <p className="text-sm opacity-80 line-clamp-2 mt-1">{banner.content}</p>
+                        )}
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <AcknowledgeList bannerId={banner.id} condominiumId={banner.condominium_id} />
                         </div>
                       </div>
                     </div>
@@ -545,9 +550,7 @@ export default function SindicoBanners() {
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
-                      <div className="mt-2 border-t pt-2 w-full">
-                        <AcknowledgeList bannerId={banner.id} condominiumId={banner.condominium_id} />
-                      </div>
+                      
                     </div>
                   </div>
                 </CardContent>
