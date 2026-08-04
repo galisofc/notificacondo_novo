@@ -153,6 +153,7 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
           filter: `banner_id=eq.${bannerId}`
         },
         () => {
+          queryClient.invalidateQueries({ queryKey: ["banner-acknowledged-users", bannerId] });
           refetch();
         }
       )
