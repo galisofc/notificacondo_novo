@@ -34,7 +34,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
     queryKey: ["banner-modal-banners", condominiumIds],
     queryFn: async () => {
       if (condominiumIds.length === 0) return [] as BannerRecord[];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("condominium_banners")
         .select("id, title, content, bg_color, text_color, image_url, display_order, show_as_modal")
         .in("condominium_id", condominiumIds)
@@ -45,14 +45,14 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
       return (data || []) as BannerRecord[];
     },
     enabled: condominiumIds.length > 0 && !!user?.id,
-    staleTime: 0, // Garantir que sempre busque a versão mais recente ao montar
+    staleTime: 0, 
   });
 
   const { data: acknowledgedIds = [], refetch: refetchAcknowledge } = useQuery({
     queryKey: ["banner-acknowledgments", user?.id],
     queryFn: async () => {
       if (!user?.id) return [] as string[];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("banner_acknowledgments")
         .select("banner_id")
         .eq("user_id", user.id);
