@@ -117,26 +117,29 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6 py-2">
           {current.image_url && (
-            <img
-              src={current.image_url}
-              alt={current.title}
-              className="w-full rounded-xl object-contain max-h-[500px] bg-muted shadow-sm border"
-              loading="lazy"
-            />
+            <div className="w-full overflow-hidden rounded-xl border bg-muted/30 shadow-sm">
+              <img
+                src={current.image_url}
+                alt={current.title || "Imagem do aviso"}
+                className="w-full h-auto object-contain max-h-[450px] mx-auto transition-all"
+                loading="lazy"
+              />
+            </div>
           )}
+          
           <div
-            className="rounded-xl p-6 lg:p-8 shadow-inner border border-white/10"
+            className="rounded-xl p-6 lg:p-10 shadow-md border border-white/10 flex flex-col gap-4"
             style={{ backgroundColor: current.bg_color, color: current.text_color }}
           >
             {current.title && (
-              <h2 className="font-bold text-xl lg:text-3xl mb-4 leading-tight">
+              <h2 className="font-extrabold text-2xl lg:text-4xl tracking-tight leading-tight">
                 {current.title}
               </h2>
             )}
             {current.content && (
-              <div className="text-lg lg:text-2xl leading-relaxed whitespace-pre-line opacity-95">
+              <div className="text-lg lg:text-3xl leading-relaxed whitespace-pre-line opacity-90 font-medium">
                 {current.content}
               </div>
             )}
