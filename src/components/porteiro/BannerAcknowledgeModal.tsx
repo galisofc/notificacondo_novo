@@ -101,52 +101,57 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
   return (
     <Dialog open onOpenChange={() => undefined}>
       <DialogContent
-        className="max-w-lg [&>button]:hidden"
+        className="max-w-2xl sm:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto [&>button]:hidden"
         onPointerDownOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Megaphone className="w-5 h-5" />
+          <DialogTitle className="flex items-center gap-2 text-2xl lg:text-3xl font-bold py-2">
+            <Megaphone className="w-8 h-8 text-primary animate-bounce" />
             Aviso da Portaria
             {pending.length > 1 && (
-              <span className="text-xs font-normal text-muted-foreground">
-                ({index + 1}/{pending.length})
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({index + 1} de {pending.length})
               </span>
             )}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           {current.image_url && (
             <img
               src={current.image_url}
               alt={current.title}
-              className="w-full rounded-lg object-contain max-h-[320px] bg-muted"
+              className="w-full rounded-xl object-contain max-h-[500px] bg-muted shadow-sm border"
               loading="lazy"
             />
           )}
           <div
-            className="rounded-lg p-4"
+            className="rounded-xl p-6 lg:p-8 shadow-inner border border-white/10"
             style={{ backgroundColor: current.bg_color, color: current.text_color }}
           >
-            <p className="font-semibold text-sm">{current.title}</p>
-            <p className="text-sm mt-1 whitespace-pre-line">{current.content}</p>
+            <h2 className="font-bold text-xl lg:text-3xl mb-4 leading-tight">
+              {current.title}
+            </h2>
+            <div className="text-lg lg:text-2xl leading-relaxed whitespace-pre-line opacity-95">
+              {current.content}
+            </div>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="pt-4 border-t mt-4">
           <Button
             onClick={handleAcknowledge}
             disabled={acknowledgeMutation.isPending}
-            className="gap-2 w-full sm:w-auto"
+            className="gap-3 w-full py-6 text-xl lg:text-2xl h-auto font-bold transition-all hover:scale-[1.02]"
+            size="lg"
           >
             {acknowledgeMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-6 h-6 animate-spin" />
             ) : (
-              <Check className="w-4 h-4" />
+              <Check className="w-6 h-6 stroke-[3]" />
             )}
-            Estou ciente
+            ESTOU CIENTE E LI TODAS AS INFORMAÇÕES
           </Button>
         </DialogFooter>
       </DialogContent>
