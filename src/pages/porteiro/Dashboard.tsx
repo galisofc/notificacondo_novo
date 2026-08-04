@@ -39,7 +39,7 @@ export default function PorteiroDashboard() {
   const navigate = useNavigate();
   const { porteiroCondominiums, profileInfo } = useUserRole();
   const condominiumIds = useMemo(() => porteiroCondominiums.map(c => c.id), [porteiroCondominiums]);
-  const userName = profileInfo?.full_name?.split(" ")[0] || "";
+  // userName removal logic - profileInfo is already available from useUserRole
   const [stats, setStats] = useState<Stats>({
     registeredToday: 0,
     totalPending: 0,
@@ -237,7 +237,7 @@ export default function PorteiroDashboard() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">
-              {getGreeting()}, {userName || "Porteiro"}! 👋
+              {getGreeting()}, {profileInfo?.full_name || "Porteiro"}! 👋
             </h1>
             <p className="text-muted-foreground">
               Gerencie as encomendas do condomínio
