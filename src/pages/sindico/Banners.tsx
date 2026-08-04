@@ -141,7 +141,9 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[10px] font-bold uppercase text-muted-foreground">Porteiros Cientes ({cientes.length}):</p>
+        <p className="text-[10px] font-bold uppercase text-muted-foreground">
+          Lido por {cientes.length} de {totalPorteiros > 0 ? totalPorteiros : cientes.length} porteiros:
+        </p>
         <Button 
           variant="ghost" 
           size="sm" 
