@@ -462,7 +462,7 @@ export default function SindicoBanners() {
                         </Button>
                       </div>
                       <div className="mt-2 border-t pt-2 w-full">
-                        <AcknowledgeList bannerId={banner.id} />
+                        <AcknowledgeList bannerId={banner.id} condominiumId={banner.condominium_id} />
                       </div>
                     </div>
                   </div>
