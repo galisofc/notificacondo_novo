@@ -224,6 +224,8 @@ export default function SindicoBanners() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [form, setForm] = useState<BannerForm>(defaultForm);
   const [uploading, setUploading] = useState(false);
+  // Tipo de aviso escolhido pelo síndico: "texto" (título + mensagem) ou "imagem" (somente imagem)
+  const [mode, setMode] = useState<"texto" | "imagem">("texto");
 
   // Faz upload da imagem para o bucket público "banners" e guarda a URL no form
   const handleImageUpload = async (file: File | undefined) => {
@@ -295,19 +297,23 @@ export default function SindicoBanners() {
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Normaliza o payload conforme o tipo escolhido:
+      // - "imagem": grava a imagem e limpa a mensagem de texto
+      // - "texto": grava a mensagem e limpa a imagem
+      const payload = {
+        title: form.title,
+        content: mode === "imagem" ? "" : form.content,
+        bg_color: form.bg_color,
+        text_color: form.text_color,
+        is_active: form.is_active,
+        image_url: mode === "imagem" ? form.image_url : null,
+        show_as_modal: form.show_as_modal,
+      };
+
       if (editingBanner) {
         const { error } = await supabase
           .from("condominium_banners" as any)
-          .update({
-            title: form.title,
-            content: form.content,
-            bg_color: form.bg_color,
-            text_color: form.text_color,
-            is_active: form.is_active,
-            image_url: form.image_url,
-            show_as_modal: form.show_as_modal,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...payload, updated_at: new Date().toISOString() })
           .eq("id", editingBanner.id);
         if (error) throw error;
       } else {
@@ -315,13 +321,7 @@ export default function SindicoBanners() {
           .from("condominium_banners" as any)
           .insert({
             condominium_id: selectedCondominium,
-            title: form.title,
-            content: form.content,
-            bg_color: form.bg_color,
-            text_color: form.text_color,
-            is_active: form.is_active,
-            image_url: form.image_url,
-            show_as_modal: form.show_as_modal,
+            ...payload,
             display_order: banners.length,
           });
         if (error) throw error;
@@ -366,6 +366,7 @@ export default function SindicoBanners() {
   const openCreate = () => {
     setEditingBanner(null);
     setForm(defaultForm);
+    setMode("texto");
     setShowDialog(true);
   };
 
@@ -380,6 +381,7 @@ export default function SindicoBanners() {
       image_url: banner.image_url ?? null,
       show_as_modal: banner.show_as_modal ?? true,
     });
+    setMode(banner.image_url ? "imagem" : "texto");
     setShowDialog(true);
   };
 
@@ -387,7 +389,15 @@ export default function SindicoBanners() {
     setShowDialog(false);
     setEditingBanner(null);
     setForm(defaultForm);
+    setMode("texto");
   };
+
+  // Validação depende do tipo escolhido
+  const canSave =
+    mode === "imagem"
+      ? !!form.image_url && !!form.title.trim()
+      : !!form.title.trim() && !!form.content.trim();
+
 
   return (
     <DashboardLayout>
@@ -508,8 +518,37 @@ export default function SindicoBanners() {
               <DialogTitle>{editingBanner ? "Editar Banner" : "Novo Banner"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pr-2">
+              {/* Tipo de aviso: texto ou imagem */}
               <div>
-                <Label>Título</Label>
+                <Label>Tipo de aviso</Label>
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setMode("texto")}
+                    className={`rounded-lg border p-3 text-sm font-medium transition-colors ${
+                      mode === "texto"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    Aviso em texto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("imagem")}
+                    className={`rounded-lg border p-3 text-sm font-medium transition-colors ${
+                      mode === "imagem"
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                    }`}
+                  >
+                    Aviso em imagem
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label>Título {mode === "imagem" && <span className="text-xs text-muted-foreground">(uso interno)</span>}</Label>
                 <Input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
@@ -517,60 +556,66 @@ export default function SindicoBanners() {
                   maxLength={100}
                 />
               </div>
-              <div>
-                <Label>Mensagem</Label>
-                <Textarea
-                  value={form.content}
-                  onChange={(e) => setForm({ ...form, content: e.target.value })}
-                  placeholder="Escreva a mensagem do banner..."
-                  rows={3}
-                  maxLength={500}
-                />
-              </div>
+
+              {mode === "texto" && (
+                <div>
+                  <Label>Mensagem</Label>
+                  <Textarea
+                    value={form.content}
+                    onChange={(e) => setForm({ ...form, content: e.target.value })}
+                    placeholder="Escreva a mensagem do banner..."
+                    rows={3}
+                    maxLength={500}
+                  />
+                </div>
+              )}
 
               {/* Imagem do banner */}
-              <div>
-                <Label>Imagem (opcional)</Label>
-                {form.image_url ? (
-                  <div className="space-y-2 mt-2">
-                    <div className="relative w-fit">
-                      <img
-                        src={form.image_url}
-                        alt="Imagem do banner"
-                        className="max-h-40 rounded-lg object-contain bg-muted"
-                      />
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg"
-                        onClick={() => setForm({ ...form, image_url: null })}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                      <p className="text-xs text-blue-600 font-medium bg-blue-50 p-2 rounded border border-blue-100">
-                        Nota: Quando houver imagem, apenas a imagem será exibida no Modal da Portaria para maior clareza visual.
+              {mode === "imagem" && (
+                <div>
+                  <Label>Imagem do aviso</Label>
+                  {form.image_url ? (
+                    <div className="space-y-2 mt-2">
+                      <div className="relative w-fit">
+                        <img
+                          src={form.image_url}
+                          alt="Imagem do banner"
+                          className="max-h-40 rounded-lg object-contain bg-muted"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg"
+                          onClick={() => setForm({ ...form, image_url: null })}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border">
+                        Somente a imagem será exibida para o porteiro (sem texto).
                       </p>
-                  </div>
-                ) : (
-                  <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
-                    {uploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Upload className="w-4 h-4" />
-                    )}
-                    {uploading ? "Enviando imagem..." : "Selecionar imagem (até 5MB)"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={(e) => handleImageUpload(e.target.files?.[0])}
-                    />
-                  </label>
-                )}
-              </div>
+                    </div>
+                  ) : (
+                    <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      {uploading ? "Enviando imagem..." : "Selecionar imagem (até 5MB)"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploading}
+                        onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
+
 
               {/* Color presets */}
               <div>
@@ -636,15 +681,22 @@ export default function SindicoBanners() {
                   className="rounded-lg p-4 mt-1"
                   style={{ backgroundColor: form.bg_color, color: form.text_color }}
                 >
-                  {form.image_url && (
-                    <img
-                      src={form.image_url}
-                      alt="Pré-visualização"
-                      className="mb-2 max-h-32 rounded-md object-contain"
-                    />
+                  {mode === "imagem" ? (
+                    form.image_url ? (
+                      <img
+                        src={form.image_url}
+                        alt="Pré-visualização"
+                        className="max-h-40 w-full rounded-md object-contain"
+                      />
+                    ) : (
+                      <p className="text-sm opacity-80">Selecione uma imagem para o aviso...</p>
+                    )
+                  ) : (
+                    <>
+                      <p className="font-semibold text-sm">{form.title || "Título do banner"}</p>
+                      <p className="text-sm mt-1">{form.content || "Mensagem do banner..."}</p>
+                    </>
                   )}
-                  <p className="font-semibold text-sm">{form.title || "Título do banner"}</p>
-                  <p className="text-sm mt-1">{form.content || "Mensagem do banner..."}</p>
                 </div>
               </div>
 
@@ -673,7 +725,7 @@ export default function SindicoBanners() {
               <Button variant="outline" onClick={closeDialog}>Cancelar</Button>
               <Button
                 onClick={() => saveMutation.mutate()}
-                disabled={!form.title.trim() || !form.content.trim() || saveMutation.isPending || uploading}
+                disabled={!canSave || saveMutation.isPending || uploading}
               >
                 {saveMutation.isPending ? "Salvando..." : editingBanner ? "Salvar" : "Criar"}
               </Button>
