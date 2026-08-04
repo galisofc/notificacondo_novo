@@ -297,19 +297,23 @@ export default function SindicoBanners() {
   // Create/Update mutation
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Normaliza o payload conforme o tipo escolhido:
+      // - "imagem": grava a imagem e limpa a mensagem de texto
+      // - "texto": grava a mensagem e limpa a imagem
+      const payload = {
+        title: form.title,
+        content: mode === "imagem" ? "" : form.content,
+        bg_color: form.bg_color,
+        text_color: form.text_color,
+        is_active: form.is_active,
+        image_url: mode === "imagem" ? form.image_url : null,
+        show_as_modal: form.show_as_modal,
+      };
+
       if (editingBanner) {
         const { error } = await supabase
           .from("condominium_banners" as any)
-          .update({
-            title: form.title,
-            content: form.content,
-            bg_color: form.bg_color,
-            text_color: form.text_color,
-            is_active: form.is_active,
-            image_url: form.image_url,
-            show_as_modal: form.show_as_modal,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...payload, updated_at: new Date().toISOString() })
           .eq("id", editingBanner.id);
         if (error) throw error;
       } else {
@@ -317,13 +321,7 @@ export default function SindicoBanners() {
           .from("condominium_banners" as any)
           .insert({
             condominium_id: selectedCondominium,
-            title: form.title,
-            content: form.content,
-            bg_color: form.bg_color,
-            text_color: form.text_color,
-            is_active: form.is_active,
-            image_url: form.image_url,
-            show_as_modal: form.show_as_modal,
+            ...payload,
             display_order: banners.length,
           });
         if (error) throw error;
