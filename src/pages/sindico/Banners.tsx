@@ -393,9 +393,9 @@ export default function SindicoBanners() {
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
-                    <p className="text-xs text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-100">
-                      Atenção: Se houver uma imagem, o título e a descrição <strong>serão exibidos</strong> abaixo dela no modal.
-                    </p>
+                      <p className="text-xs text-blue-600 font-medium bg-blue-50 p-2 rounded border border-blue-100">
+                        Nota: Quando houver imagem, apenas a imagem será exibida no Modal da Portaria para maior clareza visual.
+                      </p>
                   </div>
                 ) : (
                   <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
