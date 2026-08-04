@@ -82,7 +82,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
         .insert({ 
           banner_id: bannerId, 
           user_id: user.id,
-          full_name: profileInfo?.full_name || null 
+          full_name: profileInfo?.full_name || (role === 'porteiro' ? 'Porteiro' : null) 
         });
       if (error && error.code !== "23505") throw error;
     },
