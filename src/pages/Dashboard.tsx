@@ -340,32 +340,6 @@ const Dashboard = () => {
     },
   ];
 
-  const quickActions = [
-    {
-      icon: Building2,
-      label: "Gerenciar Condomínios",
-      description: "Cadastrar e editar condomínios",
-      action: () => navigate("/condominiums"),
-    },
-    {
-      icon: AlertTriangle,
-      label: "Nova Ocorrência",
-      description: "Registrar uma nova ocorrência",
-      action: () => navigate("/occurrences"),
-    },
-    {
-      icon: Shield,
-      label: "Analisar Defesas",
-      description: `${stats.pendingDefenses} defesa${stats.pendingDefenses !== 1 ? "s" : ""} pendente${stats.pendingDefenses !== 1 ? "s" : ""}`,
-      action: () => navigate("/defenses"),
-    },
-    {
-      icon: Package,
-      label: "Encomendas",
-      description: "Estatísticas e histórico de encomendas",
-      action: () => navigate("/sindico/packages"),
-    },
-  ];
 
   return (
     <DashboardLayout>
