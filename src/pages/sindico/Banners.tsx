@@ -791,6 +791,28 @@ export default function SindicoBanners() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Modal de visualização ampliada da imagem do banner */}
+        <Dialog open={!!zoomImage} onOpenChange={(open) => !open && setZoomImage(null)}>
+          <DialogContent className="max-w-[95vw] w-fit p-0 overflow-hidden border-none bg-transparent shadow-none [&>button]:hidden">
+            <div className="relative flex items-center justify-center">
+              <img
+                src={zoomImage || ""}
+                alt="Visualização ampliada do banner"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              />
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute top-3 right-3 rounded-full shadow-lg"
+                onClick={() => setZoomImage(null)}
+                aria-label="Fechar visualização"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
