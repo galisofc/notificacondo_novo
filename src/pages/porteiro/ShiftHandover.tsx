@@ -280,7 +280,7 @@ export default function ShiftHandover() {
       const itemsNotOk = checklistItems.filter((i) => !i.is_ok);
       const hasIssues = itemsNotOk.length > 0;
       
-      let text = `EU QRA ${porterName || "Porteiro"} PASSANDO O QTH PARA QRA ${incomingPorterName}`;
+      let text = `EU QRA ${porterName || "Colaborador"} PASSANDO O QTH PARA QRA ${incomingPorterName}`;
       text += hasIssues ? " COM AS SEGUINTES OBSERVAÇÕES:" : " SEM NOVIDADES.";
       text += "\n\n📋 CHECKLIST:";
       

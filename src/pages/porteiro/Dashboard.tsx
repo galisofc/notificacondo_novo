@@ -612,7 +612,7 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
       const { error } = await supabase.from("porter_messages").insert({
         condominium_id: condominiumIds[0],
         author_id: user.id,
-        author_name: profileInfo?.full_name || "Porteiro",
+        author_name: profileInfo?.full_name || "Colaborador",
         content: newMessage.trim(),
       });
       if (error) throw error;
@@ -670,7 +670,7 @@ function PorterMessageBook({ condominiumIds }: { condominiumIds: string[] }) {
               const profile = authorProfiles[msg.author_id];
               const roles = authorRoles[msg.author_id] || [];
               const isSindico = roles.includes("sindico");
-              const baseName = profile?.full_name || msg.author_name || "Porteiro";
+              const baseName = profile?.full_name || msg.author_name || "Colaborador";
               const displayName = isSindico ? `Síndico - ${baseName}` : baseName;
               const avatarUrl = profile?.avatar_url;
               return (
