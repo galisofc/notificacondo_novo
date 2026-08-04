@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -136,6 +136,28 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
       toast({ title: "Erro ao resetar ciências", description: error.message, variant: "destructive" });
     },
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`banner-acks-${bannerId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'banner_acknowledgments',
+          filter: `banner_id=eq.${bannerId}`
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [bannerId, refetch]);
 
   if (isLoading) return <div className="text-xs text-muted-foreground">Carregando cientes...</div>;
   if (cientes.length === 0) return <div className="text-xs text-muted-foreground">Ninguém ciente ainda.</div>;
