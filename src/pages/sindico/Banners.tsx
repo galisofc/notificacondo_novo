@@ -497,12 +497,21 @@ export default function SindicoBanners() {
                           <Megaphone className="w-6 h-6" />
                         </div>
                       )}
-                          loading="lazy"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm">{banner.title}</p>
-                        <p className="text-sm mt-1 whitespace-pre-line">{banner.content}</p>
+                      <div className="flex flex-col min-w-0">
+                        <h3 className="font-bold text-lg leading-snug">{banner.title}</h3>
+                        {banner.content && (
+                          <p className="text-sm opacity-80 line-clamp-2 mt-0.5">{banner.content}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline" className="text-[10px] bg-white/10 border-white/20 text-inherit uppercase tracking-wider h-5">
+                            {banner.image_url ? "Imagem" : "Texto"}
+                          </Badge>
+                          {banner.show_as_modal && (
+                            <Badge variant="outline" className="text-[10px] bg-white/10 border-white/20 text-inherit uppercase tracking-wider h-5">
+                              Modal
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     {/* Actions */}
