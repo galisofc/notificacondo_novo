@@ -456,19 +456,27 @@ function CondominiumBanners({ condominiumIds }: { condominiumIds: string[] }) {
         style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
       >
         {banner.image_url ? (
-          <img
-            src={banner.image_url}
-            alt={banner.title}
-            className="w-16 h-16 rounded-md object-cover shrink-0"
-            loading="lazy"
-          />
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <img
+              src={banner.image_url}
+              alt={banner.title}
+              className="w-full sm:w-24 h-24 rounded-md object-cover shrink-0"
+              loading="lazy"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-base">{banner.title}</p>
+              <p className="text-sm mt-1 whitespace-pre-line">{banner.content}</p>
+            </div>
+          </div>
         ) : (
-          <Megaphone className="w-5 h-5 shrink-0 mt-0.5" />
+          <>
+            <Megaphone className="w-5 h-5 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">{banner.title}</p>
+              <p className="text-sm mt-0.5 whitespace-pre-line">{banner.content}</p>
+            </div>
+          </>
         )}
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm">{banner.title}</p>
-          <p className="text-sm mt-0.5 whitespace-pre-line">{banner.content}</p>
-        </div>
 
         {total > 1 && (
           <div className="flex items-center gap-1 shrink-0 self-center">
