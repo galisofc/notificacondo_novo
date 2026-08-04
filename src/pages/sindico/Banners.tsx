@@ -85,7 +85,7 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
     enabled: !!condominiumId,
   });
 
-  const { data: cientes = [], isLoading } = useQuery({
+  const { data: cientes = [], isLoading, refetch } = useQuery({
     queryKey: ["banner-acknowledged-users", bannerId],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -98,6 +98,8 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
       if (error) throw error;
       return data as any[];
     },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   const deleteAcknowledgeMutation = useMutation({
