@@ -224,7 +224,7 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
       <div className="flex flex-wrap gap-1">
         {cientes.map((item) => (
           <Badge key={item.user_id} variant="secondary" className="text-[10px] pr-1 gap-1 h-5">
-            {item.full_name || item.profiles?.full_name || item.profiles?.email || "Porteiro"}
+            {item.full_name && item.full_name !== 'porteiro' ? item.full_name : (item.profiles?.full_name || item.profiles?.email || "Porteiro")}
             <button
               onClick={() => {
                 if (confirm(`Remover ciência de ${item.profiles?.full_name || "este porteiro"}?`)) {
