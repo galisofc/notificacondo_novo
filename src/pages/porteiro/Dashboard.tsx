@@ -415,6 +415,7 @@ function CondominiumBanners({ condominiumIds }: { condominiumIds: string[] }) {
         .select("*")
         .in("condominium_id", condominiumIds)
         .eq("is_active", true)
+        .eq("show_as_modal", false)
         .order("display_order", { ascending: true });
       if (error) throw error;
       return data || [];
