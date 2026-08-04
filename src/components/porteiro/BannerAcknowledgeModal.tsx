@@ -27,7 +27,7 @@ interface BannerAcknowledgeModalProps {
  */
 export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowledgeModalProps) {
   const { user } = useAuth();
-  const { profileInfo } = useUserRole();
+  const { profileInfo, role } = useUserRole();
   const queryClient = useQueryClient();
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
