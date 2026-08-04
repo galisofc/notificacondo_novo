@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Plus, Pencil, Trash2, Eye, GripVertical, Megaphone, Upload, X, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, GripVertical, Megaphone, Upload, X, Loader2, Maximize2 } from "lucide-react";
 import SindicoBreadcrumbs from "@/components/sindico/SindicoBreadcrumbs";
 
 interface Banner {
@@ -255,6 +255,8 @@ export default function SindicoBanners() {
   const [uploading, setUploading] = useState(false);
   // Tipo de aviso escolhido pelo síndico: "texto" (título + mensagem) ou "imagem" (somente imagem)
   const [mode, setMode] = useState<"texto" | "imagem">("texto");
+  // Imagem em visualização ampliada (modal de zoom)
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
 
   // Faz upload da imagem para o bucket público "banners" e guarda a URL no form
   const handleImageUpload = async (file: File | undefined) => {
@@ -486,13 +488,21 @@ export default function SindicoBanners() {
                       style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
                     >
                       {banner.image_url ? (
-                        <div className="w-20 h-20 rounded-md overflow-hidden bg-muted/20 shrink-0 border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setZoomImage(banner.image_url!)}
+                          className="w-20 h-20 rounded-md overflow-hidden bg-muted/20 shrink-0 border border-white/10 relative group cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          title="Clique para ampliar a imagem"
+                        >
                           <img
                             src={banner.image_url}
                             alt={banner.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
-                        </div>
+                          <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Maximize2 className="w-5 h-5 text-white" />
+                          </span>
+                        </button>
                       ) : (
                         <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
                           <Megaphone className="w-6 h-6" />
