@@ -484,11 +484,19 @@ export default function SindicoBanners() {
                       className="flex-1 rounded-lg p-4 min-h-[60px] flex items-start gap-3"
                       style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
                     >
-                      {banner.image_url && (
-                        <img
-                          src={banner.image_url}
-                          alt={banner.title}
-                          className="w-20 h-20 rounded-md object-cover shrink-0"
+                      {banner.image_url ? (
+                        <div className="w-20 h-20 rounded-md overflow-hidden bg-muted/20 shrink-0 border border-white/10">
+                          <img
+                            src={banner.image_url}
+                            alt={banner.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0 border border-white/10">
+                          <Megaphone className="w-6 h-6" />
+                        </div>
+                      )}
                           loading="lazy"
                         />
                       )}
