@@ -113,6 +113,8 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banner-acknowledged-users", bannerId] });
+      queryClient.invalidateQueries({ queryKey: ["condominium-porteiros-count"] });
+      refetch();
       toast({ title: "Ciência removida!" });
     },
     onError: (error: any) => {
@@ -130,6 +132,8 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banner-acknowledged-users", bannerId] });
+      queryClient.invalidateQueries({ queryKey: ["condominium-porteiros-count"] });
+      refetch();
       toast({ title: "Ciências resetadas para todos!" });
     },
     onError: (error: any) => {
@@ -149,6 +153,7 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
           filter: `banner_id=eq.${bannerId}`
         },
         () => {
+          queryClient.invalidateQueries({ queryKey: ["banner-acknowledged-users", bannerId] });
           refetch();
         }
       )
