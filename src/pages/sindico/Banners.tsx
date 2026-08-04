@@ -88,19 +88,47 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
   const { data: cientes = [], isLoading, refetch } = useQuery({
     queryKey: ["banner-acknowledged-users", bannerId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      // 1) Tenta RPC security definer (ignora RLS restritiva por user_id)
+      const rpc = await (supabase as any).rpc("get_banner_acknowledgments", {
+        _banner_id: bannerId,
+      });
+
+      if (!rpc.error && Array.isArray(rpc.data)) {
+        return (rpc.data as any[]).map((row) => ({
+          user_id: row.user_id,
+          profiles: { full_name: row.full_name, email: row.email },
+        }));
+      }
+
+      // 2) Fallback: busca ciências e perfis separadamente (sem join embutido,
+      //    que falha silenciosamente quando não há FK declarada)
+      const { data: acks, error } = await (supabase as any)
         .from("banner_acknowledgments")
-        .select(`
-          user_id,
-          profiles:user_id (full_name, email)
-        `)
+        .select("user_id")
         .eq("banner_id", bannerId);
       if (error) throw error;
-      return data as any[];
+
+      const userIds = [...new Set((acks || []).map((a: any) => a.user_id))];
+      if (userIds.length === 0) return [];
+
+      const { data: profiles } = await (supabase as any)
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+
+      const profileMap = new Map(
+        (profiles || []).map((p: any) => [p.id, p])
+      );
+
+      return userIds.map((id: string) => ({
+        user_id: id,
+        profiles: profileMap.get(id) || null,
+      }));
     },
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
+
 
   const deleteAcknowledgeMutation = useMutation({
     mutationFn: async (userId: string) => {
