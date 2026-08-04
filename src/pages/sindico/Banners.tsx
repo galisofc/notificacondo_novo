@@ -100,17 +100,17 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
         }));
       }
 
-      // 2) Fallback: busca ciências e perfis separadamente (sem join embutido,
-      //    que falha silenciosamente quando não há FK declarada)
+      // 2) Fallback: busca ciências e perfis separadamente
       const { data: acks, error } = await (supabase as any)
         .from("banner_acknowledgments")
-        .select("user_id")
+        .select("user_id, full_name")
         .eq("banner_id", bannerId);
       if (error) throw error;
 
-      const userIds = [...new Set((acks || []).map((a: any) => a.user_id))];
-      if (userIds.length === 0) return [];
+      if (!acks || acks.length === 0) return [];
 
+      const userIds = acks.map((a: any) => a.user_id);
+      
       const { data: profiles } = await (supabase as any)
         .from("profiles")
         .select("id, full_name, email")
@@ -120,9 +120,10 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
         (profiles || []).map((p: any) => [p.id, p])
       );
 
-      return userIds.map((id: string) => ({
-        user_id: id,
-        profiles: profileMap.get(id) || null,
+      return acks.map((ack: any) => ({
+        user_id: ack.user_id,
+        full_name: ack.full_name,
+        profiles: profileMap.get(ack.user_id) || null,
       }));
     },
     staleTime: 0,
@@ -223,7 +224,7 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
       <div className="flex flex-wrap gap-1">
         {cientes.map((item) => (
           <Badge key={item.user_id} variant="secondary" className="text-[10px] pr-1 gap-1 h-5">
-            {item.profiles?.full_name || item.profiles?.email || "Porteiro"}
+            {item.full_name || item.profiles?.full_name || item.profiles?.email || "Porteiro"}
             <button
               onClick={() => {
                 if (confirm(`Remover ciência de ${item.profiles?.full_name || "este porteiro"}?`)) {
