@@ -193,7 +193,7 @@ function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condom
   }, [bannerId, refetch]);
 
   if (isLoading) return <div className="text-xs text-muted-foreground">Carregando cientes...</div>;
-  if (cientes.length === 0) return <div className="text-xs text-muted-foreground">Ninguém ciente ainda.</div>;
+  if (cientes.length === 0) return <div className="text-xs text-muted-foreground">deve ser o nome dos porteiros que devem aparecer aqui.</div>;
 
   return (
     <div className="space-y-1">
