@@ -117,7 +117,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6 py-2">
+        <div className="flex flex-col gap-6 py-2 overflow-y-auto max-h-[60vh] pr-2 scrollbar-thin scrollbar-thumb-muted">
           {current.image_url && (
             <div className="w-full overflow-hidden rounded-xl border bg-muted/30 shadow-sm">
               <img
