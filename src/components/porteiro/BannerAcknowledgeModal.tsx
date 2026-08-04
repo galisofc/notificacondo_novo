@@ -27,7 +27,7 @@ interface BannerAcknowledgeModalProps {
  */
 export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowledgeModalProps) {
   const { user } = useAuth();
-  const { profileInfo } = useUserRole();
+  const { profileInfo, role } = useUserRole();
   const queryClient = useQueryClient();
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
@@ -82,7 +82,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
         .insert({ 
           banner_id: bannerId, 
           user_id: user.id,
-          full_name: profileInfo?.full_name || null 
+          full_name: profileInfo?.full_name || (role === 'porteiro' ? 'Porteiro' : null) 
         });
       if (error && error.code !== "23505") throw error;
     },
