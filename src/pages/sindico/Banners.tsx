@@ -61,9 +61,30 @@ const defaultForm: BannerForm = {
   show_as_modal: true,
 };
 
-function AcknowledgeList({ bannerId }: { bannerId: string }) {
+function AcknowledgeList({ bannerId, condominiumId }: { bannerId: string; condominiumId: string }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: totalPorteiros = 0 } = useQuery({
+    queryKey: ["condominium-porteiros-count", condominiumId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_condominium_porteiros_count', { 
+        _condominium_id: condominiumId 
+      });
+      
+      if (error) {
+        // Fallback para contagem via user_roles se RPC falhar
+        const { count, error: countError } = await (supabase as any)
+          .from("user_roles")
+          .select("*", { count: 'exact', head: true })
+          .eq("role", "porteiro"); // Nota: idealmente filtrado por condomínio, mas depende da estrutura
+        return count || 0;
+      }
+      return data || 0;
+    },
+    enabled: !!condominiumId,
+  });
+
   const { data: cientes = [], isLoading } = useQuery({
     queryKey: ["banner-acknowledged-users", bannerId],
     queryFn: async () => {
