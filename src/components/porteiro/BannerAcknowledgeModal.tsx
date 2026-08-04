@@ -130,12 +130,16 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
             className="rounded-xl p-6 lg:p-8 shadow-inner border border-white/10"
             style={{ backgroundColor: current.bg_color, color: current.text_color }}
           >
-            <h2 className="font-bold text-xl lg:text-3xl mb-4 leading-tight">
-              {current.title}
-            </h2>
-            <div className="text-lg lg:text-2xl leading-relaxed whitespace-pre-line opacity-95">
-              {current.content}
-            </div>
+            {current.title && (
+              <h2 className="font-bold text-xl lg:text-3xl mb-4 leading-tight">
+                {current.title}
+              </h2>
+            )}
+            {current.content && (
+              <div className="text-lg lg:text-2xl leading-relaxed whitespace-pre-line opacity-95">
+                {current.content}
+              </div>
+            )}
           </div>
         </div>
 

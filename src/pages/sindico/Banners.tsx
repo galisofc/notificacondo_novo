@@ -376,21 +376,26 @@ export default function SindicoBanners() {
               <div>
                 <Label>Imagem (opcional)</Label>
                 {form.image_url ? (
-                  <div className="relative mt-2 w-fit">
-                    <img
-                      src={form.image_url}
-                      alt="Imagem do banner"
-                      className="max-h-40 rounded-lg object-contain bg-muted"
-                    />
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="destructive"
-                      className="absolute -top-2 -right-2 h-7 w-7 rounded-full"
-                      onClick={() => setForm({ ...form, image_url: null })}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+                  <div className="space-y-2 mt-2">
+                    <div className="relative w-fit">
+                      <img
+                        src={form.image_url}
+                        alt="Imagem do banner"
+                        className="max-h-40 rounded-lg object-contain bg-muted"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg"
+                        onClick={() => setForm({ ...form, image_url: null })}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-amber-600 font-medium bg-amber-50 p-2 rounded border border-amber-100">
+                      Atenção: Se houver uma imagem, o título e a descrição <strong>serão exibidos</strong> abaixo dela no modal.
+                    </p>
                   </div>
                 ) : (
                   <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground transition-colors hover:bg-muted/60">
