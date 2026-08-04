@@ -725,7 +725,7 @@ export default function SindicoBanners() {
               <Button variant="outline" onClick={closeDialog}>Cancelar</Button>
               <Button
                 onClick={() => saveMutation.mutate()}
-                disabled={!form.title.trim() || !form.content.trim() || saveMutation.isPending || uploading}
+                disabled={!canSave || saveMutation.isPending || uploading}
               >
                 {saveMutation.isPending ? "Salvando..." : editingBanner ? "Salvar" : "Criar"}
               </Button>
