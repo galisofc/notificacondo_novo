@@ -30,7 +30,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
   const [index, setIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  const { data: banners = [] } = useQuery({
+  const { data: banners = [], refetch: refetchBanners } = useQuery({
     queryKey: ["banner-modal-banners", condominiumIds],
     queryFn: async () => {
       if (condominiumIds.length === 0) return [] as BannerRecord[];
@@ -45,10 +45,10 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
       return (data || []) as BannerRecord[];
     },
     enabled: condominiumIds.length > 0 && !!user?.id,
-    staleTime: 1000 * 60,
+    staleTime: 0, 
   });
 
-  const { data: acknowledgedIds = [] } = useQuery({
+  const { data: acknowledgedIds = [], refetch: refetchAcknowledge } = useQuery({
     queryKey: ["banner-acknowledgments", user?.id],
     queryFn: async () => {
       if (!user?.id) return [] as string[];
@@ -60,7 +60,7 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
       return ((data || []) as { banner_id: string }[]).map((row) => row.banner_id);
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60,
+    staleTime: 0,
   });
 
   const pending = useMemo(
@@ -78,11 +78,13 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
       const { error } = await (supabase as any)
         .from("banner_acknowledgments")
         .insert({ banner_id: bannerId, user_id: user.id });
-      // 23505 = já existe ciência registrada, tratamos como sucesso
       if (error && error.code !== "23505") throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["banner-acknowledgments", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["banner-modal-banners"] });
+      refetchAcknowledge();
+      refetchBanners();
     },
   });
 
