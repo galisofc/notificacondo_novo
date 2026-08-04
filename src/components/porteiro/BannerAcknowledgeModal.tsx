@@ -119,31 +119,31 @@ export default function BannerAcknowledgeModal({ condominiumIds }: BannerAcknowl
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-6 py-2 overflow-y-auto max-h-[70vh] pr-2 scrollbar-thin scrollbar-thumb-muted">
+        <div className="flex flex-col gap-6 py-2 overflow-y-auto max-h-[75vh] pr-2 scrollbar-thin scrollbar-thumb-muted">
           <div 
-            className="flex flex-col gap-4 overflow-hidden rounded-xl border shadow-lg bg-card"
+            className="flex flex-col overflow-hidden rounded-2xl border-0 shadow-2xl bg-card transition-all duration-300"
             style={!current.image_url ? { backgroundColor: current.bg_color, color: current.text_color } : {}}
           >
             {current.image_url && (
-              <div className="w-full bg-muted/30">
+              <div className="w-full bg-black/5 flex items-center justify-center p-1">
                 <img
                   src={current.image_url}
                   alt={current.title || "Imagem do aviso"}
-                  className="w-full h-auto object-contain max-h-[550px] mx-auto"
-                  loading="lazy"
+                  className="w-full h-auto object-contain max-h-[600px] rounded-xl shadow-inner"
+                  loading="eager"
                 />
               </div>
             )}
             
             {(current.title || current.content) && (!current.image_url) && (
-              <div className="p-6 lg:p-10 flex flex-col gap-6">
+              <div className="p-8 lg:p-14 flex flex-col gap-8 text-center items-center justify-center min-h-[300px]">
                 {current.title && (
-                  <h2 className="font-extrabold text-2xl lg:text-5xl tracking-tight leading-tight border-b border-white/20 pb-4">
+                  <h2 className="font-black text-3xl lg:text-6xl tracking-tighter leading-none uppercase drop-shadow-sm">
                     {current.title}
                   </h2>
                 )}
                 {current.content && (
-                  <div className="text-xl lg:text-4xl leading-relaxed whitespace-pre-line opacity-95 font-medium">
+                  <div className="text-2xl lg:text-5xl leading-tight opacity-95 font-semibold max-w-[90%] mx-auto">
                     {current.content}
                   </div>
                 )}
