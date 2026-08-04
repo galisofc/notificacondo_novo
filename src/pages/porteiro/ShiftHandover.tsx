@@ -280,7 +280,7 @@ export default function ShiftHandover() {
       const itemsNotOk = checklistItems.filter((i) => !i.is_ok);
       const hasIssues = itemsNotOk.length > 0;
       
-      let text = `EU QRA ${porterName || "Porteiro"} PASSANDO O QTH PARA QRA ${incomingPorterName}`;
+      let text = `EU QRA ${porterName || "Colaborador"} PASSANDO O QTH PARA QRA ${incomingPorterName}`;
       text += hasIssues ? " COM AS SEGUINTES OBSERVAÇÕES:" : " SEM NOVIDADES.";
       text += "\n\n📋 CHECKLIST:";
       
@@ -382,7 +382,7 @@ export default function ShiftHandover() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Porteiro que está assumindo</Label>
+                    <Label>Nome de quem está assumindo o plantão</Label>
                     {condominiumPorters.length > 0 ? (
                       <>
                         <Select
@@ -397,7 +397,7 @@ export default function ShiftHandover() {
                           }}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecione o porteiro..." />
+                            <SelectValue placeholder="Selecione o colaborador..." />
                           </SelectTrigger>
                           <SelectContent>
                             {condominiumPorters.map((p: any) => (
@@ -412,7 +412,7 @@ export default function ShiftHandover() {
                           <Input
                             value={incomingPorterName}
                             onChange={(e) => setIncomingPorterName(e.target.value)}
-                            placeholder="Digite o nome do próximo porteiro"
+                            placeholder="Digite o nome de quem assumirá"
                             autoFocus
                           />
                         )}
@@ -421,7 +421,7 @@ export default function ShiftHandover() {
                       <Input
                         value={incomingPorterName}
                         onChange={(e) => setIncomingPorterName(e.target.value)}
-                        placeholder="Nome completo do próximo porteiro"
+                        placeholder="Nome completo de quem assumirá"
                       />
                     )}
                   </div>
