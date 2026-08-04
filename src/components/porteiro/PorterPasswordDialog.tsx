@@ -72,7 +72,7 @@ export function PorterPasswordDialog({ open, onOpenChange, porter }: PorterPassw
     if (!password) {
       toast({
         title: "Senha obrigatória",
-        description: `Digite a nova senha para ${porter.profile?.full_name || "o colaborador"}`,
+        description: "Digite a nova senha para o porteiro",
         variant: "destructive",
       });
       return;
@@ -122,7 +122,7 @@ export function PorterPasswordDialog({ open, onOpenChange, porter }: PorterPassw
           success: true,
           password: password,
           whatsapp_sent: false,
-          message: `Senha atualizada. Informe manualmente para ${porter.profile?.full_name || "o colaborador"}.`,
+          message: "Senha atualizada. Informe manualmente ao porteiro.",
         });
       }
     } catch (error: any) {
@@ -158,7 +158,7 @@ export function PorterPasswordDialog({ open, onOpenChange, porter }: PorterPassw
             <Alert>
               <Key className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                Informe os dados de acesso manualmente para {porter.profile?.full_name || "o colaborador"}:
+                Informe os dados de acesso manualmente ao porteiro:
               </AlertDescription>
             </Alert>
 
@@ -211,7 +211,7 @@ export function PorterPasswordDialog({ open, onOpenChange, porter }: PorterPassw
         <DialogHeader className="space-y-1 sm:space-y-2">
           <DialogTitle className="text-base sm:text-lg flex items-center gap-2">
             <Key className="w-5 h-5 text-primary" />
-            Definir Senha de Acesso
+            Definir Senha do Porteiro
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Defina uma nova senha de acesso para{" "}
@@ -222,7 +222,7 @@ export function PorterPasswordDialog({ open, onOpenChange, porter }: PorterPassw
         <div className="py-3 sm:py-4 space-y-4">
           {/* Porter info */}
           <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-            <p className="text-xs text-muted-foreground">Colaborador</p>
+            <p className="text-xs text-muted-foreground">Porteiro</p>
             <p className="font-medium text-sm">{porter.profile?.full_name}</p>
             <p className="text-xs text-muted-foreground">{porter.profile?.email}</p>
           </div>
@@ -302,7 +302,7 @@ export function PorterPasswordDialog({ open, onOpenChange, porter }: PorterPassw
           {!porter.profile?.phone && (
             <Alert variant="destructive">
               <AlertDescription className="text-xs">
-                Este colaborador não possui telefone cadastrado. A senha será exibida para você informar manualmente.
+                O porteiro não possui telefone cadastrado. A senha será exibida para você informar manualmente.
               </AlertDescription>
             </Alert>
           )}
