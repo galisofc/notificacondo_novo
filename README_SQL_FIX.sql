@@ -43,7 +43,9 @@ create trigger on_banner_ack_insert
     before insert on public.banner_acknowledgments
     for each row execute function public.handle_banner_ack_full_name();
 
--- Updated RPC to handle prioritization correctly in views
+-- DROP AND RECREATE RPC: Required when changing return types/columns
+DROP FUNCTION IF EXISTS public.get_banner_acknowledgments(uuid);
+
 create or replace function public.get_banner_acknowledgments(_banner_id uuid)
 returns table (
     user_id uuid,
@@ -66,3 +68,4 @@ as $$
   left join public.profiles p on p.id = ba.user_id
   where ba.banner_id = _banner_id;
 $$;
+
