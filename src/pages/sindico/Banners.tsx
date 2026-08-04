@@ -61,6 +61,70 @@ const defaultForm: BannerForm = {
   show_as_modal: true,
 };
 
+function AcknowledgeList({ bannerId }: { bannerId: string }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: cientes = [], isLoading } = useQuery({
+    queryKey: ["banner-acknowledged-users", bannerId],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("banner_acknowledgments")
+        .select(`
+          user_id,
+          profiles:user_id (full_name, email)
+        `)
+        .eq("banner_id", bannerId);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  const deleteAcknowledgeMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await (supabase as any)
+        .from("banner_acknowledgments")
+        .delete()
+        .eq("banner_id", bannerId)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["banner-acknowledged-users", bannerId] });
+      toast({ title: "Ciência removida!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro ao remover ciência", description: error.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) return <div className="text-xs text-muted-foreground">Carregando cientes...</div>;
+  if (cientes.length === 0) return <div className="text-xs text-muted-foreground">Ninguém ciente ainda.</div>;
+
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Porteiros Cientes:</p>
+      <div className="flex flex-wrap gap-1">
+        {cientes.map((item) => (
+          <Badge key={item.user_id} variant="secondary" className="text-[10px] pr-1 gap-1 h-5">
+            {item.profiles?.full_name || item.profiles?.email || "Porteiro"}
+            <button
+              onClick={() => {
+                if (confirm(`Remover ciência de ${item.profiles?.full_name || "este porteiro"}?`)) {
+                  deleteAcknowledgeMutation.mutate(item.user_id);
+                }
+              }}
+              className="hover:text-destructive transition-colors"
+              title="Remover ciência (banner voltará a aparecer para ele)"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SindicoBanners() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -336,6 +400,9 @@ export default function SindicoBanners() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
+                      </div>
+                      <div className="mt-2 border-t pt-2 w-full">
+                        <AcknowledgeList bannerId={banner.id} />
                       </div>
                     </div>
                   </div>
